@@ -151,7 +151,7 @@ class _MainLayoutState extends State<MainLayout> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(160),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -224,7 +224,7 @@ class _MainLayoutState extends State<MainLayout> {
         decoration: const BoxDecoration(
           color: AppTheme.sidebarBg,
         ),
-        hoverColor: Colors.white.withOpacity(0.05),
+        hoverColor: Colors.white.withAlpha(160),
         textStyle: const TextStyle(color: Colors.white70, fontSize: 14),
         selectedTextStyle: const TextStyle(
           color: Colors.white,
@@ -330,7 +330,7 @@ class _MainLayoutState extends State<MainLayout> {
                     return Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
+                        color: Colors.white.withAlpha(160),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(

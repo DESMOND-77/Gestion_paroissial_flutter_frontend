@@ -1,6 +1,8 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter_frontend/presentation/widgets/responsive_text_widget.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
@@ -32,7 +34,8 @@ class _DashboardView extends StatelessWidget {
       body: BlocBuilder<DashboardBloc, DashboardState>(
         builder: (context, state) {
           if (state is DashboardLoading || state is DashboardInitial) {
-            return const LoadingWidget(message: 'Chargement du tableau de bord...');
+            return const LoadingWidget(
+                message: 'Chargement du tableau de bord...');
           }
           if (state is DashboardError) {
             return _buildError(context, state.message);
@@ -56,7 +59,8 @@ class _DashboardView extends StatelessWidget {
           Text(message, textAlign: TextAlign.center),
           const SizedBox(height: 16),
           ElevatedButton(
-            onPressed: () => context.read<DashboardBloc>().add(const LoadDashboard()),
+            onPressed: () =>
+                context.read<DashboardBloc>().add(const LoadDashboard()),
             child: const Text('Réessayer'),
           ),
         ],
@@ -65,7 +69,8 @@ class _DashboardView extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context, DashboardLoaded state) {
-    final formatter = NumberFormat.currency(locale: 'fr_FR', symbol: 'FCFA', decimalDigits: 0);
+    final formatter = NumberFormat.currency(
+        locale: 'fr_FR', symbol: 'FCFA', decimalDigits: 0);
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -103,6 +108,17 @@ class _DashboardView extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            AutoSizeText(
+              '$greeting, ${user?.firstName ?? 'Administrateur'} !',
+              maxFontSize: 48,
+              minFontSize: 22,
+              maxLines: 1,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textPrimary,
+              ),
+            ),
             Text(
               '$greeting, ${user?.firstName ?? 'Administrateur'} !',
               style: const TextStyle(
@@ -155,7 +171,9 @@ class _DashboardView extends StatelessWidget {
         title: 'Balance financière',
         value: formatter.format(state.balanceFinanciere),
         icon: Icons.account_balance_wallet,
-        color: state.balanceFinanciere >= 0 ? AppTheme.successColor : AppTheme.errorColor,
+        color: state.balanceFinanciere >= 0
+            ? AppTheme.successColor
+            : AppTheme.errorColor,
         route: '/finances',
       ),
     ];
@@ -285,13 +303,16 @@ class _DashboardView extends StatelessWidget {
                         getTitlesWidget: (value, meta) {
                           return Text(
                             formatter.format(value),
-                            style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary),
+                            style: const TextStyle(
+                                fontSize: 10, color: AppTheme.textSecondary),
                           );
                         },
                       ),
                     ),
-                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
+                    topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
@@ -324,13 +345,15 @@ class _DashboardView extends StatelessWidget {
                           toY: recettesData[i],
                           color: AppTheme.successColor,
                           width: 10,
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                          borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(4)),
                         ),
                         BarChartRodData(
                           toY: depensesData[i],
                           color: AppTheme.errorColor,
                           width: 10,
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                          borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(4)),
                         ),
                       ],
                     );
@@ -354,7 +377,9 @@ class _DashboardView extends StatelessWidget {
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+        Text(label,
+            style:
+                const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
       ],
     );
   }
@@ -396,7 +421,8 @@ class _DashboardView extends StatelessWidget {
               const Center(
                 child: Padding(
                   padding: EdgeInsets.all(32),
-                  child: Text('Aucune donnée', style: TextStyle(color: AppTheme.textSecondary)),
+                  child: Text('Aucune donnée',
+                      style: TextStyle(color: AppTheme.textSecondary)),
                 ),
               )
             else ...[
@@ -422,12 +448,13 @@ class _DashboardView extends StatelessWidget {
               ...List.generate(categories.length, (i) {
                 final entry = categories[i];
                 final label = {
-                  'quete': 'Quête',
-                  'don': 'Don',
-                  'location': 'Location',
-                  'librairie': 'Librairie',
-                  'autre': 'Autre',
-                }[entry.key] ?? entry.key;
+                      'quete': 'Quête',
+                      'don': 'Don',
+                      'location': 'Location',
+                      'librairie': 'Librairie',
+                      'autre': 'Autre',
+                    }[entry.key] ??
+                    entry.key;
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Row(
@@ -444,11 +471,13 @@ class _DashboardView extends StatelessWidget {
                       Expanded(
                         child: Text(
                           label,
-                          style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                          style: const TextStyle(
+                              fontSize: 12, color: AppTheme.textSecondary),
                         ),
                       ),
                       Text(
-                        NumberFormat.compact(locale: 'fr_FR').format(entry.value),
+                        NumberFormat.compact(locale: 'fr_FR')
+                            .format(entry.value),
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -516,28 +545,36 @@ class _DashboardView extends StatelessWidget {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: (isRecette ? AppTheme.successColor : AppTheme.errorColor)
+                      color: (isRecette
+                              ? AppTheme.successColor
+                              : AppTheme.errorColor)
                           .withOpacity(0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
                       isRecette ? Icons.arrow_downward : Icons.arrow_upward,
-                      color: isRecette ? AppTheme.successColor : AppTheme.errorColor,
+                      color: isRecette
+                          ? AppTheme.successColor
+                          : AppTheme.errorColor,
                       size: 20,
                     ),
                   ),
                   title: Text(
                     tx.categorieLabel,
-                    style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w500, fontSize: 14),
                   ),
                   subtitle: Text(
                     '${tx.date}${tx.description != null ? ' · ${tx.description}' : ''}',
-                    style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                    style: const TextStyle(
+                        fontSize: 12, color: AppTheme.textSecondary),
                   ),
                   trailing: Text(
                     '${isRecette ? '+' : '-'} ${formatter.format(tx.montant)}',
                     style: TextStyle(
-                      color: isRecette ? AppTheme.successColor : AppTheme.errorColor,
+                      color: isRecette
+                          ? AppTheme.successColor
+                          : AppTheme.errorColor,
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),
@@ -582,11 +619,13 @@ class _DashboardView extends StatelessWidget {
                   ),
                   title: Text(
                     ev.titre,
-                    style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w500, fontSize: 14),
                   ),
                   subtitle: Text(
                     '${ev.typeDisplay ?? ev.type} · ${ev.lieu ?? ''}',
-                    style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                    style: const TextStyle(
+                        fontSize: 12, color: AppTheme.textSecondary),
                   ),
                   trailing: Text(
                     DateFormat('dd MMM', 'fr_FR').format(
