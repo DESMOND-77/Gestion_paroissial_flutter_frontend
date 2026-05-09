@@ -192,7 +192,7 @@ class _DrawerItem extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
-        color: isSelected ? AppTheme.primaryColor.withOpacity(0.1) : null,
+        color: isSelected ? AppTheme.primaryColor.withAlpha(26) : null,
       ),
       child: ListTile(
         leading: Icon(

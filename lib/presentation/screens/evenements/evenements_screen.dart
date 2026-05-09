@@ -50,15 +50,15 @@ class _EvenementsViewState extends State<_EvenementsView> with SingleTickerProvi
   void _deleteEvenement(BuildContext ctx, int id, String titre) {
     showDialog(
       context: ctx,
-      builder: (_) => AlertDialog(
+      builder: (context) => AlertDialog(
         title: const Text('Confirmer la suppression'),
         content: Text('Voulez-vous supprimer l\'événement "$titre" ?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(_), child: const Text('Annuler')),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor),
             onPressed: () {
-              Navigator.pop(_);
+              Navigator.pop(ctx);
               ctx.read<EvenementsBloc>().add(DeleteEvenement(id: id));
             },
             child: const Text('Supprimer'),
@@ -221,7 +221,7 @@ class _EvenementsViewState extends State<_EvenementsView> with SingleTickerProvi
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withAlpha(30),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
@@ -261,7 +261,7 @@ class _EvenementsViewState extends State<_EvenementsView> with SingleTickerProvi
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: color.withOpacity(0.1),
+                            color: color.withAlpha(30),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(

@@ -188,7 +188,7 @@ class _EvenementFormViewState extends State<_EvenementFormView> {
                           ),
                           const SizedBox(height: 16),
                           DropdownButtonFormField<String>(
-                            value: _type,
+                            initialValue: _type,
                             decoration: const InputDecoration(
                               labelText: 'Type *',
                               prefixIcon: Icon(Icons.category_outlined),
@@ -271,7 +271,7 @@ class _EvenementFormViewState extends State<_EvenementFormView> {
                             ),
                             value: _estInscriptionRequise,
                             onChanged: (v) => setState(() => _estInscriptionRequise = v),
-                            activeColor: AppTheme.primaryColor,
+                            activeThumbColor: AppTheme.primaryColor,
                             contentPadding: EdgeInsets.zero,
                           ),
                           const SizedBox(height: 28),

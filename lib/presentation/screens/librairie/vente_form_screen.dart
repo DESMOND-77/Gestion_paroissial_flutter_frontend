@@ -134,7 +134,7 @@ class _VenteFormScreenState extends State<VenteFormScreen> {
                     ),
                     const SizedBox(height: 24),
                     DropdownButtonFormField<Article>(
-                      value: _selectedArticle,
+                      initialValue: _selectedArticle,
                       decoration: const InputDecoration(
                         labelText: 'Article *',
                         prefixIcon: Icon(Icons.menu_book_outlined),
@@ -174,7 +174,7 @@ class _VenteFormScreenState extends State<VenteFormScreen> {
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<Membre>(
-                      value: _selectedMembre,
+                      initialValue: _selectedMembre,
                       decoration: const InputDecoration(
                         labelText: 'Membre (optionnel)',
                         prefixIcon: Icon(Icons.person_outline),
@@ -195,10 +195,10 @@ class _VenteFormScreenState extends State<VenteFormScreen> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryColor.withOpacity(0.08),
+                          color: AppTheme.primaryColor.withAlpha(20),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: AppTheme.primaryColor.withOpacity(0.3),
+                            color: AppTheme.primaryColor.withAlpha(77),
                           ),
                         ),
                         child: Column(

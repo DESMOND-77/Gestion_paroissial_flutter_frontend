@@ -39,15 +39,15 @@ class _GroupesViewState extends State<_GroupesView> {
   void _deleteGroupe(BuildContext ctx, int id, String nom) {
     showDialog(
       context: ctx,
-      builder: (_) => AlertDialog(
+      builder: (context) => AlertDialog(
         title: const Text('Confirmer la suppression'),
         content: Text('Voulez-vous supprimer le groupe "$nom" ?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(_), child: const Text('Annuler')),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor),
             onPressed: () {
-              Navigator.pop(_);
+              Navigator.pop(ctx);
               ctx.read<GroupesBloc>().add(DeleteGroupe(id: id));
             },
             child: const Text('Supprimer'),
@@ -169,7 +169,7 @@ class _GroupesViewState extends State<_GroupesView> {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.1),
+                    color: AppTheme.primaryColor.withAlpha(30),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.group, color: AppTheme.primaryColor, size: 24),

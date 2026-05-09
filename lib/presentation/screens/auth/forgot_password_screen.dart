@@ -75,7 +75,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       height: 72,
                       margin: const EdgeInsets.symmetric(horizontal: 120),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryColor.withOpacity(0.1),
+                        color: AppTheme.primaryColor.withAlpha(30),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: const Icon(

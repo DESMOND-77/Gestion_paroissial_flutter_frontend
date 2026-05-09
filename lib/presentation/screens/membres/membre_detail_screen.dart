@@ -169,7 +169,7 @@ class _MembreDetailView extends StatelessWidget {
                     const SizedBox(height: 4),
                     Chip(
                       label: Text(membre.groupeNom!),
-                      backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                      backgroundColor: AppTheme.primaryColor.withAlpha(26),
                       labelStyle: const TextStyle(
                         color: AppTheme.primaryColor,
                         fontSize: 12,
@@ -249,8 +249,8 @@ class _MembreDetailView extends StatelessWidget {
       ),
       label: Text(label, style: const TextStyle(fontSize: 12)),
       backgroundColor: value
-          ? AppTheme.successColor.withOpacity(0.1)
-          : AppTheme.textSecondary.withOpacity(0.1),
+          ? AppTheme.successColor.withAlpha(26)
+          : AppTheme.textSecondary.withAlpha(26),
     );
   }
 
@@ -324,7 +324,7 @@ class _MembreDetailView extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: AppTheme.primaryColor.withOpacity(0.1),
+          color: AppTheme.primaryColor.withAlpha(26),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(
@@ -372,7 +372,7 @@ class _MembreDetailView extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   DropdownButtonFormField<String>(
-                    value: selectedType,
+                    initialValue: selectedType,
                     decoration: const InputDecoration(labelText: 'Type de sacrement'),
                     items: AppConstants.sacrementLabels.entries
                         .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value)))

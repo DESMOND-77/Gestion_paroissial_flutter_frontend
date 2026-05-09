@@ -389,7 +389,7 @@ class _MembreFormViewState extends State<_MembreFormView> {
       builder: (context, state) {
         final groupes = state is GroupesLoaded ? state.groupes : [];
         return DropdownButtonFormField<int?>(
-          value: _selectedGroupe,
+          initialValue: _selectedGroupe,
           decoration: const InputDecoration(
             labelText: 'Groupe',
             prefixIcon: Icon(Icons.group_outlined),

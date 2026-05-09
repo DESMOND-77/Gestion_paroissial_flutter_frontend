@@ -1,8 +1,6 @@
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter_frontend/presentation/widgets/responsive_text_widget.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
@@ -108,17 +106,6 @@ class _DashboardView extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AutoSizeText(
-              '$greeting, ${user?.firstName ?? 'Administrateur'} !',
-              maxFontSize: 48,
-              minFontSize: 22,
-              maxLines: 1,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimary,
-              ),
-            ),
             Text(
               '$greeting, ${user?.firstName ?? 'Administrateur'} !',
               style: const TextStyle(
@@ -548,7 +535,7 @@ class _DashboardView extends StatelessWidget {
                       color: (isRecette
                               ? AppTheme.successColor
                               : AppTheme.errorColor)
-                          .withOpacity(0.1),
+                          .withAlpha(30),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
@@ -608,7 +595,7 @@ class _DashboardView extends StatelessWidget {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withOpacity(0.1),
+                      color: AppTheme.primaryColor.withAlpha(30),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(

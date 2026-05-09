@@ -20,7 +20,7 @@ class TransactionFormScreen extends StatelessWidget {
         BlocProvider(
           create: (_) {
             final bloc = sl<FinancesBloc>();
-            if (transactionId != null) bloc.add(LoadTransactions());
+            if (transactionId != null) bloc.add(const LoadTransactions());
             return bloc;
           },
         ),
@@ -172,7 +172,7 @@ class _TransactionFormViewState extends State<_TransactionFormView> {
                           ),
                           const SizedBox(height: 16),
                           DropdownButtonFormField<String>(
-                            value: _categorie,
+                            initialValue: _categorie,
                             decoration: const InputDecoration(
                               labelText: 'Catégorie *',
                               prefixIcon: Icon(Icons.category_outlined),
@@ -222,7 +222,7 @@ class _TransactionFormViewState extends State<_TransactionFormView> {
                             builder: (context, membresState) {
                               final membres = membresState is MembresLoaded ? membresState.membres : [];
                               return DropdownButtonFormField<int?>(
-                                value: _selectedMembre,
+                                initialValue: _selectedMembre,
                                 decoration: const InputDecoration(
                                   labelText: 'Membre (optionnel)',
                                   prefixIcon: Icon(Icons.person_outlined),

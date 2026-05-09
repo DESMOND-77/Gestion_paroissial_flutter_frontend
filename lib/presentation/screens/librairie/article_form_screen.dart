@@ -46,7 +46,7 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
   }
 
   void _loadArticle() {
-    context.read<LibrairieBloc>().add(LoadArticles());
+    context.read<LibrairieBloc>().add(const LoadArticles());
   }
 
   void _populateForm(Article article) {
@@ -155,7 +155,7 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
-                      value: _categorie,
+                      initialValue: _categorie,
                       decoration: const InputDecoration(
                         labelText: 'Catégorie *',
                         prefixIcon: Icon(Icons.category_outlined),
@@ -197,10 +197,12 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
                                   RegExp(r'^\d*\.?\d*')),
                             ],
                             validator: (v) {
-                              if (v == null || v.trim().isEmpty)
+                              if (v == null || v.trim().isEmpty) {
                                 return 'Champ requis';
-                              if (double.tryParse(v) == null)
+                              }
+                              if (double.tryParse(v) == null) {
                                 return 'Prix invalide';
+                              }
                               return null;
                             },
                           ),
@@ -222,10 +224,12 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
                               FilteringTextInputFormatter.digitsOnly,
                             ],
                             validator: (v) {
-                              if (v == null || v.trim().isEmpty)
+                              if (v == null || v.trim().isEmpty) {
                                 return 'Champ requis';
-                              if (int.tryParse(v) == null)
+                              }
+                              if (int.tryParse(v) == null) {
                                 return 'Nombre invalide';
+                              }
                               return null;
                             },
                           ),
@@ -243,10 +247,12 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
                               FilteringTextInputFormatter.digitsOnly,
                             ],
                             validator: (v) {
-                              if (v == null || v.trim().isEmpty)
+                              if (v == null || v.trim().isEmpty) {
                                 return 'Champ requis';
-                              if (int.tryParse(v) == null)
+                              }
+                              if (int.tryParse(v) == null) {
                                 return 'Nombre invalide';
+                              }
                               return null;
                             },
                           ),

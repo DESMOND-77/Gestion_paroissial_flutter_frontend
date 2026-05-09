@@ -52,15 +52,15 @@ class _FinancesViewState extends State<_FinancesView> with SingleTickerProviderS
   void _deleteTransaction(BuildContext ctx, int id) {
     showDialog(
       context: ctx,
-      builder: (_) => AlertDialog(
+      builder: (context) => AlertDialog(
         title: const Text('Confirmer la suppression'),
         content: const Text('Supprimer cette transaction ?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(_), child: const Text('Annuler')),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor),
             onPressed: () {
-              Navigator.pop(_);
+              Navigator.pop(ctx);
               ctx.read<FinancesBloc>().add(DeleteTransaction(id: id));
             },
             child: const Text('Supprimer'),
@@ -260,7 +260,7 @@ class _FinancesViewState extends State<_FinancesView> with SingleTickerProviderS
           columnSpacing: 12,
           horizontalMargin: 12,
           minWidth: 600,
-          headingRowColor: WidgetStateProperty.all(AppTheme.primaryColor.withOpacity(0.08)),
+          headingRowColor: WidgetStateProperty.all(AppTheme.primaryColor.withAlpha(30)),
           columns: const [
             DataColumn2(label: Text('Date'), size: ColumnSize.S),
             DataColumn2(label: Text('Type'), size: ColumnSize.S),
@@ -279,7 +279,7 @@ class _FinancesViewState extends State<_FinancesView> with SingleTickerProviderS
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: (tx.isRecette ? AppTheme.successColor : AppTheme.errorColor)
-                          .withOpacity(0.1),
+                          .withAlpha(30),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -462,9 +462,9 @@ class _SummaryChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withAlpha(20),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withAlpha(51)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -162,7 +162,7 @@ class AppTheme {
     ),
     chipTheme: ChipThemeData(
       backgroundColor: cardColor,
-      selectedColor: primaryColor.withOpacity(0.15),
+      selectedColor: primaryColor.withAlpha(30),
       labelStyle: const TextStyle(fontSize: 12),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       shape: RoundedRectangleBorder(
@@ -170,10 +170,10 @@ class AppTheme {
       ),
     ),
     dataTableTheme: DataTableThemeData(
-      headingRowColor: WidgetStateProperty.all(primaryColor.withOpacity(0.08)),
+      headingRowColor: WidgetStateProperty.all(primaryColor.withAlpha(20)),
       dataRowColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return primaryColor.withOpacity(0.05);
+          return primaryColor.withAlpha(160);
         }
         return Colors.transparent;
       }),

@@ -207,10 +207,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withOpacity(0.1),
+                      color: AppTheme.primaryColor.withAlpha(26),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                          color: AppTheme.primaryColor.withOpacity(0.3)),
+                          color: AppTheme.primaryColor.withAlpha(77)),
                     ),
                     child: const Text(
                       'Administrateur',
@@ -383,7 +383,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ),
                 const SizedBox(height: 24),
                 Card(
-                  color: AppTheme.primaryColor.withOpacity(0.05),
+                  color: AppTheme.primaryColor.withAlpha(13),
                   child: const Padding(
                     padding: EdgeInsets.all(12),
                     child: Column(

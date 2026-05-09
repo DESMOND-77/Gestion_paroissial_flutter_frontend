@@ -48,18 +48,18 @@ class _MembresViewState extends State<_MembresView> {
   void _deleteMembre(BuildContext ctx, int id, String nom) {
     showDialog(
       context: ctx,
-      builder: (_) => AlertDialog(
+      builder: (context) => AlertDialog(
         title: const Text('Confirmer la suppression'),
         content: Text('Voulez-vous vraiment supprimer le membre "$nom" ?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(_),
+            onPressed: () => Navigator.pop(context),
             child: const Text('Annuler'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor),
             onPressed: () {
-              Navigator.pop(_);
+              Navigator.pop(ctx);
               ctx.read<MembresBloc>().add(DeleteMembre(id: id));
             },
             child: const Text('Supprimer'),
@@ -148,10 +148,10 @@ class _MembresViewState extends State<_MembresView> {
           DropdownButton<String>(
             value: _selectedSexe,
             hint: const Text('Sexe'),
-            items: [
-              const DropdownMenuItem(value: null, child: Text('Tous')),
-              const DropdownMenuItem(value: 'M', child: Text('Masculin')),
-              const DropdownMenuItem(value: 'F', child: Text('Féminin')),
+            items: const [
+              DropdownMenuItem(value: null, child: Text('Tous')),
+              DropdownMenuItem(value: 'M', child: Text('Masculin')),
+              DropdownMenuItem(value: 'F', child: Text('Féminin')),
             ],
             onChanged: (v) {
               setState(() => _selectedSexe = v);
@@ -189,7 +189,7 @@ class _MembresViewState extends State<_MembresView> {
           columnSpacing: 16,
           horizontalMargin: 16,
           minWidth: 600,
-          headingRowColor: WidgetStateProperty.all(AppTheme.primaryColor.withOpacity(0.08)),
+          headingRowColor: WidgetStateProperty.all(AppTheme.primaryColor.withAlpha(20)),
           columns: const [
             DataColumn2(label: Text('Nom complet'), size: ColumnSize.L),
             DataColumn2(label: Text('Sexe'), size: ColumnSize.S),

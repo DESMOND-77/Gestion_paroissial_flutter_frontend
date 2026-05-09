@@ -40,7 +40,7 @@ class StatCard extends StatelessWidget {
               end: Alignment.bottomRight,
               colors: [
                 cardColor,
-                cardColor.withOpacity(0.75),
+                cardColor.withAlpha(191),
               ],
             ),
           ),
@@ -53,7 +53,7 @@ class StatCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withAlpha(51),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(icon, color: Colors.white, size: 24),

@@ -156,7 +156,7 @@ class _LibrairieScreenState extends State<LibrairieScreen>
           SizedBox(
             width: 160,
             child: DropdownButtonFormField<String>(
-              value: _selectedCategorie,
+              initialValue: _selectedCategorie,
               decoration: const InputDecoration(
                 hintText: 'Catégorie',
                 isDense: true,
@@ -201,7 +201,7 @@ class _LibrairieScreenState extends State<LibrairieScreen>
       columnSpacing: 12,
       horizontalMargin: 16,
       headingRowColor: WidgetStateProperty.all(
-        AppTheme.primaryColor.withOpacity(0.08),
+        AppTheme.primaryColor.withAlpha(20),
       ),
       columns: const [
         DataColumn2(label: Text('Nom'), size: ColumnSize.L),
@@ -290,7 +290,7 @@ class _LibrairieScreenState extends State<LibrairieScreen>
       columnSpacing: 12,
       horizontalMargin: 16,
       headingRowColor: WidgetStateProperty.all(
-        AppTheme.primaryColor.withOpacity(0.08),
+        AppTheme.primaryColor.withAlpha(20),
       ),
       columns: const [
         DataColumn2(label: Text('Article'), size: ColumnSize.L),
@@ -343,7 +343,7 @@ class _LibrairieScreenState extends State<LibrairieScreen>
         return Card(
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor: AppTheme.warningColor.withOpacity(0.15),
+              backgroundColor: AppTheme.warningColor.withAlpha(38),
               child: const Icon(
                 Icons.warning_amber_rounded,
                 color: AppTheme.warningColor,
@@ -378,7 +378,7 @@ class _LibrairieScreenState extends State<LibrairieScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 64, color: color.withOpacity(0.5)),
+          Icon(icon, size: 64, color: color.withAlpha(128)),
           const SizedBox(height: 16),
           Text(message,
               style: Theme.of(context).textTheme.titleMedium,
