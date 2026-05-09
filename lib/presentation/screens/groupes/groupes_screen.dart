@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/di/injection.dart';
 import '../../blocs/groupes/groupes_bloc.dart';
@@ -230,7 +231,7 @@ class _GroupesViewState extends State<_GroupesView> {
               ),
             ],
             Text(
-              'Créé le ${groupe.dateCreation}',
+              'Créé le ${DateFormat('EEEE d MMMM yyyy', 'fr_FR').format(DateTime.parse(groupe.dateCreation))}',
               style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary),
             ),
           ],

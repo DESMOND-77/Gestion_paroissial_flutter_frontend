@@ -86,12 +86,14 @@ class _MembreDetailView extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline, size: 48, color: AppTheme.errorColor),
+                  const Icon(Icons.error_outline,
+                      size: 48, color: AppTheme.errorColor),
                   const SizedBox(height: 16),
                   Text(state.message),
                   ElevatedButton(
-                    onPressed: () =>
-                        context.read<MembresBloc>().add(LoadMembreDetail(id: membreId)),
+                    onPressed: () => context
+                        .read<MembresBloc>()
+                        .add(LoadMembreDetail(id: membreId)),
                     child: const Text('Réessayer'),
                   ),
                 ],
@@ -116,7 +118,8 @@ class _MembreDetailView extends StatelessWidget {
                   children: [
                     Expanded(flex: 2, child: _buildInfoCard(context, membre)),
                     const SizedBox(width: 16),
-                    Expanded(flex: 3, child: _buildSacrementsCard(context, membre)),
+                    Expanded(
+                        flex: 3, child: _buildSacrementsCard(context, membre)),
                   ],
                 )
               : Column(
@@ -147,7 +150,9 @@ class _MembreDetailView extends StatelessWidget {
                     radius: 36,
                     backgroundColor: AppTheme.primaryColor,
                     child: Text(
-                      membre.prenom.isNotEmpty ? membre.prenom[0].toUpperCase() : 'M',
+                      membre.prenom.isNotEmpty
+                          ? membre.prenom[0].toUpperCase()
+                          : 'M',
                       style: const TextStyle(
                         fontSize: 28,
                         color: Colors.white,
@@ -180,7 +185,8 @@ class _MembreDetailView extends StatelessWidget {
               ),
             ),
             const Divider(height: 32),
-            _infoRow(Icons.calendar_today, 'Date d\'inscription', membre.dateInscription),
+            _infoRow(Icons.calendar_today, 'Date d\'inscription',
+                membre.dateInscription),
             if (membre.dateNaissance != null)
               _infoRow(Icons.cake, 'Date de naissance', membre.dateNaissance!),
             _infoRow(
@@ -230,7 +236,8 @@ class _MembreDetailView extends StatelessWidget {
                 ),
                 Text(
                   value,
-                  style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary),
+                  style: const TextStyle(
+                      fontSize: 14, color: AppTheme.textPrimary),
                 ),
               ],
             ),
@@ -247,7 +254,13 @@ class _MembreDetailView extends StatelessWidget {
         size: 16,
         color: value ? AppTheme.successColor : AppTheme.textSecondary,
       ),
-      label: Text(label, style: const TextStyle(fontSize: 12)),
+      label: Text(label,
+          style: TextStyle(
+            fontSize: 12,
+            color: value
+                ? AppTheme.textPrimary
+                : AppTheme.textPrimary.withAlpha(167),
+          )),
       backgroundColor: value
           ? AppTheme.successColor.withAlpha(26)
           : AppTheme.textSecondary.withAlpha(26),
@@ -275,11 +288,13 @@ class _MembreDetailView extends StatelessWidget {
                 ),
                 const Spacer(),
                 ElevatedButton.icon(
-                  onPressed: () => _showAjouterSacrementDialog(context, membre.id),
+                  onPressed: () =>
+                      _showAjouterSacrementDialog(context, membre.id),
                   icon: const Icon(Icons.add, size: 16),
                   label: const Text('Ajouter'),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                 ),
               ],
@@ -291,7 +306,8 @@ class _MembreDetailView extends StatelessWidget {
                   padding: EdgeInsets.all(24),
                   child: Column(
                     children: [
-                      Icon(Icons.church, size: 48, color: AppTheme.textSecondary),
+                      Icon(Icons.church,
+                          size: 48, color: AppTheme.textSecondary),
                       SizedBox(height: 8),
                       Text(
                         'Aucun sacrement enregistré',
@@ -344,7 +360,8 @@ class _MembreDetailView extends StatelessWidget {
           if (sacrement.observations != null)
             Text(
               sacrement.observations!,
-              style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+              style:
+                  const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
             ),
         ],
       ),
@@ -373,11 +390,14 @@ class _MembreDetailView extends StatelessWidget {
                 children: [
                   DropdownButtonFormField<String>(
                     initialValue: selectedType,
-                    decoration: const InputDecoration(labelText: 'Type de sacrement'),
+                    decoration:
+                        const InputDecoration(labelText: 'Type de sacrement'),
                     items: AppConstants.sacrementLabels.entries
-                        .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value)))
+                        .map((e) => DropdownMenuItem(
+                            value: e.key, child: Text(e.value)))
                         .toList(),
-                    onChanged: (v) => setState(() => selectedType = v ?? 'bapteme'),
+                    onChanged: (v) =>
+                        setState(() => selectedType = v ?? 'bapteme'),
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
@@ -391,7 +411,8 @@ class _MembreDetailView extends StatelessWidget {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: observationsController,
-                    decoration: const InputDecoration(labelText: 'Observations'),
+                    decoration:
+                        const InputDecoration(labelText: 'Observations'),
                     maxLines: 2,
                   ),
                 ],

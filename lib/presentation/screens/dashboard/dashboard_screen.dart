@@ -165,24 +165,33 @@ class _DashboardView extends StatelessWidget {
       ),
     ];
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 280,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 1.5,
-      ),
-      itemCount: cards.length,
-      itemBuilder: (context, index) {
-        final card = cards[index];
-        return StatCard(
-          title: card.title,
-          value: card.value,
-          icon: card.icon,
-          color: card.color,
-          onTap: () => context.go(card.route),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final isSmall = width < 500;
+        final maxCrossAxisExtent = isSmall ? 250.0 : 280.0;
+        final childAspectRatio = isSmall ? 1.21 : 1.5;
+
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: maxCrossAxisExtent,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 16,
+            childAspectRatio: childAspectRatio,
+          ),
+          itemCount: cards.length,
+          itemBuilder: (context, index) {
+            final card = cards[index];
+            return StatCard(
+              title: card.title,
+              value: card.value,
+              icon: card.icon,
+              color: card.color,
+              onTap: () => context.go(card.route),
+            );
+          },
         );
       },
     );
