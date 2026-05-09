@@ -1,32 +1,22 @@
 import '../../core/network/dio_client.dart';
 import '../../core/constants/api_constants.dart';
-import '../models/transaction_model.dart';
+import '../../core/database/database_service.dart';
+import '../models/transaction_model.dart'
+    show Transaction, RapportFinancier;
 
 class FinanceRepository {
   final DioClient _dioClient;
+  final DatabaseService? _databaseService;
 
-  FinanceRepository({required DioClient dioClient}) : _dioClient = dioClient;
+  FinanceRepository({
+    required DioClient dioClient,
+    DatabaseService? databaseService,
+  })  : _dioClient = dioClient,
+        _databaseService = databaseService;
 
-  Future<List<Transaction>> getTransactions({
-    String? type,
-    String? categorie,
-    String? dateDebut,
-    String? dateFin,
-    int? membreId,
-    int? page,
-  }) async {
-    final queryParams = <String, dynamic>{};
-    if (type != null) queryParams['type'] = type;
-    if (categorie != null) queryParams['categorie'] = categorie;
-    if (dateDebut != null) queryParams['date_debut'] = dateDebut;
-    if (dateFin != null) queryParams['date_fin'] = dateFin;
-    if (membreId != null) queryParams['membre'] = membreId;
-    if (page != null) queryParams['page'] = page;
-
-    final response = await _dioClient.get(
-      ApiConstants.transactions,
-      queryParameters: queryParams.isNotEmpty ? queryParams : null,
-    );
+  // Récupère les transactions depuis le serveur (pour la synchronisation)
+  Future<List<Transaction>> fetchTransactions() async {
+    final response = await _dioClient.get(ApiConstants.transactions);
 
     final data = response.data["data"];
     List<dynamic> results;
@@ -41,6 +31,58 @@ class FinanceRepository {
     return results
         .map((e) => Transaction.fromJson(e as Map<String, dynamic>))
         .toList();
+  }
+
+  Future<List<Transaction>> getTransactions({
+    String? type,
+    String? categorie,
+    String? dateDebut,
+    String? dateFin,
+    int? membreId,
+    int? page,
+  }) async {
+    // Si paramètres de filtrage: toujours du serveur
+    if (type != null || categorie != null || dateDebut != null || dateFin != null || membreId != null || page != null) {
+      final queryParams = <String, dynamic>{};
+      if (type != null) queryParams['type'] = type;
+      if (categorie != null) queryParams['categorie'] = categorie;
+      if (dateDebut != null) queryParams['date_debut'] = dateDebut;
+      if (dateFin != null) queryParams['date_fin'] = dateFin;
+      if (membreId != null) queryParams['membre'] = membreId;
+      if (page != null) queryParams['page'] = page;
+
+      final response = await _dioClient.get(
+        ApiConstants.transactions,
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
+
+      final data = response.data["data"];
+      List<dynamic> results;
+      if (data is Map && data.containsKey('results')) {
+        results = data['results'] as List<dynamic>;
+      } else if (data is List) {
+        results = data;
+      } else {
+        results = [];
+      }
+
+      return results
+          .map((e) => Transaction.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+
+    // Chercher en cache d'abord
+    if (_databaseService != null) {
+      final cached = await _databaseService.getItems('finances');
+      if (cached.isNotEmpty) {
+        return cached
+            .map((e) => Transaction.fromJson(e))
+            .toList();
+      }
+    }
+
+    // Pas de cache, requête au serveur
+    return fetchTransactions();
   }
 
   Future<Transaction> getTransactionById(int id) async {

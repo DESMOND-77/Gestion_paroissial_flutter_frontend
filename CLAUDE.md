@@ -207,6 +207,53 @@ flutter build ios --release
   - Exception handling and parsing
 - **Auth Flow**: Login stores access and refresh tokens in secure storage; they're auto-included in requests
 
+## Local Caching System
+
+Reduces server load and enables offline functionality:
+
+### Database Architecture
+- **SQLite Local Database** (`lib/core/database/database_service.dart`):
+  - Tables for each entity: `membres`, `groupes`, `evenements`, `finances`, `librairie`
+  - `sync_metadata` table tracks last sync time per entity
+  - Automatic schema management via `sqflite`
+
+### Sync Strategy
+- **PeriodicSyncManager** syncs all data every 5 minutes in background
+- **SyncService** coordinates API calls with database persistence
+- When fetching data:
+  1. Check local cache first (if no filters/pagination)
+  2. Return cached data if available and valid
+  3. Fall back to server if cache is empty
+  4. Server requests with filters/pagination always bypass cache
+- **Connectivity detection** via `connectivity_plus` (syncs only when online)
+
+### Cache Invalidation
+- Cache is valid for 5 minutes; after that, fresh data is fetched on next request
+- Filtered queries always hit the server (search, pagination, date ranges)
+- Creating/updating/deleting items forces server-to-cache sync on next fetch
+- Manual cache clear available via `PeriodicSyncManager.clearCache()`
+
+### Using the Cache System
+```dart
+// In repositories: data auto-caches when no filters
+final membres = await _membreRepository.getMembres();  // Uses cache if available
+
+// Filtered queries always hit server
+final filtered = await _membreRepository.getMembres(search: 'Jean');
+
+// Force sync immediately
+final syncManager = sl<PeriodicSyncManager>();
+await syncManager.forceSyncNow();
+
+// Detect offline mode
+final isOnline = await syncManager.isOnline();
+```
+
+### Offline Mode
+- App uses local cache when offline
+- Sync attempts skip automatically when no internet
+- On reconnect, next sync will refresh all data
+
 ## Testing
 
 Test file structure mirrors src:

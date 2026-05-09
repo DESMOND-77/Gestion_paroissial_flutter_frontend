@@ -1,21 +1,22 @@
 import '../../core/network/dio_client.dart';
 import '../../core/constants/api_constants.dart';
+import '../../core/database/database_service.dart';
 import '../models/groupe_model.dart';
 import '../models/membre_model.dart';
 
 class GroupeRepository {
   final DioClient _dioClient;
+  final DatabaseService? _databaseService;
 
-  GroupeRepository({required DioClient dioClient}) : _dioClient = dioClient;
+  GroupeRepository({
+    required DioClient dioClient,
+    DatabaseService? databaseService,
+  })  : _dioClient = dioClient,
+        _databaseService = databaseService;
 
-  Future<List<Groupe>> getGroupes({String? search}) async {
-    final queryParams = <String, dynamic>{};
-    if (search != null && search.isNotEmpty) queryParams['search'] = search;
-
-    final response = await _dioClient.get(
-      ApiConstants.groupes,
-      queryParameters: queryParams.isNotEmpty ? queryParams : null,
-    );
+  // Récupère les groupes depuis le serveur (pour la synchronisation)
+  Future<List<Groupe>> fetchGroupes() async {
+    final response = await _dioClient.get(ApiConstants.groupes);
 
     final data = response.data["data"];
     List<dynamic> results;
@@ -30,6 +31,43 @@ class GroupeRepository {
     return results
         .map((e) => Groupe.fromJson(e as Map<String, dynamic>))
         .toList();
+  }
+
+  Future<List<Groupe>> getGroupes({String? search}) async {
+    // Si recherche: toujours du serveur
+    if (search != null && search.isNotEmpty) {
+      final response = await _dioClient.get(
+        ApiConstants.groupes,
+        queryParameters: {'search': search},
+      );
+
+      final data = response.data["data"];
+      List<dynamic> results;
+      if (data is Map && data.containsKey('results')) {
+        results = data['results'] as List<dynamic>;
+      } else if (data is List) {
+        results = data;
+      } else {
+        results = [];
+      }
+
+      return results
+          .map((e) => Groupe.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+
+    // Chercher en cache d'abord
+    if (_databaseService != null) {
+      final cached = await _databaseService.getItems('groupes');
+      if (cached.isNotEmpty) {
+        return cached
+            .map((e) => Groupe.fromJson(e))
+            .toList();
+      }
+    }
+
+    // Pas de cache, requête au serveur
+    return fetchGroupes();
   }
 
   Future<Groupe> getGroupeById(int id) async {

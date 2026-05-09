@@ -1,6 +1,10 @@
 import 'package:get_it/get_it.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../network/dio_client.dart';
 import '../storage/secure_storage.dart';
+import '../database/database_service.dart';
+import '../sync/sync_service.dart';
+import '../sync/periodic_sync_manager.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/membre_repository.dart';
 import '../../data/repositories/groupe_repository.dart';
@@ -21,6 +25,10 @@ Future<void> setupDependencies() async {
   // Storage
   sl.registerLazySingleton<SecureStorage>(() => SecureStorage());
 
+  // Database & Sync
+  sl.registerLazySingleton<DatabaseService>(() => DatabaseService());
+  sl.registerLazySingleton<Connectivity>(() => Connectivity());
+
   // Network
   sl.registerLazySingleton<DioClient>(() => DioClient(sl<SecureStorage>()));
 
@@ -33,23 +41,52 @@ Future<void> setupDependencies() async {
   );
 
   sl.registerLazySingleton<MembreRepository>(
-    () => MembreRepository(dioClient: sl<DioClient>()),
+    () => MembreRepository(
+      dioClient: sl<DioClient>(),
+      databaseService: sl<DatabaseService>(),
+    ),
   );
 
   sl.registerLazySingleton<GroupeRepository>(
-    () => GroupeRepository(dioClient: sl<DioClient>()),
+    () => GroupeRepository(
+      dioClient: sl<DioClient>(),
+      databaseService: sl<DatabaseService>(),
+    ),
   );
 
   sl.registerLazySingleton<EvenementRepository>(
-    () => EvenementRepository(dioClient: sl<DioClient>()),
+    () => EvenementRepository(
+      dioClient: sl<DioClient>(),
+      databaseService: sl<DatabaseService>(),
+    ),
   );
 
   sl.registerLazySingleton<FinanceRepository>(
-    () => FinanceRepository(dioClient: sl<DioClient>()),
+    () => FinanceRepository(
+      dioClient: sl<DioClient>(),
+      databaseService: sl<DatabaseService>(),
+    ),
   );
 
   sl.registerLazySingleton<LibrairieRepository>(
     () => LibrairieRepository(dioClient: sl<DioClient>()),
+  );
+
+  // Sync Service
+  sl.registerLazySingleton<SyncService>(
+    () => SyncService(
+      databaseService: sl<DatabaseService>(),
+      membreRepository: sl<MembreRepository>(),
+      groupeRepository: sl<GroupeRepository>(),
+      evenementRepository: sl<EvenementRepository>(),
+      financeRepository: sl<FinanceRepository>(),
+      connectivity: sl<Connectivity>(),
+    ),
+  );
+
+  // Periodic Sync Manager
+  sl.registerLazySingleton<PeriodicSyncManager>(
+    () => PeriodicSyncManager(syncService: sl<SyncService>()),
   );
 
   // BLoCs (factories so each screen gets fresh instance)
