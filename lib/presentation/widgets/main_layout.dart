@@ -306,7 +306,6 @@ class _MainLayoutState extends State<MainLayout> {
       items: _navItems
           .map(
             (item) => SidebarXItem(
-              icon: item.icon,
               iconWidget: Icon(
                 _sidebarController.selectedIndex == _navItems.indexOf(item)
                     ? item.selectedIcon
