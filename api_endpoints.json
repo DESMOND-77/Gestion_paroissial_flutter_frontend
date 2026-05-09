@@ -1,0 +1,2383 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "API GESTION PAROISSIALE",
+        "description": "API pour la gestion des paroisses",
+        "version": "V1"
+    },
+    "host": "127.0.0.1:8000",
+    "schemes": [
+        "http"
+    ],
+    "basePath": "/api",
+    "consumes": [
+        "application/json"
+    ],
+    "produces": [
+        "application/json"
+    ],
+    "securityDefinitions": {
+        "Basic": {
+            "type": "basic"
+        }
+    },
+    "security": [
+        {
+            "Basic": []
+        }
+    ],
+    "paths": {
+        "/activities/": {
+            "get": {
+                "operationId": "activities_list",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/UserActivity"
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "activities"
+                ]
+            },
+            "parameters": []
+        },
+        "/auth/email-verify/": {
+            "get": {
+                "operationId": "auth_email-verify_list",
+                "description": "Endpoint view for verifying email with token",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "auth"
+                ]
+            },
+            "post": {
+                "operationId": "auth_email-verify_create",
+                "description": "Endpoint view for verifying email with token",
+                "parameters": [],
+                "responses": {
+                    "201": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "auth"
+                ]
+            },
+            "parameters": []
+        },
+        "/auth/login/": {
+            "post": {
+                "operationId": "auth_login_create",
+                "description": "Connecter un utilisateur et obtenir les tokens JWT",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UserLogin"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Connexion réussie",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "user": {
+                                            "type": "object"
+                                        },
+                                        "tokens": {
+                                            "type": "object",
+                                            "properties": {
+                                                "access_token": {
+                                                    "type": "string"
+                                                },
+                                                "refresh_token": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Identifiants invalides ou compte verrouillé"
+                    }
+                },
+                "tags": [
+                    "Authentication"
+                ]
+            },
+            "parameters": []
+        },
+        "/auth/logout/": {
+            "post": {
+                "operationId": "auth_logout_create",
+                "description": "Déconnecter l'utilisateur et invalider les tokens",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Logout"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Déconnexion réussie",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "tags": [
+                    "Authentication"
+                ]
+            },
+            "parameters": []
+        },
+        "/auth/me/": {
+            "get": {
+                "operationId": "auth_me_list",
+                "description": "Retourne le profil de l'utilisateur connecté.",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "auth"
+                ]
+            },
+            "parameters": []
+        },
+        "/auth/password-reset-confirm/": {
+            "post": {
+                "operationId": "auth_password-reset-confirm_create",
+                "description": "Confirmer la réinitialisation du mot de passe avec le token",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ConfirmPasswordReset"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mot de passe réinitialisé avec succès",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Token invalide ou mot de passe manquant"
+                    }
+                },
+                "tags": [
+                    "Password Reset"
+                ]
+            },
+            "parameters": []
+        },
+        "/auth/password-reset/": {
+            "post": {
+                "operationId": "auth_password-reset_create",
+                "description": "Demander la réinitialisation du mot de passe",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/PasswordReset"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Demande traitée avec succès",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Email invalide ou manquant"
+                    }
+                },
+                "tags": [
+                    "Password Reset"
+                ]
+            },
+            "parameters": []
+        },
+        "/auth/register/": {
+            "post": {
+                "operationId": "auth_register_create",
+                "description": "Créer un nouveau compte utilisateur",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UserRegistration"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Enregistrement réussi",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "user": {
+                                            "type": "object"
+                                        },
+                                        "tokens": {
+                                            "type": "object",
+                                            "properties": {
+                                                "access_token": {
+                                                    "type": "string"
+                                                },
+                                                "refresh_token": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur de validation",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "Authentication"
+                ]
+            },
+            "parameters": []
+        },
+        "/auth/send-verification/": {
+            "post": {
+                "operationId": "auth_send-verification_create",
+                "description": "Endpoint for sending verification email",
+                "parameters": [],
+                "responses": {
+                    "201": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "auth"
+                ]
+            },
+            "parameters": []
+        },
+        "/auth/token/refresh": {
+            "post": {
+                "operationId": "auth_token_refresh_create",
+                "description": "Rafraîchir le JWT access token avec le refresh token",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/TokenRefresh"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Token rafraîchi avec succès",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "access_token": {
+                                            "type": "string"
+                                        },
+                                        "refresh_token": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Token invalide ou expiré"
+                    }
+                },
+                "tags": [
+                    "Authentication"
+                ]
+            },
+            "parameters": []
+        },
+        "/auth/token/validate/": {
+            "get": {
+                "operationId": "auth_token_validate_list",
+                "description": "Token validation with additional security checks",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "auth"
+                ]
+            },
+            "parameters": []
+        },
+        "/auth/verification-status/": {
+            "get": {
+                "operationId": "auth_verification-status_list",
+                "description": "Endpoint for checking verification status",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "auth"
+                ]
+            },
+            "parameters": []
+        },
+        "/check-permission/": {
+            "post": {
+                "operationId": "check-permission_create",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "201": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "check-permission"
+                ]
+            },
+            "parameters": []
+        },
+        "/evenements/": {
+            "get": {
+                "operationId": "evenements_list",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Evenement"
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "evenements"
+                ]
+            },
+            "post": {
+                "operationId": "evenements_create",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Evenement"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Evenement"
+                        }
+                    }
+                },
+                "tags": [
+                    "evenements"
+                ]
+            },
+            "parameters": []
+        },
+        "/evenements/{id}/": {
+            "get": {
+                "operationId": "evenements_read",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Evenement"
+                        }
+                    }
+                },
+                "tags": [
+                    "evenements"
+                ]
+            },
+            "put": {
+                "operationId": "evenements_update",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Evenement"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Evenement"
+                        }
+                    }
+                },
+                "tags": [
+                    "evenements"
+                ]
+            },
+            "patch": {
+                "operationId": "evenements_partial_update",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Evenement"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Evenement"
+                        }
+                    }
+                },
+                "tags": [
+                    "evenements"
+                ]
+            },
+            "delete": {
+                "operationId": "evenements_delete",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "204": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "evenements"
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "id",
+                    "in": "path",
+                    "description": "Un(une) valeur entière unique identifiant ce(cette) Événement.",
+                    "required": true,
+                    "type": "integer"
+                }
+            ]
+        },
+        "/evenements/{id}/inscrire/": {
+            "post": {
+                "operationId": "evenements_inscrire",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Evenement"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Evenement"
+                        }
+                    }
+                },
+                "tags": [
+                    "evenements"
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "id",
+                    "in": "path",
+                    "description": "Un(une) valeur entière unique identifiant ce(cette) Événement.",
+                    "required": true,
+                    "type": "integer"
+                }
+            ]
+        },
+        "/evenements/{id}/participants/": {
+            "get": {
+                "operationId": "evenements_participants",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Evenement"
+                        }
+                    }
+                },
+                "tags": [
+                    "evenements"
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "id",
+                    "in": "path",
+                    "description": "Un(une) valeur entière unique identifiant ce(cette) Événement.",
+                    "required": true,
+                    "type": "integer"
+                }
+            ]
+        },
+        "/finances/membre/{id}/dons/": {
+            "get": {
+                "operationId": "finances_membre_dons_read",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "finances"
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "type": "string"
+                }
+            ]
+        },
+        "/finances/rapport/": {
+            "get": {
+                "operationId": "finances_rapport",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Transaction"
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "finances"
+                ]
+            },
+            "parameters": []
+        },
+        "/finances/transactions/": {
+            "get": {
+                "operationId": "finances_transactions_list",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Transaction"
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "finances"
+                ]
+            },
+            "post": {
+                "operationId": "finances_transactions_create",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Transaction"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Transaction"
+                        }
+                    }
+                },
+                "tags": [
+                    "finances"
+                ]
+            },
+            "parameters": []
+        },
+        "/finances/transactions/rapport/": {
+            "get": {
+                "operationId": "finances_transactions_rapport",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Transaction"
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "finances"
+                ]
+            },
+            "parameters": []
+        },
+        "/finances/transactions/{id}/": {
+            "get": {
+                "operationId": "finances_transactions_read",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Transaction"
+                        }
+                    }
+                },
+                "tags": [
+                    "finances"
+                ]
+            },
+            "put": {
+                "operationId": "finances_transactions_update",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Transaction"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Transaction"
+                        }
+                    }
+                },
+                "tags": [
+                    "finances"
+                ]
+            },
+            "patch": {
+                "operationId": "finances_transactions_partial_update",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Transaction"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Transaction"
+                        }
+                    }
+                },
+                "tags": [
+                    "finances"
+                ]
+            },
+            "delete": {
+                "operationId": "finances_transactions_delete",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "204": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "finances"
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "id",
+                    "in": "path",
+                    "description": "Un(une) valeur entière unique identifiant ce(cette) Transaction.",
+                    "required": true,
+                    "type": "integer"
+                }
+            ]
+        },
+        "/groupes/": {
+            "get": {
+                "operationId": "groupes_list",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Groupe"
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "groupes"
+                ]
+            },
+            "post": {
+                "operationId": "groupes_create",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Groupe"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Groupe"
+                        }
+                    }
+                },
+                "tags": [
+                    "groupes"
+                ]
+            },
+            "parameters": []
+        },
+        "/groupes/{id}/": {
+            "get": {
+                "operationId": "groupes_read",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Groupe"
+                        }
+                    }
+                },
+                "tags": [
+                    "groupes"
+                ]
+            },
+            "put": {
+                "operationId": "groupes_update",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Groupe"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Groupe"
+                        }
+                    }
+                },
+                "tags": [
+                    "groupes"
+                ]
+            },
+            "patch": {
+                "operationId": "groupes_partial_update",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Groupe"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Groupe"
+                        }
+                    }
+                },
+                "tags": [
+                    "groupes"
+                ]
+            },
+            "delete": {
+                "operationId": "groupes_delete",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "204": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "groupes"
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "id",
+                    "in": "path",
+                    "description": "Un(une) valeur entière unique identifiant ce(cette) Groupe.",
+                    "required": true,
+                    "type": "integer"
+                }
+            ]
+        },
+        "/groupes/{id}/membres/": {
+            "get": {
+                "operationId": "groupes_membres",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Groupe"
+                        }
+                    }
+                },
+                "tags": [
+                    "groupes"
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "id",
+                    "in": "path",
+                    "description": "Un(une) valeur entière unique identifiant ce(cette) Groupe.",
+                    "required": true,
+                    "type": "integer"
+                }
+            ]
+        },
+        "/librairie/alertes/": {
+            "get": {
+                "operationId": "librairie_alertes",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Article"
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "librairie"
+                ]
+            },
+            "parameters": []
+        },
+        "/librairie/articles/": {
+            "get": {
+                "operationId": "librairie_articles_list",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Article"
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "librairie"
+                ]
+            },
+            "post": {
+                "operationId": "librairie_articles_create",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Article"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Article"
+                        }
+                    }
+                },
+                "tags": [
+                    "librairie"
+                ]
+            },
+            "parameters": []
+        },
+        "/librairie/articles/alertes/": {
+            "get": {
+                "operationId": "librairie_articles_alertes",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Article"
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "librairie"
+                ]
+            },
+            "parameters": []
+        },
+        "/librairie/articles/{id}/": {
+            "get": {
+                "operationId": "librairie_articles_read",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Article"
+                        }
+                    }
+                },
+                "tags": [
+                    "librairie"
+                ]
+            },
+            "put": {
+                "operationId": "librairie_articles_update",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Article"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Article"
+                        }
+                    }
+                },
+                "tags": [
+                    "librairie"
+                ]
+            },
+            "patch": {
+                "operationId": "librairie_articles_partial_update",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Article"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Article"
+                        }
+                    }
+                },
+                "tags": [
+                    "librairie"
+                ]
+            },
+            "delete": {
+                "operationId": "librairie_articles_delete",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "204": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "librairie"
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "id",
+                    "in": "path",
+                    "description": "Un(une) valeur entière unique identifiant ce(cette) Article.",
+                    "required": true,
+                    "type": "integer"
+                }
+            ]
+        },
+        "/librairie/ventes/": {
+            "get": {
+                "operationId": "librairie_ventes_list",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Vente"
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "librairie"
+                ]
+            },
+            "post": {
+                "operationId": "librairie_ventes_create",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Vente"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Vente"
+                        }
+                    }
+                },
+                "tags": [
+                    "librairie"
+                ]
+            },
+            "parameters": []
+        },
+        "/librairie/ventes/{id}/": {
+            "get": {
+                "operationId": "librairie_ventes_read",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Vente"
+                        }
+                    }
+                },
+                "tags": [
+                    "librairie"
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "id",
+                    "in": "path",
+                    "description": "Un(une) valeur entière unique identifiant ce(cette) Vente.",
+                    "required": true,
+                    "type": "integer"
+                }
+            ]
+        },
+        "/membres/": {
+            "get": {
+                "operationId": "membres_list",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Membre"
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "membres"
+                ]
+            },
+            "post": {
+                "operationId": "membres_create",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Membre"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Membre"
+                        }
+                    }
+                },
+                "tags": [
+                    "membres"
+                ]
+            },
+            "parameters": []
+        },
+        "/membres/{id}/": {
+            "get": {
+                "operationId": "membres_read",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/MembreDetail"
+                        }
+                    }
+                },
+                "tags": [
+                    "membres"
+                ]
+            },
+            "put": {
+                "operationId": "membres_update",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Membre"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Membre"
+                        }
+                    }
+                },
+                "tags": [
+                    "membres"
+                ]
+            },
+            "patch": {
+                "operationId": "membres_partial_update",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Membre"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Membre"
+                        }
+                    }
+                },
+                "tags": [
+                    "membres"
+                ]
+            },
+            "delete": {
+                "operationId": "membres_delete",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "204": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "membres"
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "id",
+                    "in": "path",
+                    "description": "Un(une) valeur entière unique identifiant ce(cette) Membre.",
+                    "required": true,
+                    "type": "integer"
+                }
+            ]
+        },
+        "/membres/{id}/ajouter_sacrement/": {
+            "post": {
+                "operationId": "membres_ajouter_sacrement",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Membre"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Membre"
+                        }
+                    }
+                },
+                "tags": [
+                    "membres"
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "id",
+                    "in": "path",
+                    "description": "Un(une) valeur entière unique identifiant ce(cette) Membre.",
+                    "required": true,
+                    "type": "integer"
+                }
+            ]
+        },
+        "/membres/{id}/sacrements/": {
+            "get": {
+                "operationId": "membres_sacrements",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Membre"
+                        }
+                    }
+                },
+                "tags": [
+                    "membres"
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "id",
+                    "in": "path",
+                    "description": "Un(une) valeur entière unique identifiant ce(cette) Membre.",
+                    "required": true,
+                    "type": "integer"
+                }
+            ]
+        },
+        "/user/change-password/": {
+            "post": {
+                "operationId": "user_change-password_create",
+                "description": "Changer le mot de passe de l'utilisateur authentifié",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ChangePassword"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mot de passe changé avec succès",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation échouée ou ancien mot de passe incorrect"
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "tags": [
+                    "Password Management"
+                ]
+            },
+            "parameters": []
+        },
+        "/user/profile/": {
+            "get": {
+                "operationId": "user_profile_list",
+                "description": "get User profile data",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "user"
+                ]
+            },
+            "put": {
+                "operationId": "user_profile_update",
+                "description": "Update full user profile",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "user"
+                ]
+            },
+            "patch": {
+                "operationId": "user_profile_partial_update",
+                "description": "Partial user profile update",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "user"
+                ]
+            },
+            "parameters": []
+        },
+        "/users/{id}/": {
+            "get": {
+                "operationId": "users_read",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "users"
+                ]
+            },
+            "put": {
+                "operationId": "users_update",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "users"
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "type": "string"
+                }
+            ]
+        }
+    },
+    "definitions": {
+        "UserActivity": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "title": "ID",
+                    "type": "integer",
+                    "readOnly": true
+                },
+                "user_email": {
+                    "title": "User email",
+                    "type": "string",
+                    "format": "email",
+                    "readOnly": true,
+                    "minLength": 1
+                },
+                "user_full_name": {
+                    "title": "User full name",
+                    "type": "string",
+                    "readOnly": true,
+                    "minLength": 1
+                },
+                "action": {
+                    "title": "Action",
+                    "type": "string",
+                    "enum": [
+                        "login",
+                        "logout",
+                        "create",
+                        "update",
+                        "delete",
+                        "view"
+                    ],
+                    "readOnly": true
+                },
+                "action_display": {
+                    "title": "Action display",
+                    "type": "string",
+                    "readOnly": true,
+                    "minLength": 1
+                },
+                "details": {
+                    "title": "Details",
+                    "type": "string",
+                    "readOnly": true,
+                    "minLength": 1
+                },
+                "ip_address": {
+                    "title": "Ip address",
+                    "type": "string",
+                    "readOnly": true,
+                    "minLength": 1,
+                    "x-nullable": true
+                },
+                "timestamp": {
+                    "title": "Timestamp",
+                    "type": "string",
+                    "format": "date-time",
+                    "readOnly": true
+                }
+            }
+        },
+        "UserLogin": {
+            "required": [
+                "email",
+                "password"
+            ],
+            "type": "object",
+            "properties": {
+                "email": {
+                    "title": "Email",
+                    "description": "Email de l'utilisateur",
+                    "type": "string",
+                    "format": "email",
+                    "minLength": 1
+                },
+                "password": {
+                    "title": "Password",
+                    "description": "Mot de passe",
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
+        },
+        "Logout": {
+            "type": "object",
+            "properties": {
+                "refresh_token": {
+                    "title": "Refresh token",
+                    "description": "Token de rafraîchissement (optionnel)",
+                    "type": "string"
+                }
+            }
+        },
+        "ConfirmPasswordReset": {
+            "required": [
+                "token",
+                "new_password",
+                "confirm_password"
+            ],
+            "type": "object",
+            "properties": {
+                "token": {
+                    "title": "Token",
+                    "description": "Token de réinitialisation reçu par email",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "new_password": {
+                    "title": "New password",
+                    "description": "Nouveau mot de passe (minimum 8 caractères)",
+                    "type": "string",
+                    "minLength": 8
+                },
+                "confirm_password": {
+                    "title": "Confirm password",
+                    "description": "Confirmation du nouveau mot de passe",
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
+        },
+        "PasswordReset": {
+            "required": [
+                "email"
+            ],
+            "type": "object",
+            "properties": {
+                "email": {
+                    "title": "Email",
+                    "description": "Email de l'utilisateur pour réinitialiser le mot de passe",
+                    "type": "string",
+                    "format": "email",
+                    "minLength": 1
+                }
+            }
+        },
+        "UserRegistration": {
+            "required": [
+                "email",
+                "password",
+                "first_name",
+                "last_name"
+            ],
+            "type": "object",
+            "properties": {
+                "email": {
+                    "title": "Email",
+                    "description": "Email de l'utilisateur",
+                    "type": "string",
+                    "format": "email",
+                    "minLength": 1
+                },
+                "password": {
+                    "title": "Password",
+                    "description": "Mot de passe (minimum 8 caractères)",
+                    "type": "string",
+                    "minLength": 8
+                },
+                "first_name": {
+                    "title": "First name",
+                    "description": "Prénom de l'utilisateur",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "last_name": {
+                    "title": "Last name",
+                    "description": "Nom de l'utilisateur",
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
+        },
+        "TokenRefresh": {
+            "required": [
+                "refresh_token"
+            ],
+            "type": "object",
+            "properties": {
+                "refresh_token": {
+                    "title": "Refresh token",
+                    "description": "Token de rafraîchissement JWT",
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
+        },
+        "Evenement": {
+            "required": [
+                "titre",
+                "type",
+                "date_debut"
+            ],
+            "type": "object",
+            "properties": {
+                "id": {
+                    "title": "ID",
+                    "type": "integer",
+                    "readOnly": true
+                },
+                "titre": {
+                    "title": "Titre",
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "type": {
+                    "title": "Type",
+                    "type": "string",
+                    "enum": [
+                        "messe",
+                        "fete_liturgique",
+                        "reunion",
+                        "kermesse",
+                        "reservation"
+                    ]
+                },
+                "type_display": {
+                    "title": "Type display",
+                    "type": "string",
+                    "readOnly": true,
+                    "minLength": 1
+                },
+                "description": {
+                    "title": "Description",
+                    "type": "string"
+                },
+                "date_debut": {
+                    "title": "Date debut",
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "date_fin": {
+                    "title": "Date fin",
+                    "type": "string",
+                    "format": "date-time",
+                    "x-nullable": true
+                },
+                "lieu": {
+                    "title": "Lieu",
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "est_inscription_requise": {
+                    "title": "Est inscription requise",
+                    "type": "boolean"
+                },
+                "createur": {
+                    "title": "Createur",
+                    "type": "integer",
+                    "x-nullable": true
+                },
+                "createur_nom": {
+                    "title": "Createur nom",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "nb_participants": {
+                    "title": "Nb participants",
+                    "type": "string",
+                    "readOnly": true
+                }
+            }
+        },
+        "Transaction": {
+            "required": [
+                "type",
+                "categorie",
+                "montant",
+                "date"
+            ],
+            "type": "object",
+            "properties": {
+                "id": {
+                    "title": "ID",
+                    "type": "integer",
+                    "readOnly": true
+                },
+                "type": {
+                    "title": "Type",
+                    "type": "string",
+                    "enum": [
+                        "recette",
+                        "depense"
+                    ]
+                },
+                "type_display": {
+                    "title": "Type display",
+                    "type": "string",
+                    "readOnly": true,
+                    "minLength": 1
+                },
+                "categorie": {
+                    "title": "Categorie",
+                    "type": "string",
+                    "enum": [
+                        "quete",
+                        "don",
+                        "location",
+                        "librairie",
+                        "autre"
+                    ]
+                },
+                "categorie_display": {
+                    "title": "Categorie display",
+                    "type": "string",
+                    "readOnly": true,
+                    "minLength": 1
+                },
+                "montant": {
+                    "title": "Montant",
+                    "type": "string",
+                    "format": "decimal"
+                },
+                "description": {
+                    "title": "Description",
+                    "type": "string"
+                },
+                "date": {
+                    "title": "Date",
+                    "type": "string",
+                    "format": "date"
+                },
+                "membre": {
+                    "title": "Membre",
+                    "type": "integer",
+                    "x-nullable": true
+                },
+                "membre_nom": {
+                    "title": "Membre nom",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "enregistre_par": {
+                    "title": "Enregistre par",
+                    "type": "integer",
+                    "x-nullable": true
+                },
+                "enregistre_par_nom": {
+                    "title": "Enregistre par nom",
+                    "type": "string",
+                    "readOnly": true
+                }
+            }
+        },
+        "Groupe": {
+            "required": [
+                "nom"
+            ],
+            "type": "object",
+            "properties": {
+                "id": {
+                    "title": "ID",
+                    "type": "integer",
+                    "readOnly": true
+                },
+                "nom": {
+                    "title": "Nom",
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 1
+                },
+                "description": {
+                    "title": "Description",
+                    "type": "string"
+                },
+                "responsable": {
+                    "title": "Responsable",
+                    "type": "integer",
+                    "x-nullable": true
+                },
+                "responsable_nom": {
+                    "title": "Responsable nom",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "date_creation": {
+                    "title": "Date creation",
+                    "type": "string",
+                    "format": "date-time",
+                    "readOnly": true
+                }
+            }
+        },
+        "Article": {
+            "required": [
+                "nom",
+                "categorie",
+                "prix_unitaire"
+            ],
+            "type": "object",
+            "properties": {
+                "id": {
+                    "title": "ID",
+                    "type": "integer",
+                    "readOnly": true
+                },
+                "nom": {
+                    "title": "Nom",
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 1
+                },
+                "description": {
+                    "title": "Description",
+                    "type": "string"
+                },
+                "categorie": {
+                    "title": "Categorie",
+                    "type": "string",
+                    "enum": [
+                        "livre",
+                        "bougie",
+                        "chapelet",
+                        "vetement",
+                        "autre"
+                    ]
+                },
+                "categorie_display": {
+                    "title": "Categorie display",
+                    "type": "string",
+                    "readOnly": true,
+                    "minLength": 1
+                },
+                "prix_unitaire": {
+                    "title": "Prix unitaire",
+                    "type": "string",
+                    "format": "decimal"
+                },
+                "stock_disponible": {
+                    "title": "Stock disponible",
+                    "type": "integer",
+                    "maximum": 4294967295,
+                    "minimum": 0
+                },
+                "seuil_alerte": {
+                    "title": "Seuil alerte",
+                    "type": "integer",
+                    "maximum": 4294967295,
+                    "minimum": 0
+                },
+                "en_alerte": {
+                    "title": "En alerte",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "date_ajout": {
+                    "title": "Date ajout",
+                    "type": "string",
+                    "format": "date-time",
+                    "readOnly": true
+                }
+            }
+        },
+        "Vente": {
+            "required": [
+                "article",
+                "quantite"
+            ],
+            "type": "object",
+            "properties": {
+                "id": {
+                    "title": "ID",
+                    "type": "integer",
+                    "readOnly": true
+                },
+                "article": {
+                    "title": "Article",
+                    "type": "integer"
+                },
+                "article_nom": {
+                    "title": "Article nom",
+                    "type": "string",
+                    "readOnly": true,
+                    "minLength": 1
+                },
+                "quantite": {
+                    "title": "Quantite",
+                    "type": "integer",
+                    "maximum": 4294967295,
+                    "minimum": 0
+                },
+                "prix_total": {
+                    "title": "Prix total",
+                    "type": "string",
+                    "format": "decimal",
+                    "readOnly": true
+                },
+                "date": {
+                    "title": "Date",
+                    "type": "string",
+                    "format": "date-time",
+                    "readOnly": true
+                },
+                "membre": {
+                    "title": "Membre",
+                    "type": "integer",
+                    "x-nullable": true
+                },
+                "membre_nom": {
+                    "title": "Membre nom",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "enregistre_par": {
+                    "title": "Enregistre par",
+                    "type": "integer",
+                    "x-nullable": true
+                },
+                "enregistre_par_nom": {
+                    "title": "Enregistre par nom",
+                    "type": "string",
+                    "readOnly": true
+                }
+            }
+        },
+        "Membre": {
+            "required": [
+                "nom",
+                "prenom"
+            ],
+            "type": "object",
+            "properties": {
+                "id": {
+                    "title": "ID",
+                    "type": "integer",
+                    "readOnly": true
+                },
+                "user": {
+                    "title": "User",
+                    "type": "integer",
+                    "x-nullable": true
+                },
+                "nom": {
+                    "title": "Nom",
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                },
+                "prenom": {
+                    "title": "Prenom",
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                },
+                "nom_complet": {
+                    "title": "Nom complet",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "date_naissance": {
+                    "title": "Date naissance",
+                    "type": "string",
+                    "format": "date",
+                    "x-nullable": true
+                },
+                "sexe": {
+                    "title": "Sexe",
+                    "type": "string",
+                    "enum": [
+                        "M",
+                        "F"
+                    ]
+                },
+                "telephone": {
+                    "title": "Telephone",
+                    "type": "string",
+                    "maxLength": 20
+                },
+                "email": {
+                    "title": "Email",
+                    "type": "string",
+                    "format": "email",
+                    "maxLength": 254
+                },
+                "quartier": {
+                    "title": "Quartier",
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "date_inscription": {
+                    "title": "Date inscription",
+                    "type": "string",
+                    "format": "date",
+                    "readOnly": true
+                },
+                "est_baptise": {
+                    "title": "Est baptise",
+                    "type": "boolean"
+                },
+                "est_confirme": {
+                    "title": "Est confirme",
+                    "type": "boolean"
+                },
+                "groupe": {
+                    "title": "Groupe",
+                    "type": "integer",
+                    "x-nullable": true
+                },
+                "groupe_nom": {
+                    "title": "Groupe nom",
+                    "type": "string",
+                    "readOnly": true
+                }
+            }
+        },
+        "Sacrement": {
+            "required": [
+                "type",
+                "membre",
+                "date"
+            ],
+            "type": "object",
+            "properties": {
+                "id": {
+                    "title": "ID",
+                    "type": "integer",
+                    "readOnly": true
+                },
+                "type": {
+                    "title": "Type",
+                    "type": "string",
+                    "enum": [
+                        "bapteme",
+                        "mariage",
+                        "confirmation",
+                        "communion",
+                        "funerailles"
+                    ]
+                },
+                "type_display": {
+                    "title": "Type display",
+                    "type": "string",
+                    "readOnly": true,
+                    "minLength": 1
+                },
+                "membre": {
+                    "title": "Membre",
+                    "type": "integer"
+                },
+                "date": {
+                    "title": "Date",
+                    "type": "string",
+                    "format": "date"
+                },
+                "officiant": {
+                    "title": "Officiant",
+                    "type": "integer",
+                    "x-nullable": true
+                },
+                "officiant_nom": {
+                    "title": "Officiant nom",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "observations": {
+                    "title": "Observations",
+                    "type": "string"
+                }
+            }
+        },
+        "MembreDetail": {
+            "required": [
+                "nom",
+                "prenom"
+            ],
+            "type": "object",
+            "properties": {
+                "id": {
+                    "title": "ID",
+                    "type": "integer",
+                    "readOnly": true
+                },
+                "user": {
+                    "title": "User",
+                    "type": "integer",
+                    "x-nullable": true
+                },
+                "nom": {
+                    "title": "Nom",
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                },
+                "prenom": {
+                    "title": "Prenom",
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                },
+                "nom_complet": {
+                    "title": "Nom complet",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "date_naissance": {
+                    "title": "Date naissance",
+                    "type": "string",
+                    "format": "date",
+                    "x-nullable": true
+                },
+                "sexe": {
+                    "title": "Sexe",
+                    "type": "string",
+                    "enum": [
+                        "M",
+                        "F"
+                    ]
+                },
+                "telephone": {
+                    "title": "Telephone",
+                    "type": "string",
+                    "maxLength": 20
+                },
+                "email": {
+                    "title": "Email",
+                    "type": "string",
+                    "format": "email",
+                    "maxLength": 254
+                },
+                "quartier": {
+                    "title": "Quartier",
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "date_inscription": {
+                    "title": "Date inscription",
+                    "type": "string",
+                    "format": "date",
+                    "readOnly": true
+                },
+                "est_baptise": {
+                    "title": "Est baptise",
+                    "type": "boolean"
+                },
+                "est_confirme": {
+                    "title": "Est confirme",
+                    "type": "boolean"
+                },
+                "groupe": {
+                    "title": "Groupe",
+                    "type": "integer",
+                    "x-nullable": true
+                },
+                "groupe_nom": {
+                    "title": "Groupe nom",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "sacrements": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Sacrement"
+                    },
+                    "readOnly": true
+                }
+            }
+        },
+        "ChangePassword": {
+            "required": [
+                "old_password",
+                "new_password",
+                "confirm_password"
+            ],
+            "type": "object",
+            "properties": {
+                "old_password": {
+                    "title": "Old password",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "new_password": {
+                    "title": "New password",
+                    "type": "string",
+                    "minLength": 8
+                },
+                "confirm_password": {
+                    "title": "Confirm password",
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
+        }
+    }
+}

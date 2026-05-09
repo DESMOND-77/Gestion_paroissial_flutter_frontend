@@ -15,7 +15,9 @@ This is a Flutter application called **Gestion Paroissiale** (Parish Management 
 The project follows **Clean Architecture** with three main layers:
 
 ### `/lib/core`
+
 Infrastructure and configuration layer:
+
 - **`constants/`**: API endpoints and app constants
 - **`di/`**: Dependency injection setup using GetIt (`injection.dart` - registers all repositories and BLoCs)
 - **`network/`**: Dio HTTP client and exception handling
@@ -24,14 +26,18 @@ Infrastructure and configuration layer:
 - **`storage/`**: Secure token storage using flutter_secure_storage
 
 ### `/lib/data`
+
 Data layer responsible for API communication and models:
+
 - **`models/`**: JSON-serializable data models (AuthUser, LoginResponse, Member, Group, Event, Finance, Article, etc.)
 - **`repositories/`**: Repository classes that abstract data sources (auth, membres, groupes, evenements, finances, librairie)
   - Each repository handles API calls via DioClient
   - AuthRepository also manages token persistence
 
 ### `/lib/presentation`
+
 UI and state management layer:
+
 - **`blocs/`**: State management using BLoC pattern
   - Each feature has: `*_bloc.dart` (events, states, BLoC class), `*_event.dart`, `*_state.dart` (separated in some cases)
   - BLoCs follow event-driven architecture with Equatable for value equality
@@ -43,6 +49,7 @@ UI and state management layer:
 ## Routing Structure
 
 Uses **GoRouter** with nested routes:
+
 - **Auth routes** (unauthenticated only):
   - `/login`, `/register`, `/forgot-password`
 - **Main routes** (require authentication via ShellRoute):
@@ -92,6 +99,7 @@ class FeatureBloc extends Bloc<FeatureEvent, FeatureState> {
 ## Dependency Injection
 
 All dependencies are set up in `lib/core/di/injection.dart`:
+
 - Repositories are registered as **lazy singletons** (created on first use, then cached)
 - BLoCs are registered as **factories** (new instance per request, except AuthBloc which is a singleton)
 - DioClient and SecureStorage are lazy singletons
@@ -100,6 +108,7 @@ All dependencies are set up in `lib/core/di/injection.dart`:
 ## Responsive Design
 
 Uses **responsive_framework** package with breakpoints:
+
 - `MOBILE` (0-450px)
 - `TABLET` (451-800px)
 - `DESKTOP` (801-1920px)
@@ -190,6 +199,7 @@ flutter build ios --release
 ## API Communication
 
 - **Base URL**: Defined in `lib/core/constants/api_constants.dart`
+- **API EndPoints**: Defined in `./api_endpoints.json`
 - **Client**: `DioClient` handles:
   - Authorization headers with JWT tokens
   - Token refresh logic
@@ -200,6 +210,7 @@ flutter build ios --release
 ## Testing
 
 Test file structure mirrors src:
+
 - `test/widget_test.dart` contains basic app tests
 - To test BLoCs: use `blocTest` from `flutter_bloc`
 - Mock repositories and DioClient in tests
