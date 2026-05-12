@@ -30,9 +30,12 @@ class Groupe extends Equatable {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'nom': nom,
       if (description != null) 'description': description,
       if (responsable != null) 'responsable': responsable,
+      if (responsableNom != null) 'responsable_nom': responsableNom,
+      'date_creation': dateCreation,
     };
   }
 

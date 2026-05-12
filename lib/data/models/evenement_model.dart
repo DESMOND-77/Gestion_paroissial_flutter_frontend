@@ -48,13 +48,18 @@ class Evenement extends Equatable {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'titre': titre,
       'type': type,
+      if (typeDisplay != null) 'type_display': typeDisplay,
       if (description != null) 'description': description,
       'date_debut': dateDebut,
       if (dateFin != null) 'date_fin': dateFin,
       if (lieu != null) 'lieu': lieu,
       'est_inscription_requise': estInscriptionRequise,
+      if (createur != null) 'createur': createur,
+      if (createurNom != null) 'createur_nom': createurNom,
+      'nb_participants': nbParticipants,
     };
   }
 

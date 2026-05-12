@@ -21,7 +21,7 @@ class DatabaseService {
     final path = join(await getDatabasesPath(), 'paroissiale.db');
     return openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createTables,
       onUpgrade: _upgradeTables,
     );
@@ -77,7 +77,18 @@ class DatabaseService {
   }
 
   Future<void> _upgradeTables(Database db, int oldVersion, int newVersion) async {
-    // Migration logic if needed
+    if (oldVersion < 2) {
+      // Drop old tables and recreate with new schema
+      await db.execute('DROP TABLE IF EXISTS membres');
+      await db.execute('DROP TABLE IF EXISTS groupes');
+      await db.execute('DROP TABLE IF EXISTS evenements');
+      await db.execute('DROP TABLE IF EXISTS finances');
+      await db.execute('DROP TABLE IF EXISTS librairie');
+      await db.execute('DROP TABLE IF EXISTS sync_metadata');
+      
+      // Recreate tables with correct schema
+      await _createTables(db, newVersion);
+    }
   }
 
   // Sauvegarde une liste d'éléments dans une table

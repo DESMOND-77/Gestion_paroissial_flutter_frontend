@@ -68,7 +68,7 @@ class _DashboardView extends StatelessWidget {
 
   Widget _buildContent(BuildContext context, DashboardLoaded state) {
     final formatter = NumberFormat.currency(
-        locale: 'fr_FR', symbol: 'FCFA', decimalDigits: 0);
+        locale: 'fr_FR', symbol: 'XFA', decimalDigits: 0);
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -170,7 +170,7 @@ class _DashboardView extends StatelessWidget {
         final width = constraints.maxWidth;
         final isSmall = width < 500;
         final maxCrossAxisExtent = isSmall ? 250.0 : 280.0;
-        final childAspectRatio = isSmall ? 1.21 : 1.5;
+        final childAspectRatio = isSmall ? 1.0 : 1.5;
 
         return GridView.builder(
           shrinkWrap: true,

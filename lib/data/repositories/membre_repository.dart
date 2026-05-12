@@ -1,3 +1,5 @@
+import 'package:flutter/cupertino.dart';
+
 import '../../core/network/dio_client.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/database/database_service.dart';
@@ -28,6 +30,9 @@ class MembreRepository {
       results = [];
     }
 
+    if (_databaseService != null) {
+      await _databaseService.saveItems('membres', results.map((e) => e as Map<String, dynamic>).toList());
+    }
     return results
         .map((e) => Membre.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -40,36 +45,19 @@ class MembreRepository {
     int? page,
   }) async {
     // Si recherche, filtrage ou pagination: toujours du serveur
-    if (search != null || groupe != null || sexe != null || page != null) {
-      final queryParams = <String, dynamic>{};
-      if (search != null && search.isNotEmpty) queryParams['search'] = search;
-      if (groupe != null) queryParams['groupe'] = groupe;
-      if (sexe != null) queryParams['sexe'] = sexe;
-      if (page != null) queryParams['page'] = page;
-
-      final response = await _dioClient.get(
-        ApiConstants.membres,
-        queryParameters: queryParams.isNotEmpty ? queryParams : null,
-      );
-
-      final data = response.data["data"];
-      List<dynamic> results;
-      if (data is Map && data.containsKey('results')) {
-        results = data['results'] as List<dynamic>;
-      } else if (data is List) {
-        results = data;
-      } else {
-        results = [];
-      }
-
-      return results
-          .map((e) => Membre.fromJson(e as Map<String, dynamic>))
-          .toList();
-    }
+    // if (search != null || groupe != null || sexe != null || page != null) {
+    //   final queryParams = <String, dynamic>{};
+    //   if (search != null && search.isNotEmpty) queryParams['search'] = search;
+    //   if (groupe != null) queryParams['groupe'] = groupe;
+    //   if (sexe != null) queryParams['sexe'] = sexe;
+    //   if (page != null) queryParams['page'] = page;
 
     // Sinon, chercher en cache d'abord
     if (_databaseService != null) {
       final cached = await _databaseService.getItems('membres');
+      debugPrint("=#=#=##=##=##=##=##=##=##=##=##=##=##=##=##=##");
+      debugPrint("Membres en cache: ${cached.length}");
+      debugPrint("Liste des Membres en cache:\n ${cached.map((e) => e).join('\n')}");
       if (cached.isNotEmpty) {
         return cached
             .map((e) => Membre.fromJson(e))
@@ -79,6 +67,28 @@ class MembreRepository {
 
     // Pas de cache, requête au serveur
     return fetchMembers();
+
+      // final response = await _dioClient.get(
+      //   ApiConstants.membres,
+      //   // queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      // );
+
+      // final data = response.data["data"];
+      // List<dynamic> results;
+      // if (data is Map && data.containsKey('results')) {
+      //   results = data['results'] as List<dynamic>;
+      // } else if (data is List) {
+      //   results = data;
+      // } else {
+      //   results = [];
+      // }
+
+      // return results
+      //     .map((e) => Membre.fromJson(e as Map<String, dynamic>))
+      //     .toList();
+    // }
+
+    
   }
 
   Future<MembreDetail> getMembreById(int id) async {

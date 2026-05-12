@@ -46,12 +46,16 @@ class Transaction extends Equatable {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'type': type,
       'categorie': categorie,
       'montant': montant,
       if (description != null) 'description': description,
       'date': date,
       if (membre != null) 'membre': membre,
+      if (membreNom != null) 'membre_nom': membreNom,
+      if (enregistrePar != null) 'enregistre_par': enregistrePar,
+      if (enregistreParNom != null) 'enregistre_par_nom': enregistreParNom,
     };
   }
 

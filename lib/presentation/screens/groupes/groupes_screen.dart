@@ -44,9 +44,12 @@ class _GroupesViewState extends State<_GroupesView> {
         title: const Text('Confirmer la suppression'),
         content: Text('Voulez-vous supprimer le groupe "$nom" ?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Annuler')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor),
+            style:
+                ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor),
             onPressed: () {
               Navigator.pop(ctx);
               ctx.read<GroupesBloc>().add(DeleteGroupe(id: id));
@@ -74,7 +77,9 @@ class _GroupesViewState extends State<_GroupesView> {
         }
         if (state is GroupesError) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: AppTheme.errorColor),
+            SnackBar(
+                content: Text(state.message),
+                backgroundColor: AppTheme.errorColor),
           );
         }
       },
@@ -122,7 +127,9 @@ class _GroupesViewState extends State<_GroupesView> {
           isDense: true,
         ),
         onChanged: (v) {
-          context.read<GroupesBloc>().add(LoadGroupes(search: v.isEmpty ? null : v));
+          context
+              .read<GroupesBloc>()
+              .add(LoadGroupes(search: v.isEmpty ? null : v));
         },
       ),
     );
@@ -136,7 +143,8 @@ class _GroupesViewState extends State<_GroupesView> {
           children: [
             Icon(Icons.group_outlined, size: 64, color: AppTheme.textSecondary),
             SizedBox(height: 16),
-            Text('Aucun groupe trouvé', style: TextStyle(color: AppTheme.textSecondary)),
+            Text('Aucun groupe trouvé',
+                style: TextStyle(color: AppTheme.textSecondary)),
           ],
         ),
       );
@@ -156,6 +164,8 @@ class _GroupesViewState extends State<_GroupesView> {
   }
 
   Widget _buildGroupeCard(BuildContext context, Groupe groupe) {
+    debugPrint("#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*##*#*");
+    debugPrint(groupe.dateCreation);
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -173,7 +183,8 @@ class _GroupesViewState extends State<_GroupesView> {
                     color: AppTheme.primaryColor.withAlpha(30),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.group, color: AppTheme.primaryColor, size: 24),
+                  child: const Icon(Icons.group,
+                      color: AppTheme.primaryColor, size: 24),
                 ),
                 const Spacer(),
                 PopupMenuButton<String>(
@@ -188,7 +199,8 @@ class _GroupesViewState extends State<_GroupesView> {
                     const PopupMenuItem(value: 'edit', child: Text('Modifier')),
                     const PopupMenuItem(
                       value: 'delete',
-                      child: Text('Supprimer', style: TextStyle(color: AppTheme.errorColor)),
+                      child: Text('Supprimer',
+                          style: TextStyle(color: AppTheme.errorColor)),
                     ),
                   ],
                 ),
@@ -209,7 +221,8 @@ class _GroupesViewState extends State<_GroupesView> {
               const SizedBox(height: 4),
               Text(
                 groupe.description!,
-                style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                style: const TextStyle(
+                    fontSize: 12, color: AppTheme.textSecondary),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -218,12 +231,14 @@ class _GroupesViewState extends State<_GroupesView> {
             if (groupe.responsableNom != null) ...[
               Row(
                 children: [
-                  const Icon(Icons.person_outline, size: 14, color: AppTheme.textSecondary),
+                  const Icon(Icons.person_outline,
+                      size: 14, color: AppTheme.textSecondary),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       groupe.responsableNom!,
-                      style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                      style: const TextStyle(
+                          fontSize: 11, color: AppTheme.textSecondary),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -231,8 +246,12 @@ class _GroupesViewState extends State<_GroupesView> {
               ),
             ],
             Text(
+              // groupe.dateCreation.isEmpty
+              //     ? 'Date inconnue'
+              // :
               'Créé le ${DateFormat('EEEE d MMMM yyyy', 'fr_FR').format(DateTime.parse(groupe.dateCreation))}',
-              style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary),
+              style:
+                  const TextStyle(fontSize: 10, color: AppTheme.textSecondary),
             ),
           ],
         ),

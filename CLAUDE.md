@@ -121,12 +121,16 @@ Check screen width with `ResponsiveValue` or `ResponsiveBreakpoints.of(context).
 - French locale configured by default (`intl` package with `fr_FR`)
 - Date formatting initialized in `main.dart`
 
-## Common Development Commands
+## Setup & Common Development Commands
 
+### Initial Setup
 ```bash
-# Get dependencies
+# Get dependencies (required after cloning or adding packages)
 flutter pub get
+```
 
+### Development
+```bash
 # Run the app (debug mode)
 flutter run
 
@@ -136,21 +140,24 @@ flutter run -d <device-id>
 # List connected devices
 flutter devices
 
-# Hot reload during development
-r (in running app)
+# Hot reload during development (press in running app)
+r
 
-# Full app restart
-R (in running app)
+# Full app restart (press in running app)
+R
 
 # Format code
 flutter format lib
 
-# Analyze code
+# Analyze code for issues
 flutter analyze
 
 # Run tests
 flutter test
+```
 
+### Building
+```bash
 # Build release APK (Android)
 flutter build apk
 
@@ -198,61 +205,74 @@ flutter build ios --release
 
 ## API Communication
 
-- **Base URL**: Defined in `lib/core/constants/api_constants.dart`
-- **API EndPoints**: Defined in `./api_endpoints.json`
-- **Client**: `DioClient` handles:
-  - Authorization headers with JWT tokens
-  - Token refresh logic
+- **Base URL**: Defined in `lib/core/constants/api_constants.dart` (e.g., `http://127.0.0.1:8000/api`)
+- **API Endpoints Reference**: `./api_endpoints.json` contains the Swagger specification for all available API endpoints (for reference/documentation)
+- **Client**: `DioClient` in `lib/core/network/dio_client.dart` handles:
+  - Authorization headers with JWT tokens from secure storage
+  - Automatic token refresh on 401 responses
   - Request/response interceptors
   - Exception handling and parsing
-- **Auth Flow**: Login stores access and refresh tokens in secure storage; they're auto-included in requests
+- **Auth Flow**: 
+  - Login via `AuthRepository.login()` stores access and refresh tokens in `SecureStorage`
+  - Tokens are automatically included in all subsequent requests via DioClient interceptor
+  - Token refresh is transparent—no need for manual re-authentication on expiry
 
 ## Local Caching System
 
-Reduces server load and enables offline functionality:
+Reduces server load and enables offline functionality. Auto-initialized in `main.dart` via `PeriodicSyncManager.startPeriodicSync()`.
 
 ### Database Architecture
 - **SQLite Local Database** (`lib/core/database/database_service.dart`):
-  - Tables for each entity: `membres`, `groupes`, `evenements`, `finances`, `librairie`
-  - `sync_metadata` table tracks last sync time per entity
-  - Automatic schema management via `sqflite`
+  - Tables auto-created on first run for: `membres`, `groupes`, `evenements`, `finances`, `librairie`
+  - `sync_metadata` table tracks last sync timestamp per entity
+  - Automatic schema management via `sqflite` package
+  - No manual migration needed
 
 ### Sync Strategy
-- **PeriodicSyncManager** syncs all data every 5 minutes in background
-- **SyncService** coordinates API calls with database persistence
-- When fetching data:
-  1. Check local cache first (if no filters/pagination)
-  2. Return cached data if available and valid
-  3. Fall back to server if cache is empty
-  4. Server requests with filters/pagination always bypass cache
+- **PeriodicSyncManager** (`lib/core/sync/periodic_sync_manager.dart`) syncs all data every 5 minutes in background
+- **SyncService** (`lib/core/sync/sync_service.dart`) coordinates API calls with local database
+- When fetching data from repositories:
+  1. **No filters** → Check local cache first; return if valid (< 5 min old)
+  2. **Cache miss/expired** → Fetch from server and update cache
+  3. **With filters/pagination** → Always hit server (cache ignored for accurate results)
 - **Connectivity detection** via `connectivity_plus` (syncs only when online)
 
-### Cache Invalidation
+### Cache Invalidation & Updates
 - Cache is valid for 5 minutes; after that, fresh data is fetched on next request
-- Filtered queries always hit the server (search, pagination, date ranges)
-- Creating/updating/deleting items forces server-to-cache sync on next fetch
-- Manual cache clear available via `PeriodicSyncManager.clearCache()`
+- Filtered queries **always bypass cache** (e.g., `search`, pagination, date ranges)
+- Creating/updating/deleting items: cache is NOT updated immediately—it refreshes on next sync cycle (max 5 min wait)
+- Manual cache control:
+  ```dart
+  final syncManager = sl<PeriodicSyncManager>();
+  await syncManager.forceSyncNow();        // Force immediate sync
+  await syncManager.forceEntitySync('membres');  // Sync specific entity
+  await syncManager.clearCache();          // Clear all cached data
+  final isOnline = await syncManager.isOnline();  // Check connectivity
+  ```
 
 ### Using the Cache System
 ```dart
-// In repositories: data auto-caches when no filters
+// In repositories: unfiltered queries use cache
 final membres = await _membreRepository.getMembres();  // Uses cache if available
 
 // Filtered queries always hit server
 final filtered = await _membreRepository.getMembres(search: 'Jean');
 
-// Force sync immediately
-final syncManager = sl<PeriodicSyncManager>();
-await syncManager.forceSyncNow();
-
-// Detect offline mode
-final isOnline = await syncManager.isOnline();
+// This request goes to server even if cache exists
+final sorted = await _membreRepository.getMembres(page: 2);
 ```
 
 ### Offline Mode
-- App uses local cache when offline
+- App functions with local cache when offline
 - Sync attempts skip automatically when no internet
-- On reconnect, next sync will refresh all data
+- On reconnect, next scheduled sync (or `forceSyncNow()`) refreshes all data
+- **Note**: Filtered queries won't work offline (they require server-side filtering)
+
+### Debugging Cache Issues
+- **"Cache shows old data"**: Normal behavior—cache refreshes every 5 minutes, or use `forceSyncNow()` for immediate refresh
+- **"Item I just created doesn't appear"**: Expected—cache syncs periodically, not on every create/update
+- **"App works fine online but shows nothing offline"**: Ensure cache has data before going offline; requets with filters bypass cache
+- **"Need more details?"**: See `CACHE_USAGE_GUIDE.md` for practical examples and troubleshooting (French)
 
 ## Testing
 
@@ -273,13 +293,25 @@ Test file structure mirrors src:
 ## Common Issues & Solutions
 
 **Issue**: Auth token expired  
-**Solution**: DioClient handles token refresh automatically
+**Solution**: DioClient handles token refresh automatically on 401 responses
 
 **Issue**: Screen not responding to BLoC changes  
-**Solution**: Ensure BlocProvider is above BlocListener/BlocBuilder in widget tree
+**Solution**: Ensure BlocProvider is above BlocListener/BlocBuilder in widget tree; check that events/states extend Equatable with all fields in props
 
-**Issue**: State not updating  
-**Solution**: Ensure events extend Equatable with proper props lists for equality
+**Issue**: State not updating after event dispatch  
+**Solution**: Verify events and states extend Equatable and include all fields in the `props` list for proper equality checking
+
+**Issue**: Data not persisting locally or showing old cached data  
+**Solution**: Check that repositories are using `DatabaseService` for cache operations; manually call `forceSyncNow()` to update cache immediately
+
+**Issue**: Queries with filters returning wrong results  
+**Solution**: Filtered queries (`search`, pagination, date ranges) always hit the server—this is intentional; for cache-only filtering, fetch unfiltered data and filter locally
+
+**Issue**: Database locked error or SQLite errors  
+**Solution**: Ensure only one instance of `DatabaseService` is used (registered as lazy singleton in DI); check that async database operations aren't blocking the UI thread
+
+**Issue**: App crashes on startup**  
+**Solution**: Verify `flutter pub get` completed successfully; ensure all dependencies in `pubspec.yaml` are compatible with your Flutter SDK version (check `flutter --version`)
 
 ## Key Dependencies
 
@@ -288,10 +320,36 @@ Test file structure mirrors src:
 - `dio`: HTTP client
 - `get_it`: Service locator/DI
 - `responsive_framework`: Responsive layouts
-- `flutter_secure_storage`: Secure data storage
-- `shared_preferences`: Local storage
+- `flutter_secure_storage`: Secure data storage (JWT tokens, credentials)
+- `shared_preferences`: Local key-value storage
 - `cached_network_image`: Image caching
-- `fl_chart`: Charts and statistics
+- `fl_chart`: Charts and statistics (dashboard)
 - `data_table_2`: Advanced data tables
 - `sidebarx`: Sidebar navigation
 - `equatable`: Value equality helper
+- `sqflite`: SQLite database for local caching
+- `connectivity_plus`: Network connectivity detection
+- `intl`: Internationalization (French locale)
+
+## Key Configuration Files
+
+- **`pubspec.yaml`**: Dependencies and Flutter configuration
+- **`lib/core/constants/api_constants.dart`**: API base URL and endpoints
+- **`./api_endpoints.json`**: Swagger/OpenAPI spec for reference
+- **`lib/core/di/injection.dart`**: Dependency injection setup
+- **`lib/core/router/app_router.dart`**: Navigation and route guards
+- **`lib/core/theme/app_theme.dart`**: Material theme definitions
+- **`lib/core/sync/periodic_sync_manager.dart`**: Cache sync configuration (5-minute interval)
+- **`lib/main.dart`**: App entry point and initialization
+
+## Code Organization Quick Reference
+
+| Need to... | Look in... |
+|-----------|-----------|
+| Add a new API endpoint | `lib/data/repositories/<feature>_repository.dart`, then expose in BLoC |
+| Add new database table | `lib/core/database/database_service.dart` and add to sync in `lib/core/sync/sync_service.dart` |
+| Create new screen | `lib/presentation/screens/<feature>/` and add route to `lib/core/router/app_router.dart` |
+| Create new BLoC | `lib/presentation/blocs/<feature>/` (events, states, bloc class) |
+| Create new model | `lib/data/models/` (ensure JSON serializable with fromJson/toJson) |
+| Configure theme colors | `lib/core/theme/app_theme.dart` |
+| Manage responsive breakpoints | `lib/core/theme/app_theme.dart` or check `ResponsiveBreakpoints` in screens

@@ -1,0 +1,31 @@
+{
+    {
+        "id": 1,
+        "user": 1,
+        "nom": 1,
+        "prenom": 1,
+        "nom_complet": 1,
+        "date_naissance": 1,
+        "sexe": 1,
+        "telephone": 1,
+        "email": 1,
+        "quartier": 1,
+        "date_inscription": 1,
+        "est_baptise": 1,
+        "est_confirme": 1,
+        "groupe": 1,
+        "groupe_nom": 1
+    },
+    {
+        "nom": 1,
+        "prenom": 1,
+        "date_naissance": 1,
+        "sexe": 1,
+        "telephone": 1,
+        "email": 1,
+        "quartier": 1,
+        "est_baptise": 1,
+        "est_confirme": 1,
+        "groupe": 1
+    }
+}

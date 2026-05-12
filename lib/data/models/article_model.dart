@@ -41,12 +41,15 @@ class Article extends Equatable {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'nom': nom,
       if (description != null) 'description': description,
       'categorie': categorie,
       'prix_unitaire': prixUnitaire,
       'stock_disponible': stockDisponible,
       'seuil_alerte': seuilAlerte,
+      'en_alerte': enAlerte,
+      if (dateAjout != null) 'date_ajout': dateAjout,
     };
   }
 

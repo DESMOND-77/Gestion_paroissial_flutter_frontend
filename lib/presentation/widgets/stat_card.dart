@@ -1,5 +1,6 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_frontend/presentation/widgets/auto_scrolling_text.dart';
 import '../../core/theme/app_theme.dart';
 
 class StatCard extends StatelessWidget {
@@ -83,15 +84,19 @@ class StatCard extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Flexible(
-                child: AutoSizeText(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Colors.white70,
-                    fontWeight: FontWeight.w500,
+                child: AutoScrollingText(
+                  scrollDuration: const Duration(seconds: 1),
+                  pauseDuration: const Duration(seconds: 1),
+                  child: AutoSizeText(
+                    title,
+                    maxFontSize: 25,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               if (subtitle != null) ...[

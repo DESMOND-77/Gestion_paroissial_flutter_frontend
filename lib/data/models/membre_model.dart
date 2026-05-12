@@ -58,16 +58,21 @@ class Membre extends Equatable {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
+      if (user != null) 'user': user,
       'nom': nom,
       'prenom': prenom,
+      'nom_complet': nomComplet,
       if (dateNaissance != null) 'date_naissance': dateNaissance,
       'sexe': sexe,
       if (telephone != null) 'telephone': telephone,
       if (email != null) 'email': email,
       if (quartier != null) 'quartier': quartier,
+      'date_inscription': dateInscription,
       'est_baptise': estBaptise,
       'est_confirme': estConfirme,
       if (groupe != null) 'groupe': groupe,
+      if (groupeNom != null) 'groupe_nom': groupeNom,
     };
   }
 
