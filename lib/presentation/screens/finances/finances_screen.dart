@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -30,7 +31,8 @@ class _FinancesView extends StatefulWidget {
   State<_FinancesView> createState() => _FinancesViewState();
 }
 
-class _FinancesViewState extends State<_FinancesView> with SingleTickerProviderStateMixin {
+class _FinancesViewState extends State<_FinancesView>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<Transaction> _transactions = [];
   RapportFinancier? _rapport;
@@ -56,9 +58,12 @@ class _FinancesViewState extends State<_FinancesView> with SingleTickerProviderS
         title: const Text('Confirmer la suppression'),
         content: const Text('Supprimer cette transaction ?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Annuler')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor),
+            style:
+                ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor),
             onPressed: () {
               Navigator.pop(ctx);
               ctx.read<FinancesBloc>().add(DeleteTransaction(id: id));
@@ -72,7 +77,7 @@ class _FinancesViewState extends State<_FinancesView> with SingleTickerProviderS
 
   @override
   Widget build(BuildContext context) {
-    final formatter = NumberFormat.currency(locale: 'fr_FR', symbol: 'FCFA', decimalDigits: 0);
+    final formatter = AppConstants.formatter;  
 
     return BlocConsumer<FinancesBloc, FinancesState>(
       listener: (context, state) {
@@ -96,7 +101,9 @@ class _FinancesViewState extends State<_FinancesView> with SingleTickerProviderS
         }
         if (state is FinancesError) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: AppTheme.errorColor),
+            SnackBar(
+                content: Text(state.message),
+                backgroundColor: AppTheme.errorColor),
           );
         }
       },
@@ -170,7 +177,9 @@ class _FinancesViewState extends State<_FinancesView> with SingleTickerProviderS
             child: _SummaryChip(
               label: 'Balance',
               amount: formatter.format(rapport.balance),
-              color: rapport.balance >= 0 ? AppTheme.primaryColor : AppTheme.errorColor,
+              color: rapport.balance >= 0
+                  ? AppTheme.primaryColor
+                  : AppTheme.errorColor,
               icon: Icons.account_balance_wallet,
             ),
           ),
@@ -181,7 +190,7 @@ class _FinancesViewState extends State<_FinancesView> with SingleTickerProviderS
 
   Widget _buildFilterBar(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 8, 4, 8),
       color: Colors.white,
       child: Row(
         children: [
@@ -208,7 +217,8 @@ class _FinancesViewState extends State<_FinancesView> with SingleTickerProviderS
             hint: const Text('Catégorie'),
             isDense: true,
             items: [
-              const DropdownMenuItem(value: null, child: Text('Toutes catégories')),
+              const DropdownMenuItem(
+                  value: null, child: Text('Toutes catégories')),
               ...AppConstants.transactionCategories.entries.map(
                 (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
               ),
@@ -243,32 +253,37 @@ class _FinancesViewState extends State<_FinancesView> with SingleTickerProviderS
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.receipt_long_outlined, size: 64, color: AppTheme.textSecondary),
+            Icon(Icons.receipt_long_outlined,
+                size: 64, color: AppTheme.textSecondary),
             SizedBox(height: 16),
-            Text('Aucune transaction', style: TextStyle(color: AppTheme.textSecondary)),
+            Text('Aucune transaction',
+                style: TextStyle(color: AppTheme.textSecondary)),
           ],
         ),
       );
     }
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(10),
       child: Card(
         elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: DataTable2(
-          columnSpacing: 12,
+          columnSpacing: 16,
           horizontalMargin: 12,
           minWidth: 600,
-          headingRowColor: WidgetStateProperty.all(AppTheme.primaryColor.withAlpha(30)),
+          headingRowColor:
+              WidgetStateProperty.all(AppTheme.primaryColor.withAlpha(30)),
           columns: const [
-            DataColumn2(label: Text('Date'), size: ColumnSize.S),
-            DataColumn2(label: Text('Type'), size: ColumnSize.S),
+            DataColumn2(label: Text('Date'), size: ColumnSize.M),
+            DataColumn2(label: Text('Type'), size: ColumnSize.M),
             DataColumn2(label: Text('Catégorie'), size: ColumnSize.M),
             DataColumn2(label: Text('Description'), size: ColumnSize.L),
-            DataColumn2(label: Text('Montant'), size: ColumnSize.M, numeric: true),
+            DataColumn2(
+                label: Text('Montant'), size: ColumnSize.M, numeric: true),
             DataColumn2(label: Text('Membre'), size: ColumnSize.M),
-            DataColumn2(label: Text('Actions'), size: ColumnSize.S, fixedWidth: 80),
+            DataColumn2(
+                label: Text('Actions'), size: ColumnSize.S, fixedWidth: 105),
           ],
           rows: _transactions.map((tx) {
             return DataRow2(
@@ -276,9 +291,12 @@ class _FinancesViewState extends State<_FinancesView> with SingleTickerProviderS
                 DataCell(Text(tx.date, style: const TextStyle(fontSize: 12))),
                 DataCell(
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: (tx.isRecette ? AppTheme.successColor : AppTheme.errorColor)
+                      color: (tx.isRecette
+                              ? AppTheme.successColor
+                              : AppTheme.errorColor)
                           .withAlpha(30),
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -286,37 +304,47 @@ class _FinancesViewState extends State<_FinancesView> with SingleTickerProviderS
                       tx.typeLabel,
                       style: TextStyle(
                         fontSize: 11,
-                        color: tx.isRecette ? AppTheme.successColor : AppTheme.errorColor,
+                        color: tx.isRecette
+                            ? AppTheme.successColor
+                            : AppTheme.errorColor,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
                 ),
-                DataCell(Text(tx.categorieLabel, style: const TextStyle(fontSize: 12))),
-                DataCell(Text(tx.description ?? '-', style: const TextStyle(fontSize: 12))),
+                DataCell(Text(tx.categorieLabel,
+                    style: const TextStyle(fontSize: 12))),
+                DataCell(Text(tx.description ?? '-',
+                    style: const TextStyle(fontSize: 12))),
                 DataCell(
-                  Text(
+                  AutoSizeText(
                     formatter.format(tx.montant),
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
-                      color: tx.isRecette ? AppTheme.successColor : AppTheme.errorColor,
+                      color: tx.isRecette
+                          ? AppTheme.successColor
+                          : AppTheme.errorColor,
                     ),
+                    maxLines: 1,
                   ),
                 ),
-                DataCell(Text(tx.membreNom ?? '-', style: const TextStyle(fontSize: 12))),
+                DataCell(Text(tx.membreNom ?? '-',
+                    style: const TextStyle(fontSize: 12))),
                 DataCell(
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.edit, size: 16),
-                        onPressed: () => context.push('/finances/${tx.id}/edit'),
+                        icon: const Icon(Icons.edit, size: 18),
+                        onPressed: () =>
+                            context.push('/finances/${tx.id}/edit'),
                         constraints: const BoxConstraints(),
                         padding: const EdgeInsets.all(4),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.delete, size: 16, color: AppTheme.errorColor),
+                        icon: const Icon(Icons.delete,
+                            size: 18, color: AppTheme.errorColor),
                         onPressed: () => _deleteTransaction(context, tx.id),
                         constraints: const BoxConstraints(),
                         padding: const EdgeInsets.all(4),
@@ -354,7 +382,8 @@ class _FinancesViewState extends State<_FinancesView> with SingleTickerProviderS
         children: [
           Card(
             elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -367,7 +396,8 @@ class _FinancesViewState extends State<_FinancesView> with SingleTickerProviderS
                   const SizedBox(height: 20),
                   if (categories.isEmpty)
                     const Center(
-                      child: Text('Aucune donnée', style: TextStyle(color: AppTheme.textSecondary)),
+                      child: Text('Aucune donnée',
+                          style: TextStyle(color: AppTheme.textSecondary)),
                     )
                   else
                     SizedBox(
@@ -377,11 +407,13 @@ class _FinancesViewState extends State<_FinancesView> with SingleTickerProviderS
                           alignment: BarChartAlignment.spaceAround,
                           barTouchData: BarTouchData(
                             touchTooltipData: BarTouchTooltipData(
-                              getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                              getTooltipItem:
+                                  (group, groupIndex, rod, rodIndex) {
                                 final label = categories[group.x].key;
                                 return BarTooltipItem(
                                   '$label\n${formatter.format(rod.toY)}',
-                                  const TextStyle(color: Colors.white, fontSize: 12),
+                                  const TextStyle(
+                                      color: Colors.white, fontSize: 12),
                                 );
                               },
                             ),
@@ -392,23 +424,33 @@ class _FinancesViewState extends State<_FinancesView> with SingleTickerProviderS
                                 showTitles: true,
                                 reservedSize: 60,
                                 getTitlesWidget: (value, meta) => Text(
-                                  NumberFormat.compact(locale: 'fr_FR').format(value),
-                                  style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary),
+                                  NumberFormat.compact(locale: 'fr_FR')
+                                      .format(value),
+                                  style: const TextStyle(
+                                      fontSize: 10,
+                                      color: AppTheme.textSecondary),
                                 ),
                               ),
                             ),
-                            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            rightTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false)),
+                            topTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false)),
                             bottomTitles: AxisTitles(
                               sideTitles: SideTitles(
                                 showTitles: true,
                                 getTitlesWidget: (value, meta) {
                                   final i = value.toInt();
                                   if (i < categories.length) {
-                                    final label = AppConstants.transactionCategories[categories[i].key] ?? categories[i].key;
+                                    final label =
+                                        AppConstants.transactionCategories[
+                                                categories[i].key] ??
+                                            categories[i].key;
                                     return Text(
                                       label,
-                                      style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary),
+                                      style: const TextStyle(
+                                          fontSize: 10,
+                                          color: AppTheme.textSecondary),
                                     );
                                   }
                                   return const SizedBox.shrink();
@@ -416,7 +458,8 @@ class _FinancesViewState extends State<_FinancesView> with SingleTickerProviderS
                               ),
                             ),
                           ),
-                          gridData: const FlGridData(show: true, drawVerticalLine: false),
+                          gridData: const FlGridData(
+                              show: true, drawVerticalLine: false),
                           borderData: FlBorderData(show: false),
                           barGroups: List.generate(categories.length, (i) {
                             return BarChartGroupData(
@@ -426,7 +469,8 @@ class _FinancesViewState extends State<_FinancesView> with SingleTickerProviderS
                                   toY: categories[i].value,
                                   color: colors[i % colors.length],
                                   width: 30,
-                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+                                  borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(6)),
                                 ),
                               ],
                             );

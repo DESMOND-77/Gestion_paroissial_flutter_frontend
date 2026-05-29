@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter_frontend/core/constants/app_constants.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
@@ -67,9 +68,8 @@ class _DashboardView extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context, DashboardLoaded state) {
-    final formatter = NumberFormat.currency(
-        locale: 'fr_FR', symbol: 'XFA', decimalDigits: 0);
-
+    final formatter = AppConstants.formatter; 
+    
     return RefreshIndicator(
       onRefresh: () async {
         context.read<DashboardBloc>().add(const RefreshDashboard());

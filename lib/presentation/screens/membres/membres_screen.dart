@@ -109,9 +109,9 @@ class _MembresViewState extends State<_MembresView> {
           ),
           floatingActionButton: FloatingActionButton.extended(
             onPressed: () => context.push('/membres/new'),
-            icon: const Icon(Icons.person_add),
-            label: const Text('Nouveau membre'),
-          ),
+            icon: const Icon(Icons.person_add,size: 20,),
+            label: const SizedBox(),
+          ),        
         );
       },
     );
@@ -181,15 +181,15 @@ class _MembresViewState extends State<_MembresView> {
     }
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(10),
       child: Card(
         elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: DataTable2(
-          columnSpacing: 16,
+          columnSpacing: 10,
           horizontalMargin: 16,
           minWidth: 600,
-          headingRowColor: WidgetStateProperty.all(AppTheme.primaryColor.withAlpha(20)),
+          headingRowColor: WidgetStateProperty.all(AppTheme.primaryColor.withAlpha(25)),
           columns: const [
             DataColumn2(label: Text('Nom complet'), size: ColumnSize.L),
             DataColumn2(label: Text('Sexe'), size: ColumnSize.S),
@@ -197,7 +197,7 @@ class _MembresViewState extends State<_MembresView> {
             DataColumn2(label: Text('Quartier'), size: ColumnSize.M),
             DataColumn2(label: Text('Groupe'), size: ColumnSize.M),
             DataColumn2(label: Text('Baptisé'), size: ColumnSize.S),
-            DataColumn2(label: Text('Actions'), size: ColumnSize.S, fixedWidth: 100),
+            DataColumn2(label: Text('Actions'), size: ColumnSize.S, fixedWidth: 105),
           ],
           rows: _membres.map((membre) {
             return DataRow2(
