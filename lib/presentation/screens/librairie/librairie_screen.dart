@@ -1,5 +1,8 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_frontend/core/constants/app_constants.dart';
+import 'package:flutter_frontend/presentation/widgets/auto_scrolling_text.dart';
 import 'package:go_router/go_router.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:intl/intl.dart';
@@ -45,7 +48,8 @@ class _LibrairieScreenState extends State<LibrairieScreen>
     switch (_tabController.index) {
       case 0:
         _bloc.add(LoadArticles(
-          search: _searchController.text.isEmpty ? null : _searchController.text,
+          search:
+              _searchController.text.isEmpty ? null : _searchController.text,
           categorie: _selectedCategorie,
         ));
         break;
@@ -198,17 +202,18 @@ class _LibrairieScreenState extends State<LibrairieScreen>
     }
 
     return DataTable2(
-      columnSpacing: 12,
-      horizontalMargin: 16,
-      headingRowColor: WidgetStateProperty.all(
-        AppTheme.primaryColor.withAlpha(20),
-      ),
+      columnSpacing: 16,
+      horizontalMargin: 12,
+      minWidth: 400,
+      headingRowColor:
+          WidgetStateProperty.all(AppTheme.primaryColor.withAlpha(25)),
       columns: const [
         DataColumn2(label: Text('Nom'), size: ColumnSize.L),
-        DataColumn2(label: Text('Catégorie'), size: ColumnSize.S),
-        DataColumn2(label: Text('Prix'), size: ColumnSize.S, numeric: true),
+        DataColumn2(label: Text('Catégorie'), size: ColumnSize.M),
+        DataColumn2(label: Text('Prix'), size: ColumnSize.M, numeric: true),
         DataColumn2(label: Text('Stock'), size: ColumnSize.S, numeric: true),
-        DataColumn2(label: Text('Actions'), size: ColumnSize.S),
+        DataColumn2(
+            label: Text('Actions'), size: ColumnSize.S, fixedWidth: 105),
       ],
       rows: articles.map((a) => _buildArticleRow(a)).toList(),
     );
@@ -216,6 +221,7 @@ class _LibrairieScreenState extends State<LibrairieScreen>
 
   DataRow2 _buildArticleRow(Article article) {
     final isLow = article.enAlerte;
+    final formatter = AppConstants.formatter;
     return DataRow2(
       cells: [
         DataCell(
@@ -233,15 +239,27 @@ class _LibrairieScreenState extends State<LibrairieScreen>
         ),
         DataCell(
           Chip(
-            label: Text(article.categorieLabel),
-            padding: EdgeInsets.zero,
-            visualDensity: VisualDensity.compact,
-          ),
+              label: Text(article.categorieLabel),
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+              backgroundColor: AppTheme.primaryColor.withAlpha(38),
+              labelStyle: const TextStyle(
+                color: AppTheme.primaryColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              )),
         ),
-        DataCell(Text(
-          '${article.prixUnitaire.toStringAsFixed(0)} FCFA',
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        )),
+        DataCell(AutoScrollingText(
+            scrollDuration: const Duration(seconds: 1),
+            pauseDuration: const Duration(seconds: 1),
+            child: AutoSizeText(
+              formatter.format(article.prixUnitaire),
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+              maxLines: 1,
+            ))),
         DataCell(Text(
           article.stockDisponible.toString(),
           style: TextStyle(
@@ -258,16 +276,16 @@ class _LibrairieScreenState extends State<LibrairieScreen>
                 onPressed: () =>
                     context.go('/librairie/articles/${article.id}/edit'),
                 tooltip: 'Modifier',
-                padding: EdgeInsets.zero,
+                padding: const EdgeInsets.all(4),
                 constraints: const BoxConstraints(),
               ),
-              const SizedBox(width: 8),
+              // const SizedBox(width: 2), --- IGNORE ---
               IconButton(
-                icon: const Icon(Icons.delete_outline, size: 18,
-                    color: AppTheme.errorColor),
+                icon: const Icon(Icons.delete_outline,
+                    size: 18, color: AppTheme.errorColor),
                 onPressed: () => _confirmDelete(article),
                 tooltip: 'Supprimer',
-                padding: EdgeInsets.zero,
+                padding: const EdgeInsets.all(4),
                 constraints: const BoxConstraints(),
               ),
             ],
@@ -283,7 +301,8 @@ class _LibrairieScreenState extends State<LibrairieScreen>
     final ventes = state is VentesLoaded ? state.ventes : <Vente>[];
 
     if (ventes.isEmpty) {
-      return _buildEmpty('Aucune vente enregistrée', Icons.shopping_cart_outlined);
+      return _buildEmpty(
+          'Aucune vente enregistrée', Icons.shopping_cart_outlined);
     }
 
     return DataTable2(
@@ -296,23 +315,26 @@ class _LibrairieScreenState extends State<LibrairieScreen>
         DataColumn2(label: Text('Article'), size: ColumnSize.L),
         DataColumn2(label: Text('Membre'), size: ColumnSize.M),
         DataColumn2(label: Text('Qté'), size: ColumnSize.S, numeric: true),
-        DataColumn2(label: Text('Total'), size: ColumnSize.S, numeric: true),
+        DataColumn2(label: Text('Total'), size: ColumnSize.M, numeric: true),
         DataColumn2(label: Text('Date'), size: ColumnSize.M),
       ],
       rows: ventes.map((v) {
         final date = DateTime.tryParse(v.date);
-        final dateStr = date != null
-            ? DateFormat('dd/MM/yyyy HH:mm').format(date)
-            : v.date;
+        final dateStr =
+            date != null ? DateFormat('dd/MM/yyyy HH:mm').format(date) : v.date;
+        final formater = AppConstants.formatter;
         return DataRow2(
           cells: [
             DataCell(Text(v.articleNom)),
             DataCell(Text(v.membreNom ?? '—')),
             DataCell(Text(v.quantite.toString())),
-            DataCell(Text(
-              '${v.prixTotal.toStringAsFixed(0)} FCFA',
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            )),
+            DataCell(AutoScrollingText(
+                scrollDuration: const Duration(seconds: 1),
+                pauseDuration: const Duration(seconds: 1),
+                child: AutoSizeText(
+                  formater.format(v.prixTotal),
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ))),
             DataCell(Text(dateStr, style: const TextStyle(fontSize: 12))),
           ],
         );
@@ -398,21 +420,59 @@ class _LibrairieScreenState extends State<LibrairieScreen>
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        FloatingActionButton.extended(
-          heroTag: 'vente',
-          onPressed: () => context.go('/librairie/ventes/new'),
-          icon: const Icon(Icons.shopping_cart_outlined),
-          label: const Text('Nouvelle vente'),
+        FloatingActionButton(
+          heroTag: 'Options',
+          onPressed: () => {},
           backgroundColor: AppTheme.secondaryColor,
           foregroundColor: AppTheme.sidebarBg,
+          child: PopupMenuButton<String>(
+            elevation: 4,
+            color: AppTheme.secondaryColor,
+            // icon: const Icon(Icons.output_outlined, color: AppTheme.sidebarBg),
+            onSelected: (value) {
+              if (value == 'sell') {
+                context.go('/librairie/ventes/new');
+              } else if (value == 'delete') {
+                context.go('/librairie/articles/new');
+              }
+            },
+            itemBuilder: (_) => [
+              const PopupMenuItem(
+                  value: 'sell',
+                  child: Row(
+                    children: [
+                      Icon(Icons.shopping_cart_outlined),
+                      Text('Nouvelle vente'),
+                    ],
+                  )),
+              const PopupMenuItem(
+                value: 'add',
+                child: Row(
+                  children: [
+                    Icon(Icons.add),
+                    Text('Ajouter article'),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 12),
-        FloatingActionButton.extended(
-          heroTag: 'article',
-          onPressed: () => context.go('/librairie/articles/new'),
-          icon: const Icon(Icons.add),
-          label: const Text('Ajouter article'),
-        ),
+
+        // FloatingActionButton(
+        //   heroTag: 'vente',
+        //   onPressed: () => context.go('/librairie/ventes/new'),
+        //   // label: const Text('Nouvelle vente'),
+        //   backgroundColor: AppTheme.secondaryColor,
+        //   foregroundColor: AppTheme.sidebarBg,
+        //   child: const Icon(Icons.shopping_cart_outlined),
+        // ),
+        // const SizedBox(height: 12),
+        // FloatingActionButton.extended(
+        //   heroTag: 'article',
+        //   onPressed: () => context.go('/librairie/articles/new'),
+        //   icon: const Icon(Icons.add),
+        //   label: const Text('Ajouter article'),
+        // ),
       ],
     );
   }
@@ -422,8 +482,7 @@ class _LibrairieScreenState extends State<LibrairieScreen>
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Supprimer l\'article'),
-        content:
-            Text('Voulez-vous supprimer "${article.nom}" ?'),
+        content: Text('Voulez-vous supprimer "${article.nom}" ?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -434,8 +493,8 @@ class _LibrairieScreenState extends State<LibrairieScreen>
               Navigator.pop(ctx);
               _bloc.add(DeleteArticle(id: article.id));
             },
-            style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.errorColor),
+            style:
+                ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor),
             child: const Text('Supprimer'),
           ),
         ],

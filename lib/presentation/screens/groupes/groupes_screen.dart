@@ -156,7 +156,7 @@ class _GroupesViewState extends State<_GroupesView> {
         maxCrossAxisExtent: 320,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: 1.2,
+        childAspectRatio: 1.9,
       ),
       itemCount: _groupes.length,
       itemBuilder: (context, i) => _buildGroupeCard(context, _groupes[i]),
