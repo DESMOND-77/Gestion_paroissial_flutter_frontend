@@ -1,8 +1,8 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_frontend/core/constants/app_constants.dart';
-import 'package:flutter_frontend/presentation/widgets/auto_scrolling_text.dart';
+import 'package:paroisse_gest/core/constants/app_constants.dart';
+import 'package:paroisse_gest/presentation/widgets/auto_scrolling_text.dart';
 import 'package:go_router/go_router.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:intl/intl.dart';
