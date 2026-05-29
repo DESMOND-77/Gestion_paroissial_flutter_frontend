@@ -166,7 +166,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ? Icons.visibility_off
                           : Icons.visibility,
                     ),
-                    onPressed: () =>
+                    onPressed:  () =>
                         setState(() => _obscurePassword = !_obscurePassword),
                   ),
                 ),

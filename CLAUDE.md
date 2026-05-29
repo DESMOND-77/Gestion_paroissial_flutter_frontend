@@ -8,7 +8,7 @@ This is a Flutter application called **Gestion Paroissiale** (Parish Management 
 
 - **Language**: Dart (Flutter)
 - **Min SDK**: 3.3.0
-- **Target Platforms**: iOS, Android, macOS, Web
+- **Target Platforms**: iOS, Android, Linux, macOS (Windows and Web are not scaffolded)
 
 ## Architecture
 
@@ -124,12 +124,14 @@ Check screen width with `ResponsiveValue` or `ResponsiveBreakpoints.of(context).
 ## Setup & Common Development Commands
 
 ### Initial Setup
+
 ```bash
 # Get dependencies (required after cloning or adding packages)
 flutter pub get
 ```
 
 ### Development
+
 ```bash
 # Run the app (debug mode)
 flutter run
@@ -157,6 +159,7 @@ flutter test
 ```
 
 ### Building
+
 ```bash
 # Build release APK (Android)
 flutter build apk
@@ -212,7 +215,7 @@ flutter build ios --release
   - Automatic token refresh on 401 responses
   - Request/response interceptors
   - Exception handling and parsing
-- **Auth Flow**: 
+- **Auth Flow**:  
   - Login via `AuthRepository.login()` stores access and refresh tokens in `SecureStorage`
   - Tokens are automatically included in all subsequent requests via DioClient interceptor
   - Token refresh is transparent—no need for manual re-authentication on expiry
@@ -222,13 +225,21 @@ flutter build ios --release
 Reduces server load and enables offline functionality. Auto-initialized in `main.dart` via `PeriodicSyncManager.startPeriodicSync()`.
 
 ### Database Architecture
+
 - **SQLite Local Database** (`lib/core/database/database_service.dart`):
   - Tables auto-created on first run for: `membres`, `groupes`, `evenements`, `finances`, `librairie`
   - `sync_metadata` table tracks last sync timestamp per entity
   - Automatic schema management via `sqflite` package
   - No manual migration needed
 
+### Desktop platform setup (Linux/macOS/Windows)
+
+- `sqflite` has no native backend on desktop, so `main.dart` calls `sqfliteFfiInit()` and sets `databaseFactory = databaseFactoryFfi` **before** `setupDependencies()` (guarded by `!kIsWeb && (Platform.isLinux || Platform.isWindows || Platform.isMacOS)` so Android/iOS keep using native sqflite).
+- `sqlite3_flutter_libs` is included to bundle the native SQLite library — no system `libsqlite3` install required.
+- If you add desktop-only init logic, place it inside the same platform guard in `main.dart` so mobile builds aren't affected.
+
 ### Sync Strategy
+
 - **PeriodicSyncManager** (`lib/core/sync/periodic_sync_manager.dart`) syncs all data every 5 minutes in background
 - **SyncService** (`lib/core/sync/sync_service.dart`) coordinates API calls with local database
 - When fetching data from repositories:
@@ -238,10 +249,12 @@ Reduces server load and enables offline functionality. Auto-initialized in `main
 - **Connectivity detection** via `connectivity_plus` (syncs only when online)
 
 ### Cache Invalidation & Updates
+
 - Cache is valid for 5 minutes; after that, fresh data is fetched on next request
 - Filtered queries **always bypass cache** (e.g., `search`, pagination, date ranges)
 - Creating/updating/deleting items: cache is NOT updated immediately—it refreshes on next sync cycle (max 5 min wait)
 - Manual cache control:
+
   ```dart
   final syncManager = sl<PeriodicSyncManager>();
   await syncManager.forceSyncNow();        // Force immediate sync
@@ -251,6 +264,7 @@ Reduces server load and enables offline functionality. Auto-initialized in `main
   ```
 
 ### Using the Cache System
+
 ```dart
 // In repositories: unfiltered queries use cache
 final membres = await _membreRepository.getMembres();  // Uses cache if available
@@ -263,12 +277,14 @@ final sorted = await _membreRepository.getMembres(page: 2);
 ```
 
 ### Offline Mode
+
 - App functions with local cache when offline
 - Sync attempts skip automatically when no internet
 - On reconnect, next scheduled sync (or `forceSyncNow()`) refreshes all data
 - **Note**: Filtered queries won't work offline (they require server-side filtering)
 
 ### Debugging Cache Issues
+
 - **"Cache shows old data"**: Normal behavior—cache refreshes every 5 minutes, or use `forceSyncNow()` for immediate refresh
 - **"Item I just created doesn't appear"**: Expected—cache syncs periodically, not on every create/update
 - **"App works fine online but shows nothing offline"**: Ensure cache has data before going offline; requets with filters bypass cache
@@ -310,8 +326,8 @@ Test file structure mirrors src:
 **Issue**: Database locked error or SQLite errors  
 **Solution**: Ensure only one instance of `DatabaseService` is used (registered as lazy singleton in DI); check that async database operations aren't blocking the UI thread
 
-**Issue**: App crashes on startup**  
-**Solution**: Verify `flutter pub get` completed successfully; ensure all dependencies in `pubspec.yaml` are compatible with your Flutter SDK version (check `flutter --version`)
+**Issue**: `SqfliteFfiException: Couldn't resolve native function 'sqlite3_initialize'` on desktop  
+**Solution**: Confirm `sqfliteFfiInit()` + `databaseFactory = databaseFactoryFfi` run before `setupDependencies()` in `main.dart` and that `sqlite3_flutter_libs` is in `pubspec.yaml`; run `flutter clean` to rebuild the desktop bundle. See `fix.md` (2026-05-29).
 
 ## Key Dependencies
 
@@ -341,15 +357,16 @@ Test file structure mirrors src:
 - **`lib/core/theme/app_theme.dart`**: Material theme definitions
 - **`lib/core/sync/periodic_sync_manager.dart`**: Cache sync configuration (5-minute interval)
 - **`lib/main.dart`**: App entry point and initialization
+- **`fix.md`**: Chronological bug-fix log. Every bug fix gets a dated entry with symptom, root cause, files touched, and follow-up steps — append a new section at the top when fixing a bug.
 
 ## Code Organization Quick Reference
 
 | Need to... | Look in... |
-|-----------|-----------|
+| ----------- | ----------- |
 | Add a new API endpoint | `lib/data/repositories/<feature>_repository.dart`, then expose in BLoC |
 | Add new database table | `lib/core/database/database_service.dart` and add to sync in `lib/core/sync/sync_service.dart` |
 | Create new screen | `lib/presentation/screens/<feature>/` and add route to `lib/core/router/app_router.dart` |
 | Create new BLoC | `lib/presentation/blocs/<feature>/` (events, states, bloc class) |
 | Create new model | `lib/data/models/` (ensure JSON serializable with fromJson/toJson) |
 | Configure theme colors | `lib/core/theme/app_theme.dart` |
-| Manage responsive breakpoints | `lib/core/theme/app_theme.dart` or check `ResponsiveBreakpoints` in screens
+| Manage responsive breakpoints | `lib/core/theme/app_theme.dart` or check `ResponsiveBreakpoints` in screens |

@@ -1,6 +1,6 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_frontend/presentation/widgets/auto_scrolling_text.dart';
+import 'package:paroisse_gest/presentation/widgets/auto_scrolling_text.dart';
 import '../../core/theme/app_theme.dart';
 
 class StatCard extends StatelessWidget {
