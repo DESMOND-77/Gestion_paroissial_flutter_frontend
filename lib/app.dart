@@ -13,7 +13,8 @@ import 'presentation/blocs/librairie/librairie_bloc.dart';
 import 'presentation/blocs/dashboard/dashboard_bloc.dart';
 
 class App extends StatefulWidget {
-  const App({super.key});
+  final bool secureStorageLocked;
+  const App({super.key, this.secureStorageLocked = false});
 
   @override
   State<App> createState() => _AppState();
@@ -29,6 +30,39 @@ class _AppState extends State<App> {
     _authBloc = sl<AuthBloc>();
     _authBloc.add(const AuthCheckRequested());
     _appRouter = AppRouter(authBloc: _authBloc);
+
+    if (widget.secureStorageLocked) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _warnKeyringLocked());
+    }
+  }
+
+  void _warnKeyringLocked() {
+    final ctx =
+        _appRouter.router.routerDelegate.navigatorKey.currentContext;
+    if (ctx == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _warnKeyringLocked());
+      return;
+    }
+    showDialog<void>(
+      context: ctx,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text('Trousseau verrouillé'),
+        content: const Text(
+          'Le trousseau GNOME est verrouillé. Tant qu\'il ne sera pas '
+          'déverrouillé, la connexion ne pourra pas être sauvegardée et '
+          'vous devrez vous reconnecter à chaque démarrage.\n\n'
+          'Pour le déverrouiller : ouvrez Seahorse (Mots de passe et clés), '
+          'développez « Mots de passe » → « Login » → clic droit → '
+          'Déverrouiller.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
