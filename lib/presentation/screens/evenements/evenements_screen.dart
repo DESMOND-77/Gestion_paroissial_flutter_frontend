@@ -58,7 +58,7 @@ class _EvenementsViewState extends State<_EvenementsView> with SingleTickerProvi
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor),
             onPressed: () {
-              Navigator.pop(ctx);
+              Navigator.pop(context);
               ctx.read<EvenementsBloc>().add(DeleteEvenement(id: id));
             },
             child: const Text('Supprimer'),

@@ -98,21 +98,25 @@ class MembreRepository {
 
   Future<Membre> createMembre(Map<String, dynamic> data) async {
     final response = await _dioClient.post(ApiConstants.membres, data: data);
+    await _databaseService?.clearTable('membres');
     return Membre.fromJson(response.data["data"] as Map<String, dynamic>);
   }
 
   Future<Membre> updateMembre(int id, Map<String, dynamic> data) async {
     final response = await _dioClient.put(ApiConstants.membreById(id), data: data);
+    await _databaseService?.clearTable('membres');
     return Membre.fromJson(response.data["data"] as Map<String, dynamic>);
   }
 
   Future<Membre> patchMembre(int id, Map<String, dynamic> data) async {
     final response = await _dioClient.patch(ApiConstants.membreById(id), data: data);
+    await _databaseService?.clearTable('membres');
     return Membre.fromJson(response.data["data"] as Map<String, dynamic>);
   }
 
   Future<void> deleteMembre(int id) async {
     await _dioClient.delete(ApiConstants.membreById(id));
+    await _databaseService?.clearTable('membres');
   }
 
   Future<List<Sacrement>> getMembreSacrements(int id) async {

@@ -92,21 +92,25 @@ class FinanceRepository {
 
   Future<Transaction> createTransaction(Map<String, dynamic> data) async {
     final response = await _dioClient.post(ApiConstants.transactions, data: data);
+    await _databaseService?.clearTable('finances');
     return Transaction.fromJson(response.data["data"] as Map<String, dynamic>);
   }
 
   Future<Transaction> updateTransaction(int id, Map<String, dynamic> data) async {
     final response = await _dioClient.put(ApiConstants.transactionById(id), data: data);
+    await _databaseService?.clearTable('finances');
     return Transaction.fromJson(response.data["data"] as Map<String, dynamic>);
   }
 
   Future<Transaction> patchTransaction(int id, Map<String, dynamic> data) async {
     final response = await _dioClient.patch(ApiConstants.transactionById(id), data: data);
+    await _databaseService?.clearTable('finances');
     return Transaction.fromJson(response.data["data"] as Map<String, dynamic>);
   }
 
   Future<void> deleteTransaction(int id) async {
     await _dioClient.delete(ApiConstants.transactionById(id));
+    await _databaseService?.clearTable('finances');
   }
 
   Future<RapportFinancier> getRapport({

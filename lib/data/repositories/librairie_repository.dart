@@ -1,3 +1,5 @@
+import 'package:paroisse_gest/core/database/database_service.dart';
+
 import '../../core/network/dio_client.dart';
 import '../../core/constants/api_constants.dart';
 import '../models/article_model.dart';
@@ -5,8 +7,12 @@ import '../models/vente_model.dart';
 
 class LibrairieRepository {
   final DioClient _dioClient;
+  final DatabaseService? _databaseService;
 
-  LibrairieRepository({required DioClient dioClient}) : _dioClient = dioClient;
+  LibrairieRepository(
+      {required DioClient dioClient, DatabaseService? databaseService})
+      : _dioClient = dioClient,
+        _databaseService = databaseService;
 
   Future<List<Article>> getArticles({
     String? search,
@@ -45,21 +51,29 @@ class LibrairieRepository {
 
   Future<Article> createArticle(Map<String, dynamic> data) async {
     final response = await _dioClient.post(ApiConstants.articles, data: data);
+    await _databaseService?.clearTable('librairie');
     return Article.fromJson(response.data["data"] as Map<String, dynamic>);
   }
 
   Future<Article> updateArticle(int id, Map<String, dynamic> data) async {
-    final response = await _dioClient.put(ApiConstants.articleById(id), data: data);
+    final response =
+        await _dioClient.put(ApiConstants.articleById(id), data: data);
+    await _databaseService?.clearTable('librairie');
+
     return Article.fromJson(response.data["data"] as Map<String, dynamic>);
   }
 
   Future<Article> patchArticle(int id, Map<String, dynamic> data) async {
-    final response = await _dioClient.patch(ApiConstants.articleById(id), data: data);
+    final response =
+        await _dioClient.patch(ApiConstants.articleById(id), data: data);
+    await _databaseService?.clearTable('librairie');
+
     return Article.fromJson(response.data["data"] as Map<String, dynamic>);
   }
 
   Future<void> deleteArticle(int id) async {
     await _dioClient.delete(ApiConstants.articleById(id));
+    await _databaseService?.clearTable('librairie');
   }
 
   Future<List<Article>> getAlertes() async {
@@ -110,6 +124,7 @@ class LibrairieRepository {
 
   Future<Vente> createVente(Map<String, dynamic> data) async {
     final response = await _dioClient.post(ApiConstants.ventes, data: data);
+    await _databaseService?.clearTable('evenements');
     return Vente.fromJson(response.data["data"] as Map<String, dynamic>);
   }
 }

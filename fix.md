@@ -4,6 +4,94 @@ A chronological log of bug fixes applied to this project. Each entry: date, symp
 
 ---
 
+## 2026-05-30 — L'interface ne se met pas à jour après ajout/modification/suppression
+
+### Symptom
+
+Après un create/update/delete d'un membre, groupe, événement ou transaction,
+l'opération réussit côté serveur mais la liste affichée reste inchangée. Il
+fallait attendre le cycle de synchronisation (5 min) puis quitter et revenir sur
+l'écran pour que les données s'actualisent.
+
+### Root cause
+
+Les méthodes `getXxx()` des repositories renvoient le cache SQLite dès qu'il
+n'est **pas vide** (sans même vérifier la validité de 5 min), et les méthodes
+`createXxx/updateXxx/deleteXxx` n'invalidaient jamais ce cache. Le BLoC
+rechargeait bien la liste (`add(LoadXxx())`) après la mutation, mais `getXxx()`
+lui resservait le cache obsolète. Seul le `PeriodicSyncManager` (toutes les 5
+min) écrasait le cache via `saveItems`, d'où l'attente.
+
+### Fix
+
+Invalider le cache de l'entité concernée juste après chaque mutation réussie,
+via `_databaseService?.clearTable('<table>')`. Au prochain `getXxx()` déclenché
+par le rechargement du BLoC, le cache vide force un `fetchXxx()` serveur qui
+repeuple le cache et renvoie des données fraîches → l'écran courant s'actualise
+immédiatement.
+
+### Files touched
+
+- `lib/data/repositories/membre_repository.dart` (createMembre, updateMembre, patchMembre, deleteMembre)
+- `lib/data/repositories/groupe_repository.dart` (createGroupe, updateGroupe, patchGroupe, deleteGroupe)
+- `lib/data/repositories/evenement_repository.dart` (createEvenement, updateEvenement, patchEvenement, deleteEvenement)
+- `lib/data/repositories/finance_repository.dart` (createTransaction, updateTransaction, patchTransaction, deleteTransaction)
+
+### Follow-up
+
+La librairie n'utilise pas encore le cache local (pas de `DatabaseService`
+injecté), donc rien à invalider là. Si une table cachée est ajoutée plus tard,
+appliquer le même `clearTable(...)` dans ses mutations.
+
+---
+
+## 2026-05-29 — App crashes (pops last page off stack) when confirming a delete
+
+### Symptom
+
+Tapping "Supprimer" in a delete-confirmation dialog (membres, groupes,
+événements, finances) crashed with:
+
+```text
+You have popped the last page off of the stack, there are no pages left to show
+'package:go_router/src/delegate.dart': Failed assertion: 'currentConfiguration.isNotEmpty'
+'package:flutter/src/widgets/navigator.dart': Failed assertion: '!_debugLocked' is not true.
+```
+
+The "Annuler" button worked fine; only "Supprimer" crashed.
+
+### Root cause
+
+`showDialog` pushes the dialog onto the **root** navigator (default
+`useRootNavigator: true`). The confirm button called `Navigator.pop(ctx)` where
+`ctx` was the **screen** context, which lives inside the `ShellRoute`'s nested
+navigator. So `Navigator.of(ctx)` resolved to the nested navigator and popped
+the current **page** instead of the dialog — emptying the shell's route stack.
+The "Annuler" button used the dialog builder's `context` (correct), which is why
+it worked. The librairie screen and the sacrement dialog were already correct
+because their builder param is named `ctx` (the dialog context).
+
+### Files touched
+
+- `lib/presentation/screens/groupes/groupes_screen.dart:54`
+- `lib/presentation/screens/finances/finances_screen.dart:68`
+- `lib/presentation/screens/evenements/evenements_screen.dart:61`
+- `lib/presentation/screens/membres/membres_screen.dart:62`
+
+Changed the confirm button's `Navigator.pop(ctx)` → `Navigator.pop(context)`
+(the dialog builder's context). The subsequent `ctx.read<Bloc>()` still uses the
+screen context, which is valid.
+
+### Follow-up
+
+- Unrelated `NetworkException` lines in the log are just the backend being
+  offline — the cache serves data correctly.
+- Separate, still-open: RenderFlex overflow (12–28px) in
+  `lib/presentation/screens/groupes/groupes_screen.dart:174` (card content too
+  tall for `childAspectRatio: 1.9`).
+
+---
+
 ## 2026-05-29 — `PlatformException(KeyringLocked)` on Linux at first auth read
 
 ### Symptom

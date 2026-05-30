@@ -86,21 +86,25 @@ class EvenementRepository {
 
   Future<Evenement> createEvenement(Map<String, dynamic> data) async {
     final response = await _dioClient.post(ApiConstants.evenements, data: data);
+    await _databaseService?.clearTable('evenements');
     return Evenement.fromJson(response.data["data"] as Map<String, dynamic>);
   }
 
   Future<Evenement> updateEvenement(int id, Map<String, dynamic> data) async {
     final response = await _dioClient.put(ApiConstants.evenementById(id), data: data);
+    await _databaseService?.clearTable('evenements');
     return Evenement.fromJson(response.data["data"] as Map<String, dynamic>);
   }
 
   Future<Evenement> patchEvenement(int id, Map<String, dynamic> data) async {
     final response = await _dioClient.patch(ApiConstants.evenementById(id), data: data);
+    await _databaseService?.clearTable('evenements');
     return Evenement.fromJson(response.data["data"] as Map<String, dynamic>);
   }
 
   Future<void> deleteEvenement(int id) async {
     await _dioClient.delete(ApiConstants.evenementById(id));
+    await _databaseService?.clearTable('evenements');
   }
 
   Future<void> inscrire(int id) async {

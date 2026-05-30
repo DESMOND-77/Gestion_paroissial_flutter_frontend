@@ -77,21 +77,25 @@ class GroupeRepository {
 
   Future<Groupe> createGroupe(Map<String, dynamic> data) async {
     final response = await _dioClient.post(ApiConstants.groupes, data: data);
+    await _databaseService?.clearTable('groupes');
     return Groupe.fromJson(response.data["data"] as Map<String, dynamic>);
   }
 
   Future<Groupe> updateGroupe(int id, Map<String, dynamic> data) async {
     final response = await _dioClient.put(ApiConstants.groupeById(id), data: data);
+    await _databaseService?.clearTable('groupes');
     return Groupe.fromJson(response.data["data"] as Map<String, dynamic>);
   }
 
   Future<Groupe> patchGroupe(int id, Map<String, dynamic> data) async {
     final response = await _dioClient.patch(ApiConstants.groupeById(id), data: data);
+    await _databaseService?.clearTable('groupes');
     return Groupe.fromJson(response.data["data"] as Map<String, dynamic>);
   }
 
   Future<void> deleteGroupe(int id) async {
     await _dioClient.delete(ApiConstants.groupeById(id));
+    await _databaseService?.clearTable('groupes');
   }
 
   Future<List<Membre>> getGroupeMembres(int id) async {

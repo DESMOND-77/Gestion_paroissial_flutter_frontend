@@ -59,7 +59,7 @@ class _MembresViewState extends State<_MembresView> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor),
             onPressed: () {
-              Navigator.pop(ctx);
+              Navigator.pop(context);
               ctx.read<MembresBloc>().add(DeleteMembre(id: id));
             },
             child: const Text('Supprimer'),

@@ -65,7 +65,7 @@ class _FinancesViewState extends State<_FinancesView>
             style:
                 ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor),
             onPressed: () {
-              Navigator.pop(ctx);
+              Navigator.pop(context);
               ctx.read<FinancesBloc>().add(DeleteTransaction(id: id));
             },
             child: const Text('Supprimer'),
