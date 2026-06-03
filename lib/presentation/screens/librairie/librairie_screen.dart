@@ -11,6 +11,7 @@ import '../../../data/models/article_model.dart';
 import '../../../data/models/vente_model.dart';
 import '../../blocs/librairie/librairie_bloc.dart';
 import '../../widgets/loading_widget.dart';
+import '../../widgets/refresh_wrapper.dart';
 
 class LibrairieScreen extends StatefulWidget {
   const LibrairieScreen({super.key});
@@ -67,6 +68,27 @@ class _LibrairieScreenState extends State<LibrairieScreen>
     _tabController.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _refreshArticles() async {
+    _bloc.add(LoadArticles(
+      search: _searchController.text.isEmpty ? null : _searchController.text,
+      categorie: _selectedCategorie,
+    ));
+    await _bloc.stream
+        .firstWhere((s) => s is ArticlesLoaded || s is LibrairieError);
+  }
+
+  Future<void> _refreshVentes() async {
+    _bloc.add(const LoadVentes());
+    await _bloc.stream
+        .firstWhere((s) => s is VentesLoaded || s is LibrairieError);
+  }
+
+  Future<void> _refreshAlertes() async {
+    _bloc.add(const LoadAlertes());
+    await _bloc.stream
+        .firstWhere((s) => s is AlertesLoaded || s is LibrairieError);
   }
 
   @override
@@ -198,10 +220,15 @@ class _LibrairieScreenState extends State<LibrairieScreen>
     final articles = state is ArticlesLoaded ? state.articles : <Article>[];
 
     if (articles.isEmpty) {
-      return _buildEmpty('Aucun article trouvé', Icons.menu_book_outlined);
+      return RefreshIndicator(
+        onRefresh: _refreshArticles,
+        child: _buildEmpty('Aucun article trouvé', Icons.menu_book_outlined),
+      );
     }
 
-    return DataTable2(
+    return RefreshIndicator(
+      onRefresh: _refreshArticles,
+      child: DataTable2(
       columnSpacing: 16,
       horizontalMargin: 12,
       minWidth: 400,
@@ -216,6 +243,7 @@ class _LibrairieScreenState extends State<LibrairieScreen>
             label: Text('Actions'), size: ColumnSize.S, fixedWidth: 105),
       ],
       rows: articles.map((a) => _buildArticleRow(a)).toList(),
+      ),
     );
   }
 
@@ -301,11 +329,16 @@ class _LibrairieScreenState extends State<LibrairieScreen>
     final ventes = state is VentesLoaded ? state.ventes : <Vente>[];
 
     if (ventes.isEmpty) {
-      return _buildEmpty(
-          'Aucune vente enregistrée', Icons.shopping_cart_outlined);
+      return RefreshIndicator(
+        onRefresh: _refreshVentes,
+        child: _buildEmpty(
+            'Aucune vente enregistrée', Icons.shopping_cart_outlined),
+      );
     }
 
-    return DataTable2(
+    return RefreshIndicator(
+      onRefresh: _refreshVentes,
+      child: DataTable2(
       columnSpacing: 12,
       horizontalMargin: 16,
       headingRowColor: WidgetStateProperty.all(
@@ -339,6 +372,7 @@ class _LibrairieScreenState extends State<LibrairieScreen>
           ],
         );
       }).toList(),
+      ),
     );
   }
 
@@ -348,15 +382,21 @@ class _LibrairieScreenState extends State<LibrairieScreen>
     final articles = state is AlertesLoaded ? state.articles : <Article>[];
 
     if (articles.isEmpty) {
-      return _buildEmpty(
-        'Aucune alerte de stock',
-        Icons.check_circle_outline,
-        color: AppTheme.successColor,
-        subtitle: 'Tous les stocks sont suffisants',
+      return RefreshIndicator(
+        onRefresh: _refreshAlertes,
+        child: _buildEmpty(
+          'Aucune alerte de stock',
+          Icons.check_circle_outline,
+          color: AppTheme.successColor,
+          subtitle: 'Tous les stocks sont suffisants',
+        ),
       );
     }
 
-    return ListView.separated(
+    return RefreshIndicator(
+      onRefresh: _refreshAlertes,
+      child: ListView.separated(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       itemCount: articles.length,
       separatorBuilder: (_, __) => const SizedBox(height: 8),
@@ -391,14 +431,15 @@ class _LibrairieScreenState extends State<LibrairieScreen>
           ),
         );
       },
+      ),
     );
   }
 
   Widget _buildEmpty(String message, IconData icon,
       {Color color = AppTheme.textSecondary, String? subtitle}) {
-    return Center(
+    return RefreshableEmpty(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 64, color: color.withAlpha(128)),
           const SizedBox(height: 16),
@@ -428,11 +469,10 @@ class _LibrairieScreenState extends State<LibrairieScreen>
           child: PopupMenuButton<String>(
             elevation: 4,
             color: AppTheme.secondaryColor,
-            // icon: const Icon(Icons.output_outlined, color: AppTheme.sidebarBg),
             onSelected: (value) {
               if (value == 'sell') {
                 context.go('/librairie/ventes/new');
-              } else if (value == 'delete') {
+              } else if (value == 'add') {
                 context.go('/librairie/articles/new');
               }
             },
@@ -457,22 +497,6 @@ class _LibrairieScreenState extends State<LibrairieScreen>
             ],
           ),
         ),
-
-        // FloatingActionButton(
-        //   heroTag: 'vente',
-        //   onPressed: () => context.go('/librairie/ventes/new'),
-        //   // label: const Text('Nouvelle vente'),
-        //   backgroundColor: AppTheme.secondaryColor,
-        //   foregroundColor: AppTheme.sidebarBg,
-        //   child: const Icon(Icons.shopping_cart_outlined),
-        // ),
-        // const SizedBox(height: 12),
-        // FloatingActionButton.extended(
-        //   heroTag: 'article',
-        //   onPressed: () => context.go('/librairie/articles/new'),
-        //   icon: const Icon(Icons.add),
-        //   label: const Text('Ajouter article'),
-        // ),
       ],
     );
   }

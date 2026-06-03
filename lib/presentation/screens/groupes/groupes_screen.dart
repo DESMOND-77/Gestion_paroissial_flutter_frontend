@@ -7,6 +7,7 @@ import '../../../core/di/injection.dart';
 import '../../blocs/groupes/groupes_bloc.dart';
 import '../../../data/models/groupe_model.dart';
 import '../../widgets/loading_widget.dart';
+import '../../widgets/refresh_wrapper.dart';
 
 class GroupesScreen extends StatelessWidget {
   const GroupesScreen({super.key});
@@ -35,6 +36,13 @@ class _GroupesViewState extends State<_GroupesView> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _refresh() async {
+    final bloc = context.read<GroupesBloc>();
+    final search = _searchController.text.trim();
+    bloc.add(LoadGroupes(search: search.isEmpty ? null : search));
+    await bloc.stream.firstWhere((s) => s is GroupesLoaded || s is GroupesError);
   }
 
   void _deleteGroupe(BuildContext ctx, int id, String nom) {
@@ -90,9 +98,12 @@ class _GroupesViewState extends State<_GroupesView> {
             children: [
               _buildSearchBar(context),
               Expanded(
-                child: state is GroupesLoading
+                child: (state is GroupesLoading && _groupes.isEmpty)
                     ? const LoadingWidget(message: 'Chargement des groupes...')
-                    : _buildGrid(),
+                    : RefreshIndicator(
+                        onRefresh: _refresh,
+                        child: _buildGrid(),
+                      ),
               ),
             ],
           ),
@@ -137,9 +148,9 @@ class _GroupesViewState extends State<_GroupesView> {
 
   Widget _buildGrid() {
     if (_groupes.isEmpty) {
-      return const Center(
+      return const RefreshableEmpty(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.group_outlined, size: 64, color: AppTheme.textSecondary),
             SizedBox(height: 16),
@@ -151,6 +162,7 @@ class _GroupesViewState extends State<_GroupesView> {
     }
 
     return GridView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
         maxCrossAxisExtent: 320,

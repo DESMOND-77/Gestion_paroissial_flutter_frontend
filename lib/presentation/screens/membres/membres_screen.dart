@@ -7,6 +7,7 @@ import '../../../core/di/injection.dart';
 import '../../blocs/membres/membres_bloc.dart';
 import '../../../data/models/membre_model.dart';
 import '../../widgets/loading_widget.dart';
+import '../../widgets/refresh_wrapper.dart';
 
 class MembresScreen extends StatelessWidget {
   const MembresScreen({super.key});
@@ -40,9 +41,23 @@ class _MembresViewState extends State<_MembresView> {
 
   void _onSearch() {
     context.read<MembresBloc>().add(LoadMembres(
-          search: _searchController.text.trim().isEmpty ? null : _searchController.text.trim(),
+          search: _searchController.text.trim().isEmpty
+              ? null
+              : _searchController.text.trim(),
           sexe: _selectedSexe,
         ));
+  }
+
+  Future<void> _refresh() async {
+    final bloc = context.read<MembresBloc>();
+    bloc.add(LoadMembres(
+      search: _searchController.text.trim().isEmpty
+          ? null
+          : _searchController.text.trim(),
+      sexe: _selectedSexe,
+    ));
+    await bloc.stream
+        .firstWhere((s) => s is MembresLoaded || s is MembresError);
   }
 
   void _deleteMembre(BuildContext ctx, int id, String nom) {
@@ -57,7 +72,8 @@ class _MembresViewState extends State<_MembresView> {
             child: const Text('Annuler'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor),
+            style:
+                ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor),
             onPressed: () {
               Navigator.pop(context);
               ctx.read<MembresBloc>().add(DeleteMembre(id: id));
@@ -101,17 +117,23 @@ class _MembresViewState extends State<_MembresView> {
             children: [
               _buildToolbar(context),
               Expanded(
-                child: state is MembresLoading
+                child: (state is MembresLoading && _membres.isEmpty)
                     ? const LoadingWidget(message: 'Chargement des membres...')
-                    : _buildTable(context),
+                    : RefreshIndicator(
+                        onRefresh: _refresh,
+                        child: _buildTable(context),
+                      ),
               ),
             ],
           ),
           floatingActionButton: FloatingActionButton.extended(
             onPressed: () => context.push('/membres/new'),
-            icon: const Icon(Icons.person_add,size: 20,),
+            icon: const Icon(
+              Icons.person_add,
+              size: 20,
+            ),
             label: const SizedBox(),
-          ),        
+          ),
         );
       },
     );
@@ -138,7 +160,8 @@ class _MembresViewState extends State<_MembresView> {
                         },
                       )
                     : null,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 isDense: true,
               ),
               onChanged: (_) => _onSearch(),
@@ -164,10 +187,11 @@ class _MembresViewState extends State<_MembresView> {
   }
 
   Widget _buildTable(BuildContext context) {
+   
     if (_membres.isEmpty) {
-      return const Center(
+      return const RefreshableEmpty(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.people_outline, size: 64, color: AppTheme.textSecondary),
             SizedBox(height: 16),
@@ -183,13 +207,14 @@ class _MembresViewState extends State<_MembresView> {
     return Padding(
       padding: const EdgeInsets.all(10),
       child: Card(
-        elevation: 2,
+        elevation: 6,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: DataTable2(
           columnSpacing: 10,
           horizontalMargin: 16,
           minWidth: 600,
-          headingRowColor: WidgetStateProperty.all(AppTheme.primaryColor.withAlpha(25)),
+          headingRowColor:
+              WidgetStateProperty.all(AppTheme.primaryColor.withAlpha(25)),
           columns: const [
             DataColumn2(label: Text('Nom complet'), size: ColumnSize.L),
             DataColumn2(label: Text('Sexe'), size: ColumnSize.S),
@@ -197,7 +222,8 @@ class _MembresViewState extends State<_MembresView> {
             DataColumn2(label: Text('Quartier'), size: ColumnSize.M),
             DataColumn2(label: Text('Groupe'), size: ColumnSize.M),
             DataColumn2(label: Text('Baptisé'), size: ColumnSize.S),
-            DataColumn2(label: Text('Actions'), size: ColumnSize.S, fixedWidth: 105),
+            DataColumn2(
+                label: Text('Actions'), size: ColumnSize.S, fixedWidth: 105),
           ],
           rows: _membres.map((membre) {
             return DataRow2(
@@ -221,7 +247,9 @@ class _MembresViewState extends State<_MembresView> {
                 DataCell(
                   Icon(
                     membre.estBaptise ? Icons.check_circle : Icons.cancel,
-                    color: membre.estBaptise ? AppTheme.successColor : AppTheme.textSecondary,
+                    color: membre.estBaptise
+                        ? AppTheme.successColor
+                        : AppTheme.textSecondary,
                     size: 18,
                   ),
                 ),
@@ -231,14 +259,17 @@ class _MembresViewState extends State<_MembresView> {
                     children: [
                       IconButton(
                         icon: const Icon(Icons.edit, size: 18),
-                        onPressed: () => context.push('/membres/${membre.id}/edit'),
+                        onPressed: () =>
+                            context.push('/membres/${membre.id}/edit'),
                         tooltip: 'Modifier',
                         constraints: const BoxConstraints(),
                         padding: const EdgeInsets.all(4),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.delete, size: 18, color: AppTheme.errorColor),
-                        onPressed: () => _deleteMembre(context, membre.id, membre.nomComplet),
+                        icon: const Icon(Icons.delete,
+                            size: 18, color: AppTheme.errorColor),
+                        onPressed: () => _deleteMembre(
+                            context, membre.id, membre.nomComplet),
                         tooltip: 'Supprimer',
                         constraints: const BoxConstraints(),
                         padding: const EdgeInsets.all(4),

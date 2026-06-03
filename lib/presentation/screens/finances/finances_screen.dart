@@ -11,6 +11,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../blocs/finances/finances_bloc.dart';
 import '../../../data/models/transaction_model.dart';
 import '../../widgets/loading_widget.dart';
+import '../../widgets/refresh_wrapper.dart';
 
 class FinancesScreen extends StatelessWidget {
   const FinancesScreen({super.key});
@@ -49,6 +50,19 @@ class _FinancesViewState extends State<_FinancesView>
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  Future<void> _refresh() async {
+    final bloc = context.read<FinancesBloc>();
+    if (_filterType != null || _filterCategorie != null) {
+      bloc.add(LoadTransactions(type: _filterType, categorie: _filterCategorie));
+      await bloc.stream
+          .firstWhere((s) => s is TransactionsLoaded || s is FinancesError);
+    } else {
+      bloc.add(const LoadRapportFinancier());
+      await bloc.stream
+          .firstWhere((s) => s is RapportFinancierLoaded || s is FinancesError);
+    }
   }
 
   void _deleteTransaction(BuildContext ctx, int id) {
@@ -127,7 +141,7 @@ class _FinancesViewState extends State<_FinancesView>
                 ],
               ),
               Expanded(
-                child: isLoading
+                child: (isLoading && _transactions.isEmpty && _rapport == null)
                     ? const LoadingWidget(message: 'Chargement...')
                     : TabBarView(
                         controller: _tabController,
@@ -249,26 +263,31 @@ class _FinancesViewState extends State<_FinancesView>
 
   Widget _buildTransactionsTable(BuildContext context, NumberFormat formatter) {
     if (_transactions.isEmpty) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.receipt_long_outlined,
-                size: 64, color: AppTheme.textSecondary),
-            SizedBox(height: 16),
-            Text('Aucune transaction',
-                style: TextStyle(color: AppTheme.textSecondary)),
-          ],
+      return RefreshIndicator(
+        onRefresh: _refresh,
+        child: const RefreshableEmpty(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.receipt_long_outlined,
+                  size: 64, color: AppTheme.textSecondary),
+              SizedBox(height: 16),
+              Text('Aucune transaction',
+                  style: TextStyle(color: AppTheme.textSecondary)),
+            ],
+          ),
         ),
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.all(10),
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: DataTable2(
+    return RefreshIndicator(
+      onRefresh: _refresh,
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: DataTable2(
           columnSpacing: 16,
           horizontalMargin: 12,
           minWidth: 600,
@@ -355,6 +374,7 @@ class _FinancesViewState extends State<_FinancesView>
               ],
             );
           }).toList(),
+          ),
         ),
       ),
     );
@@ -362,7 +382,12 @@ class _FinancesViewState extends State<_FinancesView>
 
   Widget _buildRapportChart(BuildContext context, NumberFormat formatter) {
     if (_rapport == null) {
-      return const Center(child: Text('Aucun rapport disponible'));
+      return RefreshIndicator(
+        onRefresh: _refresh,
+        child: const RefreshableEmpty(
+          child: Text('Aucun rapport disponible'),
+        ),
+      );
     }
 
     final rapport = _rapport!;
@@ -376,12 +401,15 @@ class _FinancesViewState extends State<_FinancesView>
       const Color(0xFF6A1B9A),
     ];
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          Card(
-            elevation: 2,
+    return RefreshIndicator(
+      onRefresh: _refresh,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Card(
+              elevation: 2,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Padding(
@@ -483,6 +511,7 @@ class _FinancesViewState extends State<_FinancesView>
             ),
           ),
         ],
+        ),
       ),
     );
   }

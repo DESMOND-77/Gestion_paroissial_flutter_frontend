@@ -8,6 +8,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../blocs/evenements/evenements_bloc.dart';
 import '../../../data/models/evenement_model.dart';
 import '../../widgets/loading_widget.dart';
+import '../../widgets/refresh_wrapper.dart';
 
 class EvenementsScreen extends StatelessWidget {
   const EvenementsScreen({super.key});
@@ -45,6 +46,16 @@ class _EvenementsViewState extends State<_EvenementsView> with SingleTickerProvi
     _searchController.dispose();
     _tabController.dispose();
     super.dispose();
+  }
+
+  Future<void> _refresh() async {
+    final bloc = context.read<EvenementsBloc>();
+    bloc.add(LoadEvenements(
+      search: _searchController.text.isEmpty ? null : _searchController.text,
+      type: _selectedType,
+    ));
+    await bloc.stream
+        .firstWhere((s) => s is EvenementsLoaded || s is EvenementsError);
   }
 
   void _deleteEvenement(BuildContext ctx, int id, String titre) {
@@ -111,7 +122,7 @@ class _EvenementsViewState extends State<_EvenementsView> with SingleTickerProvi
                 ],
               ),
               Expanded(
-                child: isLoading
+                child: (isLoading && _evenements.isEmpty)
                     ? const LoadingWidget(message: 'Chargement des événements...')
                     : TabBarView(
                         controller: _tabController,
@@ -176,22 +187,29 @@ class _EvenementsViewState extends State<_EvenementsView> with SingleTickerProvi
 
   Widget _buildList(BuildContext context, List<Evenement> evenements) {
     if (evenements.isEmpty) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.event_outlined, size: 64, color: AppTheme.textSecondary),
-            SizedBox(height: 16),
-            Text('Aucun événement', style: TextStyle(color: AppTheme.textSecondary)),
-          ],
+      return RefreshIndicator(
+        onRefresh: _refresh,
+        child: const RefreshableEmpty(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.event_outlined, size: 64, color: AppTheme.textSecondary),
+              SizedBox(height: 16),
+              Text('Aucun événement', style: TextStyle(color: AppTheme.textSecondary)),
+            ],
+          ),
         ),
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: evenements.length,
-      itemBuilder: (context, i) => _buildCard(context, evenements[i]),
+    return RefreshIndicator(
+      onRefresh: _refresh,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        itemCount: evenements.length,
+        itemBuilder: (context, i) => _buildCard(context, evenements[i]),
+      ),
     );
   }
 
