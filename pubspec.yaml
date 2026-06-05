@@ -28,13 +28,29 @@ dependencies:
   connectivity_plus: ^5.0.2
   sqflite_common_ffi: ^2.4.0+3
   sqlite3_flutter_libs: ^0.5.24
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.7
+  lottie: ^3.3.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
 
+flutter_launcher_icons:
+  android: "launcher_icon"
+  image_path: "assets/images/gestparr_logo.png"
+  ios: true
+  background_color: "#000000"
+
+flutter_native_splash:
+  color: "#000000"
+  image: assets/images/gestparr_logo.png
+  android_12:
+    image: assets/images/gestparr_logo.png
+
 flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/lotties/

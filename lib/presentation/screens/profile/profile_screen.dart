@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:paroisse_gest/core/constants/api_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/auth_model.dart';
 import '../../blocs/auth/auth_bloc.dart';
@@ -16,10 +17,12 @@ class _ProfileScreenState extends State<ProfileScreen>
   late final TabController _tabController;
   final _profileFormKey = GlobalKey<FormState>();
   final _passwordFormKey = GlobalKey<FormState>();
+  final _urlFormKey = GlobalKey<FormState>();
 
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _urlController = TextEditingController();
 
   final _oldPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
@@ -30,7 +33,10 @@ class _ProfileScreenState extends State<ProfileScreen>
   bool _obscureConfirm = true;
   bool _profileLoading = false;
   bool _passwordLoading = false;
+  bool _urlLoading = false;
+  final String _apiBaseUrl = ApiConstants.baseUrl;
 
+  @override
   @override
   void initState() {
     super.initState();
@@ -50,6 +56,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     _firstNameController.text = user.firstName;
     _lastNameController.text = user.lastName;
     _emailController.text = user.email;
+    _urlController.text = _apiBaseUrl;
   }
 
   @override
@@ -67,18 +74,26 @@ class _ProfileScreenState extends State<ProfileScreen>
   void _submitProfile() {
     if (!_profileFormKey.currentState!.validate()) return;
     context.read<AuthBloc>().add(AuthProfileUpdated(data: {
-      'first_name': _firstNameController.text.trim(),
-      'last_name': _lastNameController.text.trim(),
-      'email': _emailController.text.trim(),
-    }));
+          'first_name': _firstNameController.text.trim(),
+          'last_name': _lastNameController.text.trim(),
+          'email': _emailController.text.trim(),
+        }));
   }
 
   void _submitPassword() {
     if (!_passwordFormKey.currentState!.validate()) return;
     context.read<AuthBloc>().add(AuthPasswordChanged(
-      oldPassword: _oldPasswordController.text,
-      newPassword: _newPasswordController.text,
-    ));
+          oldPassword: _oldPasswordController.text,
+          newPassword: _newPasswordController.text,
+        ));
+  }
+
+  void _submitUrl() {
+    if (!_urlFormKey.currentState!.validate()) return;
+    final newUrl = _urlController.text.trim();
+    context.read<AuthBloc>().add(AuthProfileUpdated(data: {
+          'api_base_url': newUrl,
+        }));
   }
 
   @override
@@ -89,11 +104,13 @@ class _ProfileScreenState extends State<ProfileScreen>
           setState(() {
             _profileLoading = true;
             _passwordLoading = true;
+            _urlLoading = true;
           });
         } else {
           setState(() {
             _profileLoading = false;
             _passwordLoading = false;
+            _urlLoading = false;
           });
         }
 
@@ -142,7 +159,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 controller: _tabController,
                 tabs: const [
                   Tab(text: 'Informations'),
-                  Tab(text: 'Sécurité'),
+                  Tab(text: 'Paramètres et Sécurité'),
                 ],
                 labelColor: AppTheme.primaryColor,
                 unselectedLabelColor: AppTheme.textSecondary,
@@ -252,8 +269,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                           prefixIcon: Icon(Icons.person_outline),
                         ),
                         textCapitalization: TextCapitalization.words,
-                        validator: (v) =>
-                            v == null || v.trim().isEmpty ? 'Champ requis' : null,
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? 'Champ requis'
+                            : null,
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -265,8 +283,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                           prefixIcon: Icon(Icons.person_outline),
                         ),
                         textCapitalization: TextCapitalization.words,
-                        validator: (v) =>
-                            v == null || v.trim().isEmpty ? 'Champ requis' : null,
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? 'Champ requis'
+                            : null,
                       ),
                     ),
                   ],
@@ -313,113 +332,155 @@ class _ProfileScreenState extends State<ProfileScreen>
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 500),
-          child: Form(
-            key: _passwordFormKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _sectionTitle('Changer le mot de passe'),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: _oldPasswordController,
-                  decoration: InputDecoration(
-                    labelText: 'Mot de passe actuel',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(_obscureOld
-                          ? Icons.visibility_off
-                          : Icons.visibility),
-                      onPressed: () =>
-                          setState(() => _obscureOld = !_obscureOld),
-                    ),
-                  ),
-                  obscureText: _obscureOld,
-                  validator: (v) =>
-                      v == null || v.isEmpty ? 'Champ requis' : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _newPasswordController,
-                  decoration: InputDecoration(
-                    labelText: 'Nouveau mot de passe',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(_obscureNew
-                          ? Icons.visibility_off
-                          : Icons.visibility),
-                      onPressed: () =>
-                          setState(() => _obscureNew = !_obscureNew),
-                    ),
-                  ),
-                  obscureText: _obscureNew,
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Champ requis';
-                    if (v.length < 8) return 'Minimum 8 caractères';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _confirmPasswordController,
-                  decoration: InputDecoration(
-                    labelText: 'Confirmer le nouveau mot de passe',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(_obscureConfirm
-                          ? Icons.visibility_off
-                          : Icons.visibility),
-                      onPressed: () =>
-                          setState(() => _obscureConfirm = !_obscureConfirm),
-                    ),
-                  ),
-                  obscureText: _obscureConfirm,
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Champ requis';
-                    if (v != _newPasswordController.text) {
-                      return 'Les mots de passe ne correspondent pas';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-                Card(
-                  color: AppTheme.primaryColor.withAlpha(13),
-                  child: const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Critères du mot de passe :',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
+          child: Column(
+            children: [
+              Form(
+                key: _passwordFormKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _sectionTitle('Changer le mot de passe'),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: _oldPasswordController,
+                      decoration: InputDecoration(
+                        labelText: 'Mot de passe actuel',
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: IconButton(
+                          icon: Icon(_obscureOld
+                              ? Icons.visibility_off
+                              : Icons.visibility),
+                          onPressed: () =>
+                              setState(() => _obscureOld = !_obscureOld),
                         ),
-                        SizedBox(height: 6),
-                        _PasswordCriteria(text: 'Minimum 8 caractères'),
-                        _PasswordCriteria(
-                            text: 'Mélange de lettres et de chiffres recommandé'),
-                        _PasswordCriteria(
-                            text: 'Évitez les mots de passe trop simples'),
-                      ],
+                      ),
+                      obscureText: _obscureOld,
+                      validator: (v) =>
+                          v == null || v.isEmpty ? 'Champ requis' : null,
                     ),
-                  ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _newPasswordController,
+                      decoration: InputDecoration(
+                        labelText: 'Nouveau mot de passe',
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: IconButton(
+                          icon: Icon(_obscureNew
+                              ? Icons.visibility_off
+                              : Icons.visibility),
+                          onPressed: () =>
+                              setState(() => _obscureNew = !_obscureNew),
+                        ),
+                      ),
+                      obscureText: _obscureNew,
+                      validator: (v) {
+                        if (v == null || v.isEmpty) return 'Champ requis';
+                        if (v.length < 8) return 'Minimum 8 caractères';
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _confirmPasswordController,
+                      decoration: InputDecoration(
+                        labelText: 'Confirmer le nouveau mot de passe',
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: IconButton(
+                          icon: Icon(_obscureConfirm
+                              ? Icons.visibility_off
+                              : Icons.visibility),
+                          onPressed: () => setState(
+                              () => _obscureConfirm = !_obscureConfirm),
+                        ),
+                      ),
+                      obscureText: _obscureConfirm,
+                      validator: (v) {
+                        if (v == null || v.isEmpty) return 'Champ requis';
+                        if (v != _newPasswordController.text) {
+                          return 'Les mots de passe ne correspondent pas';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    Card(
+                      color: AppTheme.primaryColor.withAlpha(13),
+                      child: const Padding(
+                        padding: EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Critères du mot de passe :',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                            SizedBox(height: 6),
+                            _PasswordCriteria(text: 'Minimum 8 caractères'),
+                            _PasswordCriteria(
+                                text:
+                                    'Mélange de lettres et de chiffres recommandé'),
+                            _PasswordCriteria(
+                                text: 'Évitez les mots de passe trop simples'),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: _passwordLoading ? null : _submitPassword,
+                      child: _passwordLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white),
+                            )
+                          : const Text('Changer le mot de passe'),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: _passwordLoading ? null : _submitPassword,
-                  child: _passwordLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white),
-                        )
-                      : const Text('Changer le mot de passe'),
+              ),
+              const SizedBox(height: 24),
+              Form(
+                key: _urlFormKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _sectionTitle('Changer l\'URL du serveur'),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: _urlController,
+                      decoration: const InputDecoration(
+                        labelText: 'Nouvelle URL du serveur',
+                        prefixIcon: Icon(Icons.link),
+                      ),
+                      validator: (v) {
+                        if (v == null || v.isEmpty) return 'Champ requis';
+                        if (!Uri.tryParse(v)!.hasAbsolutePath == true) {
+                          return 'URL invalide';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: _urlLoading ? null : _submitUrl,
+                      child: _urlLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white),
+                            )
+                          : const Text('Enregistrer l\'URL du serveur'),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

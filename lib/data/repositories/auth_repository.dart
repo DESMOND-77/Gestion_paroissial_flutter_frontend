@@ -24,7 +24,8 @@ class AuthRepository {
       ApiConstants.login,
       data: {'email': email, 'password': password},
     );
-    final loginResponse = LoginResponse.fromJson(response.data["data"] as Map<String, dynamic>);
+    final loginResponse =
+        LoginResponse.fromJson(response.data["data"] as Map<String, dynamic>);
     await _secureStorage.saveAccessToken(loginResponse.access);
     await _secureStorage.saveRefreshToken(loginResponse.refresh);
     await _secureStorage.saveUserData(jsonEncode(loginResponse.user.toJson()));
@@ -95,15 +96,26 @@ class AuthRepository {
 
   Future<AuthUser> getUserProfile() async {
     final response = await _dioClient.get(ApiConstants.userProfile);
-    final user = AuthUser.fromJson(response.data["data"] as Map<String, dynamic>);
+    final user =
+        AuthUser.fromJson(response.data["data"] as Map<String, dynamic>);
     await _secureStorage.saveUserData(jsonEncode(user.toJson()));
     return user;
   }
 
   Future<AuthUser> updateUserProfile(Map<String, dynamic> data) async {
-    final response = await _dioClient.patch(ApiConstants.userProfile, data: data);
-    final user = AuthUser.fromJson(response.data["data"] as Map<String, dynamic>);
+    final response =
+        await _dioClient.patch(ApiConstants.userProfile, data: data);
+    final user =
+        AuthUser.fromJson(response.data["data"] as Map<String, dynamic>);
     await _secureStorage.saveUserData(jsonEncode(user.toJson()));
     return user;
+  }
+
+  Future<void> setBaseUrl(String baseUrl) async {
+    await _secureStorage.saveBaseUrl(baseUrl);
+  }
+
+  Future<String?> getBaseUrl() async {
+    return await _secureStorage.getBaseUrl();
   }
 }

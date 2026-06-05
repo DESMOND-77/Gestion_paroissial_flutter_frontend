@@ -10,7 +10,7 @@ class AppConstants {
   static const String accessTokenKey = 'access_token';
   static const String refreshTokenKey = 'refresh_token';
   static const String userKey = 'user_data';
-
+  static const String apiBaseUrlKey = 'api_base_url';
   // Pagination
   static const int defaultPageSize = 20;
 

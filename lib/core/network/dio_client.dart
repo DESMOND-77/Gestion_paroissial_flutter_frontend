@@ -13,9 +13,11 @@ class DioClient {
   DioClient(this._secureStorage) {
     _dio = Dio(
       BaseOptions(
-        baseUrl: ApiConstants.baseUrl,
-        connectTimeout: const Duration(milliseconds: AppConstants.connectTimeout),
-        receiveTimeout: const Duration(milliseconds: AppConstants.receiveTimeout),
+        baseUrl:  ApiConstants.baseUrl,
+        connectTimeout:
+            const Duration(milliseconds: AppConstants.connectTimeout),
+        receiveTimeout:
+            const Duration(milliseconds: AppConstants.receiveTimeout),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -78,7 +80,8 @@ class DioClient {
               _failedQueue.clear();
 
               // Retry original request
-              error.requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
+              error.requestOptions.headers['Authorization'] =
+                  'Bearer $newAccessToken';
               final response = await _dio.fetch(error.requestOptions);
               _isRefreshing = false;
               handler.resolve(response);
@@ -190,10 +193,14 @@ class DioClient {
     if (e.type == DioExceptionType.connectionTimeout ||
         e.type == DioExceptionType.receiveTimeout ||
         e.type == DioExceptionType.sendTimeout) {
-      return const NetworkException(message: 'Délai de connexion dépassé. Vérifiez votre connexion internet.');
+      return const NetworkException(
+          message:
+              'Délai de connexion dépassé. Vérifiez votre connexion internet.');
     }
     if (e.type == DioExceptionType.connectionError) {
-      return const NetworkException(message: 'Impossible de se connecter au serveur. Vérifiez votre connexion internet.');
+      return const NetworkException(
+          message:
+              'Impossible de se connecter au serveur. Vérifiez votre connexion internet.');
     }
     if (e.response != null) {
       return ApiException.fromStatusCode(
@@ -201,6 +208,7 @@ class DioClient {
         e.response!.data,
       );
     }
-    return ApiException(message: e.message ?? 'Une erreur inattendue s\'est produite');
+    return ApiException(
+        message: e.message ?? 'Une erreur inattendue s\'est produite');
   }
 }

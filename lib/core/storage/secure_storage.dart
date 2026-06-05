@@ -101,6 +101,12 @@ class SecureStorage {
 
   Future<void> deleteUserData() => _safeDelete(AppConstants.userKey);
 
+
+  Future<void> saveBaseUrl(String baseUrl) =>
+      _safeWrite(AppConstants.apiBaseUrlKey, baseUrl);
+
+  Future<String?> getBaseUrl() => _safeRead(AppConstants.apiBaseUrlKey);
+
   Future<void> clearAll() async {
     try {
       await _storage.deleteAll();

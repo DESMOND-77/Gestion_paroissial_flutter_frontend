@@ -59,6 +59,13 @@ class AuthProfileUpdated extends AuthEvent {
   List<Object?> get props => [data];
 }
 
+class AuthBaseUrlUpdated extends AuthEvent {
+  final String baseUrl;
+  const AuthBaseUrlUpdated({required this.baseUrl});
+  @override
+  List<Object?> get props => [baseUrl];
+}
+
 class AuthPasswordChanged extends AuthEvent {
   final String oldPassword;
   final String newPassword;
@@ -144,6 +151,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthUserProfileRefreshed>(_onAuthUserProfileRefreshed);
     on<AuthProfileUpdated>(_onAuthProfileUpdated);
     on<AuthPasswordChanged>(_onAuthPasswordChanged);
+    on<AuthBaseUrlUpdated>(_onAuthBaseUrlUpdated);
   }
 
   Future<void> _onAuthCheckRequested(
@@ -262,6 +270,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       // Keep user authenticated
       final user = await _authRepository.getCachedUser();
       if (user != null) emit(AuthAuthenticated(user: user));
+    } catch (e) {
+      emit(AuthError(message: e.toString().replaceAll('Exception: ', '')));
+    }
+  }
+
+  Future<void> _onAuthBaseUrlUpdated(
+    AuthBaseUrlUpdated event,
+    Emitter<AuthState> emit,
+  ) async {
+    try {
+      await _authRepository.setBaseUrl(event.baseUrl);
+      // Optionally, you could emit a state to indicate the base URL was updated
     } catch (e) {
       emit(AuthError(message: e.toString().replaceAll('Exception: ', '')));
     }
