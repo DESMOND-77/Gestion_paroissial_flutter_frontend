@@ -81,6 +81,7 @@ Future<void> setupDependencies() async {
       evenementRepository: sl<EvenementRepository>(),
       financeRepository: sl<FinanceRepository>(),
       connectivity: sl<Connectivity>(),
+      secureStorage: sl<SecureStorage>(),
     ),
   );
 

@@ -4,6 +4,47 @@ A chronological log of bug fixes applied to this project. Each entry: date, symp
 
 ---
 
+## 2026-07-01 — Requêtes serveur au démarrage même sans utilisateur connecté
+
+### Symptom
+
+À l'ouverture de l'application (même si aucun compte n'est créé ni connecté),
+l'app effectue immédiatement des requêtes vers le serveur (membres, groupes,
+événements, finances). Ces requêtes échouent en 401 sans token et déclenchent
+inutilement des tentatives de rafraîchissement de token.
+
+### Root cause
+
+`main.dart` appelle `PeriodicSyncManager.startPeriodicSync()` de façon
+inconditionnelle au démarrage. Cette méthode lance immédiatement
+`SyncService.syncAll()`, qui ne vérifiait que la connectivité (`isOnline()`) et
+jamais l'état d'authentification. Résultat : les 4 endpoints étaient appelés dès
+l'ouverture, avant toute connexion.
+
+### Fix
+
+`SyncService` reçoit désormais `SecureStorage` (injecté via DI) et vérifie la
+présence d'un access token via `_isAuthenticated()` au début de `syncAll()` et
+`syncEntity()`. Sans token valide, aucune requête serveur n'est effectuée — ni
+au démarrage, ni au cycle périodique de 5 min.
+
+### Files touched
+
+- `lib/core/sync/sync_service.dart` — ajout du champ `_secureStorage`, du helper
+  `_isAuthenticated()`, et des gardes dans `syncAll()` / `syncEntity()`
+- `lib/core/di/injection.dart` — passe `secureStorage: sl<SecureStorage>()` à
+  `SyncService`
+
+### Follow-up
+
+- La première sync pour un utilisateur authentifié se fera au prochain tick du
+  timer (max 5 min) ; les écrans chargent de toute façon leurs données à la
+  demande via les repositories. Si une sync immédiate après login est souhaitée,
+  déclencher `PeriodicSyncManager.forceSyncNow()` depuis `AuthBloc` sur
+  `AuthAuthenticated`.
+
+---
+
 ## 2026-05-30 — L'interface ne se met pas à jour après ajout/modification/suppression
 
 ### Symptom

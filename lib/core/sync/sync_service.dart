@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../database/database_service.dart';
+import '../storage/secure_storage.dart';
 import '../../data/repositories/membre_repository.dart';
 import '../../data/repositories/groupe_repository.dart';
 import '../../data/repositories/evenement_repository.dart';
@@ -13,6 +14,7 @@ class SyncService {
   final EvenementRepository _evenementRepository;
   final FinanceRepository _financeRepository;
   final Connectivity _connectivity;
+  final SecureStorage _secureStorage;
 
   bool _isSyncing = false;
 
@@ -23,12 +25,14 @@ class SyncService {
     required EvenementRepository evenementRepository,
     required FinanceRepository financeRepository,
     required Connectivity connectivity,
+    required SecureStorage secureStorage,
   })  : _databaseService = databaseService,
         _membreRepository = membreRepository,
         _groupeRepository = groupeRepository,
         _evenementRepository = evenementRepository,
         _financeRepository = financeRepository,
-        _connectivity = connectivity;
+        _connectivity = connectivity,
+        _secureStorage = secureStorage;
 
   bool get isSyncing => _isSyncing;
 
@@ -38,9 +42,17 @@ class SyncService {
     return result != ConnectivityResult.none;
   }
 
+  // Vérifie qu'un utilisateur est connecté (token présent).
+  // Sans token, aucune requête serveur ne doit être effectuée.
+  Future<bool> _isAuthenticated() async {
+    final token = await _secureStorage.getAccessToken();
+    return token != null && token.isNotEmpty;
+  }
+
   // Synchronise toutes les données
   Future<void> syncAll() async {
     if (_isSyncing) return;
+    if (!await _isAuthenticated()) return;
     if (!await isOnline()) return;
 
     _isSyncing = true;
@@ -112,6 +124,7 @@ class SyncService {
 
   // Synchronise une entité spécifique
   Future<void> syncEntity(String entityType) async {
+    if (!await _isAuthenticated()) return;
     if (!await isOnline()) return;
 
     try {
