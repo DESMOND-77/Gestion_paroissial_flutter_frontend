@@ -191,16 +191,37 @@ class _ProfileScreenState extends State<ProfileScreen>
           CircleAvatar(
             radius: 36,
             backgroundColor: AppTheme.primaryColor,
-            child: Text(
-              user?.firstName.isNotEmpty == true
-                  ? user!.firstName[0].toUpperCase()
-                  : 'U',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            child: user?.profilePictureUrl != null
+                ? ClipOval(
+                    child: Image.network(
+                      user!.profilePictureUrl,
+                      width: 72,
+                      height: 72,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Text(
+                          user.firstName.isNotEmpty
+                              ? user.firstName[0].toUpperCase()
+                              : 'U',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        );
+                      },
+                    ),
+                  )
+                : Text(
+                    user?.firstName.isNotEmpty == true
+                        ? user!.firstName[0].toUpperCase()
+                        : 'U',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
           ),
           const SizedBox(width: 20),
           Expanded(

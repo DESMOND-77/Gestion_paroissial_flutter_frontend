@@ -116,19 +116,40 @@ class AppDrawer extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               CircleAvatar(
-                radius: 28,
-                backgroundColor: AppTheme.secondaryColor,
-                child: Text(
-                  user?.firstName.isNotEmpty == true
-                      ? user!.firstName[0].toUpperCase()
-                      : 'G',
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.sidebarBg,
+            radius: 36,
+            backgroundColor: AppTheme.secondaryColor,
+            child: user?.profilePictureUrl != null
+                ? ClipOval(
+                    child: Image.network(
+                      user!.profilePictureUrl,
+                      width: 72,
+                      height: 72,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Text(
+                          user.firstName.isNotEmpty
+                              ? user.firstName[0].toUpperCase()
+                              : 'U',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        );
+                      },
+                    ),
+                  )
+                : Text(
+                    user?.firstName.isNotEmpty == true
+                        ? user!.firstName[0].toUpperCase()
+                        : 'U',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              ),
+          ),
               const SizedBox(height: 12),
               Text(
                 user?.fullName ?? 'Administrateur',

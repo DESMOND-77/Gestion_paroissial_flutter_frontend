@@ -7,6 +7,7 @@ class AuthUser extends Equatable {
   final String lastName;
   final bool isStaff;
   final bool isActive;
+  final String profilePictureUrl;
 
   const AuthUser({
     required this.id,
@@ -15,6 +16,7 @@ class AuthUser extends Equatable {
     required this.lastName,
     required this.isStaff,
     required this.isActive,
+    required this.profilePictureUrl,
   });
 
   String get fullName => '$firstName $lastName'.trim();
@@ -27,6 +29,7 @@ class AuthUser extends Equatable {
       lastName: json['last_name'] as String? ?? '',
       isStaff: json['is_staff'] as bool? ?? false,
       isActive: json['is_active'] as bool? ?? true,
+      profilePictureUrl: json['profile_picture_url'] as String? ?? '',
     );
   }
 
@@ -38,6 +41,7 @@ class AuthUser extends Equatable {
       'last_name': lastName,
       'is_staff': isStaff,
       'is_active': isActive,
+      'profile_picture_url': profilePictureUrl,
     };
   }
 
@@ -48,6 +52,7 @@ class AuthUser extends Equatable {
     String? lastName,
     bool? isStaff,
     bool? isActive,
+    String? profilePictureUrl,
   }) {
     return AuthUser(
       id: id ?? this.id,
@@ -56,11 +61,12 @@ class AuthUser extends Equatable {
       lastName: lastName ?? this.lastName,
       isStaff: isStaff ?? this.isStaff,
       isActive: isActive ?? this.isActive,
+      profilePictureUrl: profilePictureUrl ?? this.profilePictureUrl,
     );
   }
 
   @override
-  List<Object?> get props => [id, email, firstName, lastName, isStaff, isActive];
+  List<Object?> get props => [id, email, firstName, lastName, isStaff, isActive, profilePictureUrl];
 }
 
 class LoginResponse extends Equatable {

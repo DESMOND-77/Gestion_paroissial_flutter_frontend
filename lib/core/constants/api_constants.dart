@@ -1,5 +1,5 @@
 class ApiConstants {
-  static const String baseUrl = 'http://192.168.1.3:8000/api';
+  static const String baseUrl = 'http://192.168.1.87:8000/api';
 // 127.0.0.1
 // gestion-paroissiale.onrender.com
   // Auth
@@ -7,7 +7,7 @@ class ApiConstants {
   static const String logout = '/auth/logout/';
   static const String register = '/auth/register/';
   static const String me = '/auth/me/';
-  static const String tokenRefresh = '/auth/token/refresh';
+  static const String tokenRefresh = '/auth/token/refresh/';
   static const String tokenValidate = '/auth/token/validate/';
   static const String passwordReset = '/auth/password-reset/';
   static const String passwordResetConfirm = '/auth/password-reset-confirm/';
