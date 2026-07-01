@@ -25,8 +25,8 @@ class AuthUser extends Equatable {
     return AuthUser(
       id: json['id'] as int? ?? 0,
       email: json['email'] as String? ?? '',
-      firstName: json['first_name'] as String? ?? '',
-      lastName: json['last_name'] as String? ?? '',
+      firstName: (json['first_name'] ?? json['prenom']) as String? ?? '',
+      lastName: (json['last_name'] ?? json['nom']) as String? ?? '',
       isStaff: json['is_staff'] as bool? ?? false,
       isActive: json['is_active'] as bool? ?? true,
       profilePictureUrl: json['profile_picture_url'] as String? ?? '',

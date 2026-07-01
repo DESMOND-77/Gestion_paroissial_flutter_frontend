@@ -16,7 +16,13 @@ class AuthRepository {
 
   Future<AuthUser> register(Map<String, dynamic> data) async {
     final response = await _dioClient.post(ApiConstants.register, data: data);
-    return AuthUser.fromJson(response.data["data"] as Map<String, dynamic>);
+    final body = response.data as Map<String, dynamic>;
+    // Le serveur enveloppe la charge utile sous "success" -> "data" -> "user".
+    // On reste tolérant aux variantes ({"data": ...} ou charge à plat).
+    final wrapper = (body['success'] ?? body) as Map<String, dynamic>;
+    final payload = (wrapper['data'] ?? wrapper) as Map<String, dynamic>;
+    final userJson = (payload['user'] ?? payload) as Map<String, dynamic>;
+    return AuthUser.fromJson(userJson);
   }
 
   Future<LoginResponse> login(String email, String password) async {

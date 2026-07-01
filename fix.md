@@ -4,6 +4,47 @@ A chronological log of bug fixes applied to this project. Each entry: date, symp
 
 ---
 
+## 2026-07-01 — Crash au register : `Null is not a subtype of Map<String, dynamic>`
+
+### Symptom
+
+À l'inscription : `_TypeError (type 'Null' is not a subtype of type
+'Map<String, dynamic>' in type cast)`. La réponse serveur était pourtant valide
+(compte créé, tokens présents).
+
+### Root cause
+
+Deux problèmes dans `AuthRepository.register()` :
+1. La réponse est enveloppée : `{"success":{"success":true,"data":{"user":{...},
+   "tokens":{...}}}}`. Le code lisait `response.data["data"]` (null, car `data`
+   est sous `success`) → cast `Null → Map` échoue. De plus il passait tout le
+   bloc `{user, tokens, ...}` à `AuthUser.fromJson` au lieu de `["user"]`.
+2. Le serveur renvoie les noms en français (`prenom`/`nom`), alors que
+   `AuthUser.fromJson` ne lisait que `first_name`/`last_name` → nom vide dans le
+   message de bienvenue.
+
+### Fix
+
+- `register()` déballe la charge de façon tolérante :
+  `body['success'] ?? body` → `['data'] ?? wrapper` → `['user'] ?? payload`,
+  puis `AuthUser.fromJson` sur l'objet user.
+- `AuthUser.fromJson` accepte désormais `first_name`/`prenom` et `nom`/`last_name`
+  (fallback additif, sans impact sur le login).
+
+### Files touched
+
+- `lib/data/repositories/auth_repository.dart` — déballage robuste dans `register()`
+- `lib/data/models/auth_model.dart` — fallback `prenom`/`nom` dans `AuthUser.fromJson`
+
+### Follow-up
+
+- L'écran register navigue vers `/login` (pas d'auto-login), donc les tokens de
+  la réponse register ne sont volontairement pas persistés.
+- Si le login présente le même enveloppage `success`, appliquer le même déballage
+  dans `login()`/`getCurrentUser()`/`getUserProfile()`.
+
+---
+
 ## 2026-07-01 — Requêtes serveur au démarrage même sans utilisateur connecté
 
 ### Symptom
