@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'core/di/injection.dart';
+import 'core/network/dio_client.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'presentation/blocs/auth/auth_bloc.dart';
@@ -30,6 +31,14 @@ class _AppState extends State<App> {
     _authBloc = sl<AuthBloc>();
     _authBloc.add(const AuthCheckRequested());
     _appRouter = AppRouter(authBloc: _authBloc);
+
+    // Après 3 échecs de renouvellement du jeton, DioClient efface les jetons et
+    // invoque ce callback : on notifie l'AuthBloc pour rediriger vers /login.
+    sl<DioClient>().onSessionExpired = () {
+      if (!_authBloc.isClosed) {
+        _authBloc.add(const AuthLogoutRequested());
+      }
+    };
 
     if (widget.secureStorageLocked) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _warnKeyringLocked());

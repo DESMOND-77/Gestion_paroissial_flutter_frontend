@@ -4,6 +4,199 @@ A chronological log of bug fixes applied to this project. Each entry: date, symp
 
 ---
 
+## 2026-07-01 — Refresh en 500 (token blacklisté) : rotation des refresh tokens non persistée
+
+### Symptom
+
+Le refresh réussit une fois (`200`), puis un second refresh quasi simultané
+échoue en `500` : `Attempt to refresh blacklisted or invalid token` /
+`Token is blacklisted or invalid`. Plusieurs requêtes protégées 401 en cascade
+déclenchent plusieurs refresh.
+
+### Root cause
+
+Le backend a `ROTATE_REFRESH_TOKENS=True` + `BLACKLIST_AFTER_ROTATION=True` :
+chaque refresh **invalide l'ancien refresh token** et en renvoie un nouveau dans
+`data.refresh`. Or DioClient ne sauvegardait que le **nouvel access token**, pas
+le nouveau refresh token → le refresh suivant réutilisait l'ancien (blacklisté)
+→ 500. Aggravé par les 401 concurrents : chaque requête relançait son propre
+refresh.
+
+### Fix
+
+- Extraction et **persistance du nouveau refresh token** après refresh
+  (`_extractRefreshToken` + `saveRefreshToken`).
+- **Court-circuit concurrent** : si le jeton courant diffère de celui utilisé par
+  la requête échouée, on rejoue directement avec le jeton courant sans relancer
+  de refresh (`_retryOriginal`).
+- **Garde anti-boucle** : `requestOptions.extra['__retried__']` empêche qu'une
+  requête rejouée ne redéclenche un cycle de refresh.
+- onError ignore désormais explicitement les endpoints d'auth (pas de refresh sur
+  un échec de refresh lui-même).
+
+### Files touched
+
+- `lib/core/network/dio_client.dart` — `_extractToken`/`_extractRefreshToken`,
+  sauvegarde du refresh token, `_retryOriginal`, court-circuit + garde anti-boucle
+
+### Follow-up
+
+- Rotation active → chaque appareil possède une chaîne de refresh tokens ; une
+  reconnexion sur un autre appareil peut invalider la session courante (attendu).
+
+---
+
+## 2026-07-01 — Refresh renvoie 401 : l'access token périmé était réattaché à la requête de refresh
+
+### Symptom
+
+Après ~1 min (expiration de l'access token), une requête protégée renvoie 401,
+l'app tente `/api/auth/token/refresh/` → **401** aussi → déconnexion. Le refresh
+token est pourtant valide (`REFRESH_TOKEN_LIFETIME = 7 jours`).
+
+### Root cause
+
+La requête de refresh utilisait `Options(headers: {'Authorization': null})` pour
+partir sans en-tête, mais l'intercepteur `onRequest` de DioClient réattachait
+**inconditionnellement** l'access token (périmé) lu depuis le storage. Le endpoint
+refresh hérite de `BaseAPIView` : DRF authentifie l'en-tête, l'access token expiré
+lève `AuthenticationFailed` → **401 avant même d'exécuter `post()`**. Le refresh
+ne pouvait donc jamais aboutir.
+
+### Fix
+
+`onRequest` n'attache plus jamais l'`Authorization` aux endpoints
+d'authentification (`_isAuthEndpoint` : token refresh / login / register). La
+requête de refresh part désormais sans en-tête et est acceptée.
+
+### Files touched
+
+- `lib/core/network/dio_client.dart` — helper `_isAuthEndpoint()` + exclusion de
+  l'en-tête dans `onRequest`
+
+### Follow-up
+
+- `ACCESS_TOKEN_LIFETIME = 1 min` (backend `gestion_p/settings.py:302`) génère un
+  cycle 401→refresh toutes les minutes. Fonctionnel, mais bavard : envisager
+  15–30 min pour une expérience plus fluide (le refresh à 7 j reste inchangé).
+- Le `refresh_expires_in:120` vu dans une réponse register antérieure venait
+  d'une ancienne config ; la valeur actuelle est 7 jours.
+
+---
+
+## 2026-07-01 — Contrat API auth incohérent front/back (cause racine register + refresh)
+
+> Backend : `../backend` (Django/DRF). Pas de fix-log côté backend → consigné ici.
+
+### Symptom
+
+- Register renvoyait une réponse double-enveloppée `{"success":{"success":true,
+  "data":{...}}}` → crash de parsing côté Flutter.
+- Le renouvellement de jeton échouait systématiquement (déconnexion au bout de
+  ~1 min, l'access token expirant en 60 s).
+
+### Root cause (backend)
+
+1. **Register double-enveloppé** — `accounts/auth/views.py` faisait
+   `standardized_response(response_data)` (positionnel → param `success`) au lieu
+   de `standardized_response(**response_data)`. Le service renvoyait déjà
+   `{"success":true,"data":{...}}`, d'où l'imbrication.
+2. **Refresh toujours en 500** — `accounts/auth/services.py::RefreshToken` lisait
+   `tokens["access_token"]/["refresh_token"]/["expire_in"]`, alors que
+   `TokenManager.generate_token()` renvoie `access/refresh/access_expires_in/…`
+   → `KeyError` capturé → réponse 500 à chaque refresh.
+3. **Noms de champs incohérents front/back** — le front envoyait `{'refresh': …}`
+   pour refresh et logout, mais le backend lit `request.data.get("refresh_token")`.
+
+### Fix (backend — ../backend)
+
+- `accounts/auth/views.py` : `standardized_response(**response_data)` pour le
+  register ; bloc cookie du refresh aligné sur les clés natives
+  (`refresh` / `refresh_expires_in`).
+- `accounts/auth/services.py` : `RefreshToken` renvoie directement `data: tokens`
+  (structure native de `generate_token`, cohérente avec login/register) + gestion
+  du cas `tokens is None` (rotation désactivée → 401) ; 1er retour d'erreur de
+  `register` transformé en dict (sinon `**` planterait sur une chaîne).
+
+### Fix (frontend)
+
+- `lib/data/repositories/auth_repository.dart` : `register()` déballe de façon
+  type-safe (ne descend dans `success`/`data`/`user` que si c'est un `Map`) →
+  tolère l'ancienne et la nouvelle forme ; `refresh`→`refresh_token` dans le
+  body de logout.
+- `lib/core/network/dio_client.dart` : `refresh`→`refresh_token` dans le body du
+  refresh ; `_extractAccessToken` récupère `access` sous `data`.
+
+### Contrat API confirmé (après fix)
+
+- Register/Login → `{"success":true,"data":{"user":{…},"tokens":{"access",
+  "refresh","token_type","access_expires_in","refresh_expires_in",…}}}`.
+- Refresh → body `{"refresh_token":"…"}` ; réponse
+  `{"success":true,"data":{"access","refresh","access_expires_in",…}}`.
+- Le user renvoyé utilise `prenom`/`nom` (géré par `AuthUser.fromJson`).
+
+### Follow-up
+
+- `access_expires_in = 60 s` : le refresh transparent doit fonctionner en continu
+  maintenant — tester une session > 1 min pour valider bout en bout.
+- Redémarrer le serveur Django après ces changements.
+
+---
+
+## 2026-07-01 — Renouvellement de jeton : 3 tentatives puis déconnexion + redirection
+
+### Symptom / demande
+
+Le renouvellement du jeton d'accès (401) ne réessayait qu'une seule fois et, en
+cas d'échec, n'effaçait pas les jetons ni ne redirigeait vers `/login`.
+Souhaité : après **trois** tentatives de renouvellement infructueuses, effacer
+tous les jetons et rediriger vers l'écran de connexion.
+
+De plus, le projet **ne compilait plus** : le constructeur `DioClient` exigeait
+un `AuthRepository` (dépendance circulaire `DioClient → AuthRepository →
+DioClient`) alors que la DI ne lui passait que `SecureStorage`
+(`not_enough_positional_arguments` à `injection.dart:33`).
+
+### Root cause
+
+- `DioClient` avait été couplé à `AuthRepository` uniquement pour appeler
+  `logout()` en cas d'échec de refresh → cycle de dépendances + build cassé.
+- Aucune logique de comptage de tentatives ; aucune notification à l'`AuthBloc`
+  (donc le router GoRouter ne redirigeait jamais vers `/login`).
+
+### Fix
+
+- `DioClient` ne dépend plus d'`AuthRepository`. Il efface les jetons via
+  `SecureStorage.clearAll()` et expose un callback `onSessionExpired`.
+- `App` câble `onSessionExpired` sur l'instance réelle d'`AuthBloc` (celle que
+  le router écoute) → dispatch `AuthLogoutRequested` → état
+  `AuthUnauthenticated` → redirection `/login` via `refreshListenable`.
+- Boucle de renouvellement jusqu'à `_maxRefreshAttempts = 3` ; après 3 échecs
+  (ou jeton d'accès absent/vide) → `_expireSession()` (efface tout + callback).
+- `_extractAccessToken()` tolère les enveloppes serveur variées
+  (`{access}`, `{data:{access}}`, `{tokens:{access}}`, `{success:{data:{tokens:{access}}}}`).
+
+### Files touched
+
+- `lib/core/network/dio_client.dart` — suppression dépendance AuthRepository,
+  callback `onSessionExpired`, boucle 3 tentatives, `_expireSession()`,
+  `_extractAccessToken()`
+- `lib/core/di/injection.dart` — commentaire ; `DioClient(sl<SecureStorage>())`
+  redevient valide
+- `lib/app.dart` — import DioClient + câblage `onSessionExpired`
+
+### Follow-up
+
+- `AuthBloc` reste enregistré en factory dans la DI, mais `App` utilise une seule
+  instance partagée (`_authBloc`) pour le provider, le router et le callback —
+  cohérent. Ne pas appeler `sl<AuthBloc>()` ailleurs en s'attendant à la même
+  instance.
+- Les requêtes mises en file (`_failedQueue`) sont abandonnées sur échec final
+  (comportement inchangé) ; à revoir si un blocage de requêtes concurrentes
+  apparaît.
+
+---
+
 ## 2026-07-01 — Crash au register : `Null is not a subtype of Map<String, dynamic>`
 
 ### Symptom

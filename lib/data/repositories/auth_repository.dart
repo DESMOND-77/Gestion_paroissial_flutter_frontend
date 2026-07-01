@@ -16,12 +16,20 @@ class AuthRepository {
 
   Future<AuthUser> register(Map<String, dynamic> data) async {
     final response = await _dioClient.post(ApiConstants.register, data: data);
-    final body = response.data as Map<String, dynamic>;
-    // Le serveur enveloppe la charge utile sous "success" -> "data" -> "user".
-    // On reste tolérant aux variantes ({"data": ...} ou charge à plat).
-    final wrapper = (body['success'] ?? body) as Map<String, dynamic>;
-    final payload = (wrapper['data'] ?? wrapper) as Map<String, dynamic>;
-    final userJson = (payload['user'] ?? payload) as Map<String, dynamic>;
+    // Réponse attendue : {"success": true, "data": {"user": {...}, ...}}.
+    // On déballe étape par étape en ne descendant que si la valeur est un Map,
+    // pour rester tolérant à l'ancienne enveloppe buguée
+    // ({"success": {"success": true, "data": {...}}}) où "success" était un objet.
+    var payload = response.data as Map<String, dynamic>;
+    if (payload['success'] is Map) {
+      payload = (payload['success'] as Map).cast<String, dynamic>();
+    }
+    if (payload['data'] is Map) {
+      payload = (payload['data'] as Map).cast<String, dynamic>();
+    }
+    final userJson = payload['user'] is Map
+        ? (payload['user'] as Map).cast<String, dynamic>()
+        : payload;
     return AuthUser.fromJson(userJson);
   }
 
@@ -43,7 +51,7 @@ class AuthRepository {
       final refreshToken = await _secureStorage.getRefreshToken();
       await _dioClient.post(
         ApiConstants.logout,
-        data: {'refresh': refreshToken},
+        data: {'refresh_token': refreshToken},
       );
     } finally {
       await _secureStorage.clearAll();

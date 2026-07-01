@@ -31,6 +31,9 @@ Future<void> setupDependencies() async {
 
   // Network
   sl.registerLazySingleton<DioClient>(() => DioClient(sl<SecureStorage>()));
+  // Note : DioClient ne dépend pas d'AuthRepository (dépendance circulaire) ;
+  // la fin de session est signalée via le callback onSessionExpired câblé
+  // dans App.
 
   // Repositories
   sl.registerLazySingleton<AuthRepository>(
