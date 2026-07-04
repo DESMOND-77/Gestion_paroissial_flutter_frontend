@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'core/di/injection.dart';
+import 'core/network/dio_client.dart';
 import 'core/storage/secure_storage.dart';
 import 'core/sync/periodic_sync_manager.dart';
 import 'app.dart';
@@ -17,6 +18,9 @@ void main() async {
   }
 
   await setupDependencies();
+  // Applique une URL de serveur précédemment enregistrée par l'utilisateur
+  // avant toute requête réseau (login, vérification de session, etc.).
+  await sl<DioClient>().loadPersistedBaseUrl();
   await initializeDateFormatting('fr_FR', null);
 
   var secureStorageLocked = false;

@@ -16,7 +16,7 @@ class ApiException implements Exception {
         message = _extractMessage(data) ?? 'Requête invalide';
         break;
       case 401:
-        message = 'Non authentifié. Veuillez vous reconnecter.';
+        message = 'Non authorisé.';
         break;
       case 403:
         message = 'Accès refusé. Vous n\'avez pas les droits nécessaires.';

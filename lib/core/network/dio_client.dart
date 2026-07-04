@@ -157,6 +157,23 @@ class DioClient {
 
   Dio get dio => _dio;
 
+  String get baseUrl => _dio.options.baseUrl;
+
+  /// Change l'URL du serveur utilisée pour toutes les requêtes suivantes,
+  /// sans nécessiter de redémarrage de l'application.
+  void updateBaseUrl(String baseUrl) {
+    _dio.options.baseUrl = baseUrl;
+  }
+
+  /// Recharge, au démarrage de l'app, une URL de serveur précédemment
+  /// enregistrée par l'utilisateur (sinon on conserve [ApiConstants.baseUrl]).
+  Future<void> loadPersistedBaseUrl() async {
+    final saved = await _secureStorage.getBaseUrl();
+    if (saved != null && saved.trim().isNotEmpty) {
+      _dio.options.baseUrl = saved.trim();
+    }
+  }
+
   /// Endpoints d'authentification qui ne doivent jamais recevoir l'en-tête
   /// Authorization (publics ou dédiés au renouvellement du jeton).
   static bool _isAuthEndpoint(String path) {
