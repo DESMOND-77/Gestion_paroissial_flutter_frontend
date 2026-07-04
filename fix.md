@@ -4,6 +4,79 @@ A chronological log of bug fixes applied to this project. Each entry: date, symp
 
 ---
 
+## 2026-07-04 — Refonte de l'écran Profil : photo de profil, champs profil cassés, mot de passe cassé, URL serveur factice
+
+### Symptom
+
+- La photo de profil ne pouvait pas être modifiée (aucune UI, aucun endpoint câblé).
+- Le formulaire "Informations personnelles" semblait fonctionner (200 OK, message
+  de succès) mais le prénom/nom n'étaient jamais mis à jour côté serveur.
+- Le changement de mot de passe échouait systématiquement en 400.
+- Le champ "Changer l'URL du serveur" affichait un succès mais ne changeait
+  jamais réellement le serveur utilisé par l'app.
+
+### Root cause
+
+- `profile_screen.dart` envoyait `first_name`/`last_name` au PATCH
+  `/user/profile/`, mais le serializer backend (`UserSerializer`) attend
+  `prenom`/`nom` — les clés inconnues sont silencieusement ignorées par DRF.
+- `AuthRepository.changePassword` n'envoyait pas `confirm_password`, pourtant
+  requis par `ChangePasswordSerializer` côté backend → 400 à chaque appel.
+- `AuthRepository.setBaseUrl` ne faisait que persister l'URL en secure storage ;
+  `DioClient` lit `ApiConstants.baseUrl` (constante figée) une seule fois à la
+  construction et ne relit jamais la valeur sauvegardée. Le bouton déclenchait
+  en plus `AuthProfileUpdated` (PATCH `/user/profile/` avec un champ
+  `api_base_url` inexistant côté backend) au lieu de `AuthBaseUrlUpdated`.
+- Affichage de la photo (`profile_screen.dart` + `app_drawer.dart`) : le test
+  `user?.profilePictureUrl != null` est toujours vrai car `profilePictureUrl`
+  est un `String` non nullable (défaut `''`), pas un `String?` — l'app tentait
+  systématiquement `Image.network('')` avant de retomber sur les initiales.
+
+### Fix
+
+- Refonte visuelle de l'écran Profil (bandeau dégradé, avatar avec halo doré,
+  badge appareil photo) et ajout d'un widget `UserAvatar` partagé (photo
+  distante via `cached_network_image`, fallback initiales, `isNotEmpty` correct)
+  réutilisé par `profile_screen.dart` et `app_drawer.dart`.
+- Ajout du changement de photo de profil (galerie/caméra via `image_picker`,
+  upload multipart) : `AuthRepository.updateProfilePicture`,
+  `AuthBloc.AuthProfilePictureUpdated`, permissions Android/iOS/macOS.
+- `AuthUser` : ajout du champ `phoneNumber` (`phone_number`) affiché/éditable.
+- Formulaire Informations : envoi de `prenom`/`nom`/`email`/`phone_number`
+  (au lieu de `first_name`/`last_name`).
+- `AuthRepository.changePassword` : ajout de `confirm_password`.
+- URL serveur réellement fonctionnelle : `DioClient.updateBaseUrl` /
+  `loadPersistedBaseUrl` (relecture au démarrage dans `main.dart`),
+  `AuthRepository.setBaseUrl` applique désormais l'URL immédiatement au client
+  Dio, et `profile_screen.dart` dispatch `AuthBaseUrlUpdated` (nouvel état
+  `AuthBaseUrlUpdateSuccess`) avec une validation d'URL correcte. Champ déplacé
+  dans une section "Paramètres avancés" repliable.
+
+### Files touched
+
+- `lib/presentation/screens/profile/profile_screen.dart` (refonte complète)
+- `lib/presentation/widgets/user_avatar.dart` (nouveau)
+- `lib/presentation/widgets/app_drawer.dart`
+- `lib/data/models/auth_model.dart`
+- `lib/data/repositories/auth_repository.dart`
+- `lib/presentation/blocs/auth/auth_bloc.dart`
+- `lib/core/network/dio_client.dart`
+- `lib/main.dart`
+- `pubspec.yaml` (ajout `image_picker`)
+- `android/app/src/main/AndroidManifest.xml`, `ios/Runner/Info.plist`,
+  `macos/Runner/Info.plist`, `macos/Runner/{Debug,Release}.entitlements`
+
+### Follow-up
+
+- Les entitlements macOS ne déclaraient pas `com.apple.security.network.client`
+  du tout (seulement `network.server`) : corrigé au passage, sinon aucun appel
+  API n'aurait fonctionné sur une build macOS sandboxée.
+- La barre supérieure desktop et le pied de la sidebar (`main_layout.dart`)
+  n'affichent que des initiales et n'ont pas été branchés sur la photo réelle ;
+  à harmoniser avec `UserAvatar` si souhaité plus tard.
+
+---
+
 ## 2026-07-01 — Refresh en 500 (token blacklisté) : rotation des refresh tokens non persistée
 
 ### Symptom

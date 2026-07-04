@@ -1,9 +1,19 @@
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:paroisse_gest/core/constants/api_constants.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../../../core/constants/api_constants.dart';
+import '../../../core/di/injection.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/auth_model.dart';
+import '../../../data/repositories/auth_repository.dart';
 import '../../blocs/auth/auth_bloc.dart';
+import '../../widgets/user_avatar.dart';
+
+enum _PhotoSource { camera, gallery }
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -22,6 +32,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _urlController = TextEditingController();
 
   final _oldPasswordController = TextEditingController();
@@ -34,14 +45,14 @@ class _ProfileScreenState extends State<ProfileScreen>
   bool _profileLoading = false;
   bool _passwordLoading = false;
   bool _urlLoading = false;
-  final String _apiBaseUrl = ApiConstants.baseUrl;
+  bool _photoUploading = false;
 
-  @override
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _loadUserData();
+    _loadEffectiveBaseUrl();
     context.read<AuthBloc>().add(const AuthUserProfileRefreshed());
   }
 
@@ -52,11 +63,20 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
+  Future<void> _loadEffectiveBaseUrl() async {
+    final saved = await sl<AuthRepository>().getBaseUrl();
+    if (!mounted) return;
+    setState(() {
+      _urlController.text =
+          (saved != null && saved.trim().isNotEmpty) ? saved : ApiConstants.baseUrl;
+    });
+  }
+
   void _populateProfile(AuthUser user) {
     _firstNameController.text = user.firstName;
     _lastNameController.text = user.lastName;
     _emailController.text = user.email;
-    _urlController.text = _apiBaseUrl;
+    _phoneController.text = user.phoneNumber;
   }
 
   @override
@@ -65,6 +85,8 @@ class _ProfileScreenState extends State<ProfileScreen>
     _firstNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
+    _urlController.dispose();
     _oldPasswordController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
@@ -74,9 +96,10 @@ class _ProfileScreenState extends State<ProfileScreen>
   void _submitProfile() {
     if (!_profileFormKey.currentState!.validate()) return;
     context.read<AuthBloc>().add(AuthProfileUpdated(data: {
-          'first_name': _firstNameController.text.trim(),
-          'last_name': _lastNameController.text.trim(),
+          'prenom': _firstNameController.text.trim(),
+          'nom': _lastNameController.text.trim(),
           'email': _emailController.text.trim(),
+          'phone_number': _phoneController.text.trim(),
         }));
   }
 
@@ -91,9 +114,88 @@ class _ProfileScreenState extends State<ProfileScreen>
   void _submitUrl() {
     if (!_urlFormKey.currentState!.validate()) return;
     final newUrl = _urlController.text.trim();
-    context.read<AuthBloc>().add(AuthProfileUpdated(data: {
-          'api_base_url': newUrl,
-        }));
+    context.read<AuthBloc>().add(AuthBaseUrlUpdated(baseUrl: newUrl));
+  }
+
+  Future<void> _showPhotoOptions() async {
+    if (_photoUploading) return;
+    final isMobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+
+    final source = await showModalBottomSheet<_PhotoSource>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 20, 20, 8),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Photo de profil',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                ),
+              ),
+              if (isMobile)
+                ListTile(
+                  leading: const Icon(Icons.photo_camera_outlined,
+                      color: AppTheme.primaryColor),
+                  title: const Text('Prendre une photo'),
+                  onTap: () =>
+                      Navigator.of(sheetContext).pop(_PhotoSource.camera),
+                ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined,
+                    color: AppTheme.primaryColor),
+                title: const Text('Choisir dans la galerie'),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(_PhotoSource.gallery),
+              ),
+              ListTile(
+                leading: const Icon(Icons.close, color: AppTheme.textSecondary),
+                title: const Text('Annuler'),
+                onTap: () => Navigator.of(sheetContext).pop(),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (source == null || !mounted) return;
+
+    try {
+      final picked = await ImagePicker().pickImage(
+        source: source == _PhotoSource.camera
+            ? ImageSource.camera
+            : ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+      if (picked == null || !mounted) return;
+      context
+          .read<AuthBloc>()
+          .add(AuthProfilePictureUpdated(filePath: picked.path));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Impossible d'accéder à la caméra ou à la galerie"),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+    }
   }
 
   @override
@@ -105,12 +207,14 @@ class _ProfileScreenState extends State<ProfileScreen>
             _profileLoading = true;
             _passwordLoading = true;
             _urlLoading = true;
+            _photoUploading = true;
           });
         } else {
           setState(() {
             _profileLoading = false;
             _passwordLoading = false;
             _urlLoading = false;
+            _photoUploading = false;
           });
         }
 
@@ -138,6 +242,13 @@ class _ProfileScreenState extends State<ProfileScreen>
           _oldPasswordController.clear();
           _newPasswordController.clear();
           _confirmPasswordController.clear();
+        } else if (state is AuthBaseUrlUpdateSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Serveur mis à jour : ${state.baseUrl}'),
+              backgroundColor: AppTheme.successColor,
+            ),
+          );
         } else if (state is AuthError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -155,16 +266,19 @@ class _ProfileScreenState extends State<ProfileScreen>
           body: Column(
             children: [
               _buildProfileHeader(user),
-              TabBar(
-                controller: _tabController,
-                tabs: const [
-                  Tab(text: 'Informations'),
-                  Tab(text: 'Paramètres et Sécurité'),
-                ],
-                labelColor: AppTheme.primaryColor,
-                unselectedLabelColor: AppTheme.textSecondary,
-                indicatorColor: AppTheme.primaryColor,
-                indicatorWeight: 3,
+              Container(
+                color: Colors.white,
+                child: TabBar(
+                  controller: _tabController,
+                  tabs: const [
+                    Tab(text: 'Informations'),
+                    Tab(text: 'Paramètres et Sécurité'),
+                  ],
+                  labelColor: AppTheme.primaryColor,
+                  unselectedLabelColor: AppTheme.textSecondary,
+                  indicatorColor: AppTheme.primaryColor,
+                  indicatorWeight: 3,
+                ),
               ),
               Expanded(
                 child: TabBarView(
@@ -183,85 +297,104 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _buildProfileHeader(AuthUser? user) {
+    final initials = user?.firstName.isNotEmpty == true
+        ? user!.firstName[0].toUpperCase()
+        : 'U';
+
     return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-      child: Row(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppTheme.sidebarBg, AppTheme.primaryColor],
+        ),
+      ),
+      padding: const EdgeInsets.fromLTRB(24, 36, 24, 24),
+      child: Column(
         children: [
-          CircleAvatar(
-            radius: 36,
-            backgroundColor: AppTheme.primaryColor,
-            child: user?.profilePictureUrl != null
-                ? ClipOval(
-                    child: Image.network(
-                      user!.profilePictureUrl,
-                      width: 72,
-                      height: 72,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Text(
-                          user.firstName.isNotEmpty
-                              ? user.firstName[0].toUpperCase()
-                              : 'U',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        );
-                      },
-                    ),
-                  )
-                : Text(
-                    user?.firstName.isNotEmpty == true
-                        ? user!.firstName[0].toUpperCase()
-                        : 'U',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-          ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          GestureDetector(
+            onTap: _showPhotoOptions,
+            child: Stack(
+              clipBehavior: Clip.none,
               children: [
-                Text(
-                  user?.fullName.isNotEmpty == true
-                      ? user!.fullName
-                      : 'Utilisateur',
-                  style: Theme.of(context).textTheme.headlineSmall,
+                UserAvatar(
+                  imageUrl: user?.profilePictureUrl,
+                  initials: initials,
+                  radius: 52,
+                  showHalo: true,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  user?.email ?? '',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 4),
-                if (user?.isStaff == true)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withAlpha(26),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: AppTheme.primaryColor.withAlpha(77)),
-                    ),
-                    child: const Text(
-                      'Administrateur',
-                      style: TextStyle(
-                        color: AppTheme.primaryColor,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
+                if (_photoUploading)
+                  Positioned.fill(
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.black38,
+                      ),
+                      child: const Center(
+                        child: SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
                   ),
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.secondaryColor,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: const Icon(
+                      Icons.camera_alt,
+                      size: 16,
+                      color: AppTheme.sidebarBg,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
+          const SizedBox(height: 16),
+          Text(
+            user?.fullName.isNotEmpty == true ? user!.fullName : 'Utilisateur',
+            style: Theme.of(context)
+                .textTheme
+                .headlineSmall
+                ?.copyWith(color: Colors.white),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            user?.email ?? '',
+            style: const TextStyle(color: Colors.white70, fontSize: 13),
+          ),
+          if (user?.isStaff == true) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white.withAlpha(38),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white.withAlpha(77)),
+              ),
+              child: const Text(
+                'Administrateur',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -323,6 +456,22 @@ class _ProfileScreenState extends State<ProfileScreen>
                     if (v == null || v.trim().isEmpty) return 'Champ requis';
                     if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) {
                       return 'Email invalide';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _phoneController,
+                  decoration: const InputDecoration(
+                    labelText: 'Téléphone',
+                    prefixIcon: Icon(Icons.phone_outlined),
+                  ),
+                  keyboardType: TextInputType.phone,
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return null;
+                    if (!RegExp(r'^\+?1?\d{9,15}$').hasMatch(v.trim())) {
+                      return 'Format de téléphone invalide';
                     }
                     return null;
                   },
@@ -464,39 +613,71 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
-              Form(
-                key: _urlFormKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _sectionTitle('Changer l\'URL du serveur'),
-                    const SizedBox(height: 20),
-                    TextFormField(
-                      controller: _urlController,
-                      decoration: const InputDecoration(
-                        labelText: 'Nouvelle URL du serveur',
-                        prefixIcon: Icon(Icons.link),
-                      ),
-                      validator: (v) {
-                        if (v == null || v.isEmpty) return 'Champ requis';
-                        if (!Uri.tryParse(v)!.hasAbsolutePath == true) {
-                          return 'URL invalide';
-                        }
-                        return null;
-                      },
+              const SizedBox(height: 8),
+              Theme(
+                data: Theme.of(context)
+                    .copyWith(dividerColor: Colors.transparent),
+                child: ExpansionTile(
+                  tilePadding: EdgeInsets.zero,
+                  title: const Text(
+                    'Paramètres avancés',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textSecondary,
+                      fontSize: 14,
                     ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: _urlLoading ? null : _submitUrl,
-                      child: _urlLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white),
-                            )
-                          : const Text('Enregistrer l\'URL du serveur'),
+                  ),
+                  leading: const Icon(Icons.tune, color: AppTheme.textSecondary),
+                  childrenPadding: const EdgeInsets.only(top: 8, bottom: 16),
+                  children: [
+                    Form(
+                      key: _urlFormKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Text(
+                            "Adresse du serveur de l'application. À modifier "
+                            'uniquement si vous savez ce que vous faites.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _urlController,
+                            decoration: const InputDecoration(
+                              labelText: 'URL du serveur',
+                              prefixIcon: Icon(Icons.link),
+                            ),
+                            keyboardType: TextInputType.url,
+                            validator: (v) {
+                              if (v == null || v.trim().isEmpty) {
+                                return 'Champ requis';
+                              }
+                              final uri = Uri.tryParse(v.trim());
+                              if (uri == null ||
+                                  !uri.hasScheme ||
+                                  uri.host.isEmpty) {
+                                return 'URL invalide';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 20),
+                          OutlinedButton(
+                            onPressed: _urlLoading ? null : _submitUrl,
+                            child: _urlLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2),
+                                  )
+                                : const Text('Enregistrer le serveur'),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),

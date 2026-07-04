@@ -59,6 +59,13 @@ class AuthProfileUpdated extends AuthEvent {
   List<Object?> get props => [data];
 }
 
+class AuthProfilePictureUpdated extends AuthEvent {
+  final String filePath;
+  const AuthProfilePictureUpdated({required this.filePath});
+  @override
+  List<Object?> get props => [filePath];
+}
+
 class AuthBaseUrlUpdated extends AuthEvent {
   final String baseUrl;
   const AuthBaseUrlUpdated({required this.baseUrl});
@@ -136,6 +143,13 @@ class AuthPasswordChangeSuccess extends AuthState {
   const AuthPasswordChangeSuccess();
 }
 
+class AuthBaseUrlUpdateSuccess extends AuthState {
+  final String baseUrl;
+  const AuthBaseUrlUpdateSuccess({required this.baseUrl});
+  @override
+  List<Object?> get props => [baseUrl];
+}
+
 // BLoC
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _authRepository;
@@ -150,6 +164,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthPasswordResetRequested>(_onAuthPasswordResetRequested);
     on<AuthUserProfileRefreshed>(_onAuthUserProfileRefreshed);
     on<AuthProfileUpdated>(_onAuthProfileUpdated);
+    on<AuthProfilePictureUpdated>(_onAuthProfilePictureUpdated);
     on<AuthPasswordChanged>(_onAuthPasswordChanged);
     on<AuthBaseUrlUpdated>(_onAuthBaseUrlUpdated);
   }
@@ -259,6 +274,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
+  Future<void> _onAuthProfilePictureUpdated(
+    AuthProfilePictureUpdated event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      final user =
+          await _authRepository.updateProfilePicture(event.filePath);
+      emit(AuthProfileUpdateSuccess(user: user));
+      emit(AuthAuthenticated(user: user));
+    } catch (e) {
+      emit(AuthError(message: e.toString().replaceAll('Exception: ', '')));
+    }
+  }
+
   Future<void> _onAuthPasswordChanged(
     AuthPasswordChanged event,
     Emitter<AuthState> emit,
@@ -279,9 +309,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthBaseUrlUpdated event,
     Emitter<AuthState> emit,
   ) async {
+    emit(const AuthLoading());
     try {
       await _authRepository.setBaseUrl(event.baseUrl);
-      // Optionally, you could emit a state to indicate the base URL was updated
+      emit(AuthBaseUrlUpdateSuccess(baseUrl: event.baseUrl));
+      // Keep user authenticated
+      final user = await _authRepository.getCachedUser();
+      if (user != null) emit(AuthAuthenticated(user: user));
     } catch (e) {
       emit(AuthError(message: e.toString().replaceAll('Exception: ', '')));
     }

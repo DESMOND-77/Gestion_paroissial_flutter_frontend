@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import '../../core/network/dio_client.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/storage/secure_storage.dart';
@@ -102,9 +103,15 @@ class AuthRepository {
   }
 
   Future<void> changePassword(String oldPassword, String newPassword) async {
+    // Le serializer backend exige confirm_password en plus de new_password ;
+    // le formulaire valide déjà l'égalité des deux avant l'appel.
     await _dioClient.post(
       ApiConstants.changePassword,
-      data: {'old_password': oldPassword, 'new_password': newPassword},
+      data: {
+        'old_password': oldPassword,
+        'new_password': newPassword,
+        'confirm_password': newPassword,
+      },
     );
   }
 
@@ -125,8 +132,21 @@ class AuthRepository {
     return user;
   }
 
+  Future<AuthUser> updateProfilePicture(String filePath) async {
+    final formData = FormData.fromMap({
+      'profile_picture': await MultipartFile.fromFile(filePath),
+    });
+    final response =
+        await _dioClient.patch(ApiConstants.userProfile, data: formData);
+    final user =
+        AuthUser.fromJson(response.data["data"] as Map<String, dynamic>);
+    await _secureStorage.saveUserData(jsonEncode(user.toJson()));
+    return user;
+  }
+
   Future<void> setBaseUrl(String baseUrl) async {
     await _secureStorage.saveBaseUrl(baseUrl);
+    _dioClient.updateBaseUrl(baseUrl);
   }
 
   Future<String?> getBaseUrl() async {

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/theme/app_theme.dart';
 import '../blocs/auth/auth_bloc.dart';
+import 'user_avatar.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -115,41 +116,14 @@ class AppDrawer extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              CircleAvatar(
-            radius: 36,
-            backgroundColor: AppTheme.secondaryColor,
-            child: user?.profilePictureUrl != null
-                ? ClipOval(
-                    child: Image.network(
-                      user!.profilePictureUrl,
-                      width: 72,
-                      height: 72,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Text(
-                          user.firstName.isNotEmpty
-                              ? user.firstName[0].toUpperCase()
-                              : 'U',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        );
-                      },
-                    ),
-                  )
-                : Text(
-                    user?.firstName.isNotEmpty == true
-                        ? user!.firstName[0].toUpperCase()
-                        : 'U',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-          ),
+              UserAvatar(
+                imageUrl: user?.profilePictureUrl,
+                initials: user?.firstName.isNotEmpty == true
+                    ? user!.firstName[0].toUpperCase()
+                    : 'U',
+                radius: 36,
+                backgroundColor: AppTheme.secondaryColor,
+              ),
               const SizedBox(height: 12),
               Text(
                 user?.fullName ?? 'Administrateur',
