@@ -28,5 +28,9 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Utilisée pour prendre une photo de profil.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Utilisée pour choisir une photo de profil depuis votre photothèque.</string>
 </dict>
 </plist>
