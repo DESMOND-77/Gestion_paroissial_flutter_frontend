@@ -9,31 +9,47 @@ import '../../../core/constants/api_constants.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/auth_model.dart';
+import '../../../data/models/membre_model.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../blocs/auth/auth_bloc.dart';
+import '../../blocs/membres/membres_bloc.dart';
 import '../../widgets/user_avatar.dart';
 
 enum _PhotoSource { camera, gallery }
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => sl<MembresBloc>()..add(const LoadMyMembre()),
+      child: const _ProfileScreenView(),
+    );
+  }
 }
 
-class _ProfileScreenState extends State<ProfileScreen>
+class _ProfileScreenView extends StatefulWidget {
+  const _ProfileScreenView();
+
+  @override
+  State<_ProfileScreenView> createState() => _ProfileScreenViewState();
+}
+
+class _ProfileScreenViewState extends State<_ProfileScreenView>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   final _profileFormKey = GlobalKey<FormState>();
   final _passwordFormKey = GlobalKey<FormState>();
   final _urlFormKey = GlobalKey<FormState>();
+  final _membreFormKey = GlobalKey<FormState>();
 
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _urlController = TextEditingController();
+  final _quartierController = TextEditingController();
 
   final _oldPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
@@ -46,6 +62,12 @@ class _ProfileScreenState extends State<ProfileScreen>
   bool _passwordLoading = false;
   bool _urlLoading = false;
   bool _photoUploading = false;
+
+  bool _membreSectionReady = false;
+  bool _hasMembreProfile = false;
+  bool _membreSaving = false;
+  String _memberSexe = 'M';
+  String? _memberDateNaissance;
 
   @override
   void initState() {
@@ -67,8 +89,9 @@ class _ProfileScreenState extends State<ProfileScreen>
     final saved = await sl<AuthRepository>().getBaseUrl();
     if (!mounted) return;
     setState(() {
-      _urlController.text =
-          (saved != null && saved.trim().isNotEmpty) ? saved : ApiConstants.baseUrl;
+      _urlController.text = (saved != null && saved.trim().isNotEmpty)
+          ? saved
+          : ApiConstants.baseUrl;
     });
   }
 
@@ -79,6 +102,14 @@ class _ProfileScreenState extends State<ProfileScreen>
     _phoneController.text = user.phoneNumber;
   }
 
+  void _populateMembre(Membre membre) {
+    _quartierController.text = membre.quartier ?? '';
+    setState(() {
+      _memberSexe = membre.sexe.isNotEmpty ? membre.sexe : 'M';
+      _memberDateNaissance = membre.dateNaissance;
+    });
+  }
+
   @override
   void dispose() {
     _tabController.dispose();
@@ -87,6 +118,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     _emailController.dispose();
     _phoneController.dispose();
     _urlController.dispose();
+    _quartierController.dispose();
     _oldPasswordController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
@@ -115,6 +147,33 @@ class _ProfileScreenState extends State<ProfileScreen>
     if (!_urlFormKey.currentState!.validate()) return;
     final newUrl = _urlController.text.trim();
     context.read<AuthBloc>().add(AuthBaseUrlUpdated(baseUrl: newUrl));
+  }
+
+  void _submitMembreInfo() {
+    if (!_membreFormKey.currentState!.validate()) return;
+    context.read<MembresBloc>().add(UpdateMyMembre(data: {
+          'sexe': _memberSexe,
+          if (_memberDateNaissance != null)
+            'date_naissance': _memberDateNaissance,
+          'quartier': _quartierController.text.trim(),
+        }));
+  }
+
+  Future<void> _selectMemberDateNaissance() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _memberDateNaissance != null
+          ? DateTime.tryParse(_memberDateNaissance!) ?? DateTime(1990)
+          : DateTime(1990),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        _memberDateNaissance =
+            '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+      });
+    }
   }
 
   Future<void> _showPhotoOptions() async {
@@ -200,56 +259,30 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<AuthBloc, AuthState>(
+    return BlocListener<MembresBloc, MembresState>(
       listener: (context, state) {
-        if (state is AuthLoading) {
-          setState(() {
-            _profileLoading = true;
-            _passwordLoading = true;
-            _urlLoading = true;
-            _photoUploading = true;
-          });
-        } else {
-          setState(() {
-            _profileLoading = false;
-            _passwordLoading = false;
-            _urlLoading = false;
-            _photoUploading = false;
-          });
+        if (state is MembresLoading) {
+          if (_membreSectionReady) setState(() => _membreSaving = true);
+        } else if (_membreSaving) {
+          setState(() => _membreSaving = false);
         }
 
-        if (state is AuthAuthenticated || state is AuthProfileUpdateSuccess) {
-          final user = state is AuthAuthenticated
-              ? state.user
-              : (state as AuthProfileUpdateSuccess).user;
-          _populateProfile(user);
-        }
-
-        if (state is AuthProfileUpdateSuccess) {
+        if (state is MyMembreLoaded) {
+          setState(() {
+            _membreSectionReady = true;
+            _hasMembreProfile = state.membre != null;
+          });
+          if (state.membre != null) _populateMembre(state.membre!);
+        } else if (state is MyMembreUpdated) {
+          _populateMembre(state.membre);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Profil mis à jour avec succès'),
+              content: Text('Informations paroissiales mises à jour'),
               backgroundColor: AppTheme.successColor,
             ),
           );
-        } else if (state is AuthPasswordChangeSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Mot de passe modifié avec succès'),
-              backgroundColor: AppTheme.successColor,
-            ),
-          );
-          _oldPasswordController.clear();
-          _newPasswordController.clear();
-          _confirmPasswordController.clear();
-        } else if (state is AuthBaseUrlUpdateSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Serveur mis à jour : ${state.baseUrl}'),
-              backgroundColor: AppTheme.successColor,
-            ),
-          );
-        } else if (state is AuthError) {
+        } else if (state is MembresError) {
+          if (!_membreSectionReady) setState(() => _membreSectionReady = true);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message),
@@ -258,41 +291,100 @@ class _ProfileScreenState extends State<ProfileScreen>
           );
         }
       },
-      builder: (context, state) {
-        final user = state is AuthAuthenticated ? state.user : null;
+      child: BlocConsumer<AuthBloc, AuthState>(
+        listener: (context, state) {
+          if (state is AuthLoading) {
+            setState(() {
+              _profileLoading = true;
+              _passwordLoading = true;
+              _urlLoading = true;
+              _photoUploading = true;
+            });
+          } else {
+            setState(() {
+              _profileLoading = false;
+              _passwordLoading = false;
+              _urlLoading = false;
+              _photoUploading = false;
+            });
+          }
 
-        return Scaffold(
-          backgroundColor: AppTheme.surfaceColor,
-          body: Column(
-            children: [
-              _buildProfileHeader(user),
-              Container(
-                color: Colors.white,
-                child: TabBar(
-                  controller: _tabController,
-                  tabs: const [
-                    Tab(text: 'Informations'),
-                    Tab(text: 'Paramètres et Sécurité'),
-                  ],
-                  labelColor: AppTheme.primaryColor,
-                  unselectedLabelColor: AppTheme.textSecondary,
-                  indicatorColor: AppTheme.primaryColor,
-                  indicatorWeight: 3,
-                ),
+          if (state is AuthAuthenticated || state is AuthProfileUpdateSuccess) {
+            final user = state is AuthAuthenticated
+                ? state.user
+                : (state as AuthProfileUpdateSuccess).user;
+            _populateProfile(user);
+          }
+
+          if (state is AuthProfileUpdateSuccess) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Profil mis à jour avec succès'),
+                backgroundColor: AppTheme.successColor,
               ),
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildProfileTab(),
-                    _buildSecurityTab(),
-                  ],
-                ),
+            );
+          } else if (state is AuthPasswordChangeSuccess) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Mot de passe modifié avec succès'),
+                backgroundColor: AppTheme.successColor,
               ),
-            ],
-          ),
-        );
-      },
+            );
+            _oldPasswordController.clear();
+            _newPasswordController.clear();
+            _confirmPasswordController.clear();
+          } else if (state is AuthBaseUrlUpdateSuccess) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Serveur mis à jour : ${state.baseUrl}'),
+                backgroundColor: AppTheme.successColor,
+              ),
+            );
+          } else if (state is AuthError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: AppTheme.errorColor,
+              ),
+            );
+          }
+        },
+        builder: (context, state) {
+          final user = state is AuthAuthenticated ? state.user : null;
+
+          return Scaffold(
+            backgroundColor: AppTheme.surfaceColor,
+            body: Column(
+              children: [
+                _buildProfileHeader(user),
+                Container(
+                  color: Colors.white,
+                  child: TabBar(
+                    controller: _tabController,
+                    tabs: const [
+                      Tab(text: 'Informations'),
+                      Tab(text: 'Paramètres et Sécurité'),
+                    ],
+                    labelColor: AppTheme.primaryColor,
+                    unselectedLabelColor: AppTheme.textSecondary,
+                    indicatorColor: AppTheme.primaryColor,
+                    indicatorWeight: 3,
+                  ),
+                ),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildProfileTab(),
+                      _buildSecurityTab(),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -406,90 +498,184 @@ class _ProfileScreenState extends State<ProfileScreen>
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 500),
-          child: Form(
-            key: _profileFormKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _sectionTitle('Informations personnelles'),
-                const SizedBox(height: 20),
-                Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Form(
+                key: _profileFormKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _firstNameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Prénom',
-                          prefixIcon: Icon(Icons.person_outline),
+                    _sectionTitle('Informations personnelles'),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _firstNameController,
+                            decoration: const InputDecoration(
+                              labelText: 'Prénom',
+                              prefixIcon: Icon(Icons.person_outline),
+                            ),
+                            textCapitalization: TextCapitalization.words,
+                            validator: (v) => v == null || v.trim().isEmpty
+                                ? 'Champ requis'
+                                : null,
+                          ),
                         ),
-                        textCapitalization: TextCapitalization.words,
-                        validator: (v) => v == null || v.trim().isEmpty
-                            ? 'Champ requis'
-                            : null,
-                      ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _lastNameController,
+                            decoration: const InputDecoration(
+                              labelText: 'Nom',
+                              prefixIcon: Icon(Icons.person_outline),
+                            ),
+                            textCapitalization: TextCapitalization.words,
+                            validator: (v) => v == null || v.trim().isEmpty
+                                ? 'Champ requis'
+                                : null,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: TextFormField(
-                        controller: _lastNameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Nom',
-                          prefixIcon: Icon(Icons.person_outline),
-                        ),
-                        textCapitalization: TextCapitalization.words,
-                        validator: (v) => v == null || v.trim().isEmpty
-                            ? 'Champ requis'
-                            : null,
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _emailController,
+                      decoration: const InputDecoration(
+                        labelText: 'Adresse email',
+                        prefixIcon: Icon(Icons.email_outlined),
                       ),
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) {
+                          return 'Champ requis';
+                        }
+                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) {
+                          return 'Email invalide';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _phoneController,
+                      decoration: const InputDecoration(
+                        labelText: 'Téléphone',
+                        prefixIcon: Icon(Icons.phone_outlined),
+                      ),
+                      keyboardType: TextInputType.phone,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) return null;
+                        if (!RegExp(r'^\+?1?\d{9,15}$').hasMatch(v.trim())) {
+                          return 'Format de téléphone invalide';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 32),
+                    ElevatedButton(
+                      onPressed: _profileLoading ? null : _submitProfile,
+                      child: _profileLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white),
+                            )
+                          : const Text('Enregistrer les modifications'),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Adresse email',
-                    prefixIcon: Icon(Icons.email_outlined),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Champ requis';
-                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) {
-                      return 'Email invalide';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _phoneController,
-                  decoration: const InputDecoration(
-                    labelText: 'Téléphone',
-                    prefixIcon: Icon(Icons.phone_outlined),
-                  ),
-                  keyboardType: TextInputType.phone,
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return null;
-                    if (!RegExp(r'^\+?1?\d{9,15}$').hasMatch(v.trim())) {
-                      return 'Format de téléphone invalide';
-                    }
-                    return null;
-                  },
-                ),
+              ),
+              if (!_membreSectionReady) ...[
                 const SizedBox(height: 32),
-                ElevatedButton(
-                  onPressed: _profileLoading ? null : _submitProfile,
-                  child: _profileLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white),
-                        )
-                      : const Text('Enregistrer les modifications'),
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
                 ),
-              ],
-            ),
+              ] else if (_hasMembreProfile)
+                Padding(
+                  padding: const EdgeInsets.only(top: 32),
+                  child: Form(
+                    key: _membreFormKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _sectionTitle('Informations paroissiales'),
+                        const SizedBox(height: 20),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Sexe',
+                              style: TextStyle(
+                                  fontSize: 12, color: AppTheme.textSecondary),
+                            ),
+                            const SizedBox(height: 8),
+                            SegmentedButton<String>(
+                              segments: const [
+                                ButtonSegment(
+                                    value: 'M',
+                                    label: Text('Masculin'),
+                                    icon: Icon(Icons.male)),
+                                ButtonSegment(
+                                    value: 'F',
+                                    label: Text('Féminin'),
+                                    icon: Icon(Icons.female)),
+                              ],
+                              selected: {_memberSexe},
+                              onSelectionChanged: (v) =>
+                                  setState(() => _memberSexe = v.first),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        InkWell(
+                          onTap: _selectMemberDateNaissance,
+                          child: InputDecorator(
+                            decoration: const InputDecoration(
+                              labelText: 'Date de naissance',
+                              prefixIcon: Icon(Icons.cake_outlined),
+                              suffixIcon: Icon(Icons.calendar_today),
+                            ),
+                            child: Text(
+                              _memberDateNaissance ?? 'Sélectionner une date',
+                              style: TextStyle(
+                                color: _memberDateNaissance != null
+                                    ? AppTheme.textPrimary
+                                    : AppTheme.textSecondary,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _quartierController,
+                          decoration: const InputDecoration(
+                            labelText: 'Quartier',
+                            prefixIcon: Icon(Icons.location_on_outlined),
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        ElevatedButton(
+                          onPressed: _membreSaving ? null : _submitMembreInfo,
+                          child: _membreSaving
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2, color: Colors.white),
+                                )
+                              : const Text('Enregistrer les modifications'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),
@@ -627,7 +813,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                       fontSize: 14,
                     ),
                   ),
-                  leading: const Icon(Icons.tune, color: AppTheme.textSecondary),
+                  leading:
+                      const Icon(Icons.tune, color: AppTheme.textSecondary),
                   childrenPadding: const EdgeInsets.only(top: 8, bottom: 16),
                   children: [
                     Form(

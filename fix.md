@@ -4,6 +4,57 @@ A chronological log of bug fixes applied to this project. Each entry: date, symp
 
 ---
 
+## 2026-07-04 — Auto-modification par un membre de sa date de naissance / sexe / quartier
+
+### Symptom
+
+Un utilisateur normal (rôle `fidele`) n'avait aucun moyen de modifier sa propre
+date de naissance, son sexe ou son quartier. Ces champs existent bien sur le
+modèle `Membre` et sont déjà éditables... mais uniquement par le personnel
+(`IsSecretaryOrAbove`) via l'écran Membres, qui modifie n'importe quelle fiche,
+pas la sienne. Aucun endpoint "self" n'existait.
+
+### Root cause
+
+`MembreDetailView` (PUT/PATCH `/api/membres/<pk>/`) est protégé par
+`IsSecretaryOrAbove` : un compte `fidele` reçoit un 403 s'il tente de modifier
+sa propre fiche membre.
+
+### Fix
+
+- Backend : nouvel endpoint `GET/PATCH /api/membres/me/` (`MembreMeView`),
+  ouvert à tout utilisateur authentifié, qui résout `request.user.membre`
+  (relation `OneToOne`) et n'autorise en écriture que `date_naissance`, `sexe`,
+  `quartier` via un nouveau `MembreSelfSerializer` (identité, sacrements,
+  groupe restent en lecture seule / réservés au personnel).
+- Frontend : `MembreRepository.getMyMembre()` / `updateMyMembre()`,
+  événements/états `LoadMyMembre` / `UpdateMyMembre` /
+  `MyMembreLoaded` / `MyMembreUpdated` sur `MembresBloc`, et une nouvelle
+  section "Informations paroissiales" sur l'écran Profil (sexe, date de
+  naissance, quartier) — masquée si le compte n'a pas de fiche membre liée
+  (ex : compte admin sans `Membre`).
+
+### Files touched
+
+- `backend/membres/serializers.py` (`MembreSelfSerializer`)
+- `backend/membres/views.py` (`MembreMeView`)
+- `backend/membres/urls.py`
+- `lib/core/constants/api_constants.dart` (`membreMe`)
+- `lib/data/repositories/membre_repository.dart`
+- `lib/presentation/blocs/membres/membres_bloc.dart`
+- `lib/presentation/screens/profile/profile_screen.dart`
+
+### Follow-up
+
+- Le modèle Flutter `Membre.telephone` lit la clé JSON `telephone`, mais aucun
+  serializer backend (`MembreSerializer` ni `MembreSelfSerializer`) ne renvoie
+  cette clé — c'est `phone_number` (issu de `user.phone_number`) qui est
+  envoyé. Ce champ est donc toujours `null` côté app. Pas corrigé ici (hors
+  périmètre de cette demande) ; à corriger si le téléphone du membre doit
+  s'afficher quelque part.
+
+---
+
 ## 2026-07-04 — Refonte de l'écran Profil : photo de profil, champs profil cassés, mot de passe cassé, URL serveur factice
 
 ### Symptom

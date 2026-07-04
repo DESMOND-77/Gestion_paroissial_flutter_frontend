@@ -17,6 +17,7 @@ class ApiConstants {
 
   // Membres
   static const String membres = '/membres/';
+  static const String membreMe = '/membres/me/';
   static String membreById(int id) => '/membres/$id/';
   static String membreSacrements(int id) => '/membres/$id/sacrements/';
   static String membreAjouterSacrement(int id) => '/membres/$id/ajouter_sacrement/';

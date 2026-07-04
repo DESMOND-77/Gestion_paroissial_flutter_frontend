@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 
+import '../../core/network/api_exception.dart';
 import '../../core/network/dio_client.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/database/database_service.dart';
@@ -31,7 +32,8 @@ class MembreRepository {
     }
 
     if (_databaseService != null) {
-      await _databaseService.saveItems('membres', results.map((e) => e as Map<String, dynamic>).toList());
+      await _databaseService.saveItems(
+          'membres', results.map((e) => e as Map<String, dynamic>).toList());
     }
     return results
         .map((e) => Membre.fromJson(e as Map<String, dynamic>))
@@ -57,38 +59,35 @@ class MembreRepository {
       final cached = await _databaseService.getItems('membres');
       debugPrint("=#=#=##=##=##=##=##=##=##=##=##=##=##=##=##=##");
       debugPrint("Membres en cache: ${cached.length}");
-      debugPrint("Liste des Membres en cache:\n ${cached.map((e) => e).join('\n')}");
+      debugPrint(
+          "Liste des Membres en cache:\n ${cached.map((e) => e).join('\n')}");
       if (cached.isNotEmpty) {
-        return cached
-            .map((e) => Membre.fromJson(e))
-            .toList();
+        return cached.map((e) => Membre.fromJson(e)).toList();
       }
     }
 
     // Pas de cache, requête au serveur
     return fetchMembers();
 
-      // final response = await _dioClient.get(
-      //   ApiConstants.membres,
-      //   // queryParameters: queryParams.isNotEmpty ? queryParams : null,
-      // );
+    // final response = await _dioClient.get(
+    //   ApiConstants.membres,
+    //   // queryParameters: queryParams.isNotEmpty ? queryParams : null,
+    // );
 
-      // final data = response.data["data"];
-      // List<dynamic> results;
-      // if (data is Map && data.containsKey('results')) {
-      //   results = data['results'] as List<dynamic>;
-      // } else if (data is List) {
-      //   results = data;
-      // } else {
-      //   results = [];
-      // }
-
-      // return results
-      //     .map((e) => Membre.fromJson(e as Map<String, dynamic>))
-      //     .toList();
+    // final data = response.data["data"];
+    // List<dynamic> results;
+    // if (data is Map && data.containsKey('results')) {
+    //   results = data['results'] as List<dynamic>;
+    // } else if (data is List) {
+    //   results = data;
+    // } else {
+    //   results = [];
     // }
 
-    
+    // return results
+    //     .map((e) => Membre.fromJson(e as Map<String, dynamic>))
+    //     .toList();
+    // }
   }
 
   Future<MembreDetail> getMembreById(int id) async {
@@ -103,14 +102,35 @@ class MembreRepository {
   }
 
   Future<Membre> updateMembre(int id, Map<String, dynamic> data) async {
-    final response = await _dioClient.put(ApiConstants.membreById(id), data: data);
+    final response =
+        await _dioClient.put(ApiConstants.membreById(id), data: data);
     await _databaseService?.clearTable('membres');
     return Membre.fromJson(response.data["data"] as Map<String, dynamic>);
   }
 
   Future<Membre> patchMembre(int id, Map<String, dynamic> data) async {
-    final response = await _dioClient.patch(ApiConstants.membreById(id), data: data);
+    final response =
+        await _dioClient.patch(ApiConstants.membreById(id), data: data);
     await _databaseService?.clearTable('membres');
+    return Membre.fromJson(response.data["data"] as Map<String, dynamic>);
+  }
+
+  /// Profil membre lié au compte connecté, ou `null` si aucun membre n'est
+  /// associé à ce compte (ex : compte administrateur sans fiche membre).
+  Future<Membre?> getMyMembre() async {
+    try {
+      final response = await _dioClient.get(ApiConstants.membreMe);
+      return Membre.fromJson(response.data["data"] as Map<String, dynamic>);
+    } on ApiException catch (e) {
+      if (e.statusCode == 404) return null;
+      rethrow;
+    }
+  }
+
+  /// Auto-modification limitée à date_naissance/sexe/quartier (voir
+  /// `MembreSelfSerializer` côté backend).
+  Future<Membre> updateMyMembre(Map<String, dynamic> data) async {
+    final response = await _dioClient.patch(ApiConstants.membreMe, data: data);
     return Membre.fromJson(response.data["data"] as Map<String, dynamic>);
   }
 
@@ -135,7 +155,8 @@ class MembreRepository {
         .toList();
   }
 
-  Future<Sacrement> ajouterSacrement(int membreId, Map<String, dynamic> data) async {
+  Future<Sacrement> ajouterSacrement(
+      int membreId, Map<String, dynamic> data) async {
     final response = await _dioClient.post(
       ApiConstants.membreAjouterSacrement(membreId),
       data: data,

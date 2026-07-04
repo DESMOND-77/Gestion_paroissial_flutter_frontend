@@ -42,6 +42,17 @@ class UpdateMembre extends MembresEvent {
   List<Object?> get props => [id, data];
 }
 
+class LoadMyMembre extends MembresEvent {
+  const LoadMyMembre();
+}
+
+class UpdateMyMembre extends MembresEvent {
+  final Map<String, dynamic> data;
+  const UpdateMyMembre({required this.data});
+  @override
+  List<Object?> get props => [data];
+}
+
 class DeleteMembre extends MembresEvent {
   final int id;
   const DeleteMembre({required this.id});
@@ -100,6 +111,20 @@ class MembreUpdated extends MembresState {
   List<Object?> get props => [membre];
 }
 
+class MyMembreLoaded extends MembresState {
+  final Membre? membre;
+  const MyMembreLoaded({required this.membre});
+  @override
+  List<Object?> get props => [membre];
+}
+
+class MyMembreUpdated extends MembresState {
+  final Membre membre;
+  const MyMembreUpdated({required this.membre});
+  @override
+  List<Object?> get props => [membre];
+}
+
 class MembreDeleted extends MembresState {
   final int id;
   const MembreDeleted({required this.id});
@@ -132,6 +157,8 @@ class MembresBloc extends Bloc<MembresEvent, MembresState> {
     on<LoadMembreDetail>(_onLoadMembreDetail);
     on<CreateMembre>(_onCreateMembre);
     on<UpdateMembre>(_onUpdateMembre);
+    on<LoadMyMembre>(_onLoadMyMembre);
+    on<UpdateMyMembre>(_onUpdateMyMembre);
     on<DeleteMembre>(_onDeleteMembre);
     on<AjouterSacrement>(_onAjouterSacrement);
   }
@@ -192,6 +219,32 @@ class MembresBloc extends Bloc<MembresEvent, MembresState> {
     }
   }
 
+  Future<void> _onLoadMyMembre(
+    LoadMyMembre event,
+    Emitter<MembresState> emit,
+  ) async {
+    emit(const MembresLoading());
+    try {
+      final membre = await _membreRepository.getMyMembre();
+      emit(MyMembreLoaded(membre: membre));
+    } catch (e) {
+      emit(MembresError(message: e.toString().replaceAll('Exception: ', '')));
+    }
+  }
+
+  Future<void> _onUpdateMyMembre(
+    UpdateMyMembre event,
+    Emitter<MembresState> emit,
+  ) async {
+    emit(const MembresLoading());
+    try {
+      final membre = await _membreRepository.updateMyMembre(event.data);
+      emit(MyMembreUpdated(membre: membre));
+    } catch (e) {
+      emit(MembresError(message: e.toString().replaceAll('Exception: ', '')));
+    }
+  }
+
   Future<void> _onDeleteMembre(
     DeleteMembre event,
     Emitter<MembresState> emit,
@@ -211,7 +264,8 @@ class MembresBloc extends Bloc<MembresEvent, MembresState> {
   ) async {
     emit(const MembresLoading());
     try {
-      final sacrement = await _membreRepository.ajouterSacrement(event.membreId, event.data);
+      final sacrement =
+          await _membreRepository.ajouterSacrement(event.membreId, event.data);
       emit(SacrementAjoute(sacrement: sacrement));
     } catch (e) {
       emit(MembresError(message: e.toString().replaceAll('Exception: ', '')));
