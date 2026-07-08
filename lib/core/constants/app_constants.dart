@@ -5,11 +5,13 @@ class AppConstants {
   static const String appVersion = '1.0.0';
 
   // Currency formatter
-  static final formatter = NumberFormat.currency(locale: 'fr_FR', symbol: 'XFA', decimalDigits: 0);
+  static final formatter =
+      NumberFormat.currency(locale: 'fr_FR', symbol: 'XFA', decimalDigits: 0);
   // Storage keys
   static const String accessTokenKey = 'access_token';
   static const String refreshTokenKey = 'refresh_token';
   static const String userKey = 'user_data';
+  static const String membreSelfKey = 'membre_self_data';
   static const String apiBaseUrlKey = 'api_base_url';
   // Pagination
   static const int defaultPageSize = 20;

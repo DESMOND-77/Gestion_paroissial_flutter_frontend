@@ -6,6 +6,7 @@ import '../../data/repositories/membre_repository.dart';
 import '../../data/repositories/groupe_repository.dart';
 import '../../data/repositories/evenement_repository.dart';
 import '../../data/repositories/finance_repository.dart';
+import '../../data/repositories/librairie_repository.dart';
 
 class SyncService {
   final DatabaseService _databaseService;
@@ -13,6 +14,7 @@ class SyncService {
   final GroupeRepository _groupeRepository;
   final EvenementRepository _evenementRepository;
   final FinanceRepository _financeRepository;
+  final LibrairieRepository _librairieRepository;
   final Connectivity _connectivity;
   final SecureStorage _secureStorage;
 
@@ -24,6 +26,7 @@ class SyncService {
     required GroupeRepository groupeRepository,
     required EvenementRepository evenementRepository,
     required FinanceRepository financeRepository,
+    required LibrairieRepository librairieRepository,
     required Connectivity connectivity,
     required SecureStorage secureStorage,
   })  : _databaseService = databaseService,
@@ -31,6 +34,7 @@ class SyncService {
         _groupeRepository = groupeRepository,
         _evenementRepository = evenementRepository,
         _financeRepository = financeRepository,
+        _librairieRepository = librairieRepository,
         _connectivity = connectivity,
         _secureStorage = secureStorage;
 
@@ -62,6 +66,7 @@ class SyncService {
         _syncGroupes(),
         _syncEvenements(),
         _syncFinances(),
+        _syncLibrairie(),
       ]);
     } catch (e) {
       if (kDebugMode) print('Erreur lors de la synchronisation: $e');
@@ -122,6 +127,19 @@ class SyncService {
     }
   }
 
+  // Synchronise la librairie
+  Future<void> _syncLibrairie() async {
+    try {
+      final articles = await _librairieRepository.fetchArticles();
+      await _databaseService.saveItems(
+        'librairie',
+        articles.map((a) => a.toJson()).toList(),
+      );
+    } catch (e) {
+      if (kDebugMode) print('Erreur sync librairie: $e');
+    }
+  }
+
   // Synchronise une entité spécifique
   Future<void> syncEntity(String entityType) async {
     if (!await _isAuthenticated()) return;
@@ -140,6 +158,9 @@ class SyncService {
           break;
         case 'finances':
           await _syncFinances();
+          break;
+        case 'librairie':
+          await _syncLibrairie();
           break;
       }
     } catch (e) {

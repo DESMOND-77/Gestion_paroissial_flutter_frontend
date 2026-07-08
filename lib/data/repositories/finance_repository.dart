@@ -1,8 +1,7 @@
 import '../../core/network/dio_client.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/database/database_service.dart';
-import '../models/transaction_model.dart'
-    show Transaction, RapportFinancier;
+import '../models/transaction_model.dart' show Transaction, RapportFinancier;
 
 class FinanceRepository {
   final DioClient _dioClient;
@@ -42,7 +41,12 @@ class FinanceRepository {
     int? page,
   }) async {
     // Si paramètres de filtrage: toujours du serveur
-    if (type != null || categorie != null || dateDebut != null || dateFin != null || membreId != null || page != null) {
+    if (type != null ||
+        categorie != null ||
+        dateDebut != null ||
+        dateFin != null ||
+        membreId != null ||
+        page != null) {
       final queryParams = <String, dynamic>{};
       if (type != null) queryParams['type'] = type;
       if (categorie != null) queryParams['categorie'] = categorie;
@@ -75,9 +79,7 @@ class FinanceRepository {
     if (_databaseService != null) {
       final cached = await _databaseService.getItems('finances');
       if (cached.isNotEmpty) {
-        return cached
-            .map((e) => Transaction.fromJson(e))
-            .toList();
+        return cached.map((e) => Transaction.fromJson(e)).toList();
       }
     }
 
@@ -91,19 +93,24 @@ class FinanceRepository {
   }
 
   Future<Transaction> createTransaction(Map<String, dynamic> data) async {
-    final response = await _dioClient.post(ApiConstants.transactions, data: data);
+    final response =
+        await _dioClient.post(ApiConstants.transactions, data: data);
     await _databaseService?.clearTable('finances');
     return Transaction.fromJson(response.data["data"] as Map<String, dynamic>);
   }
 
-  Future<Transaction> updateTransaction(int id, Map<String, dynamic> data) async {
-    final response = await _dioClient.put(ApiConstants.transactionById(id), data: data);
+  Future<Transaction> updateTransaction(
+      int id, Map<String, dynamic> data) async {
+    final response =
+        await _dioClient.put(ApiConstants.transactionById(id), data: data);
     await _databaseService?.clearTable('finances');
     return Transaction.fromJson(response.data["data"] as Map<String, dynamic>);
   }
 
-  Future<Transaction> patchTransaction(int id, Map<String, dynamic> data) async {
-    final response = await _dioClient.patch(ApiConstants.transactionById(id), data: data);
+  Future<Transaction> patchTransaction(
+      int id, Map<String, dynamic> data) async {
+    final response =
+        await _dioClient.patch(ApiConstants.transactionById(id), data: data);
     await _databaseService?.clearTable('finances');
     return Transaction.fromJson(response.data["data"] as Map<String, dynamic>);
   }
@@ -117,15 +124,51 @@ class FinanceRepository {
     String? dateDebut,
     String? dateFin,
   }) async {
-    final queryParams = <String, dynamic>{};
-    if (dateDebut != null) queryParams['date_debut'] = dateDebut;
-    if (dateFin != null) queryParams['date_fin'] = dateFin;
+    try {
+      final queryParams = <String, dynamic>{};
+      if (dateDebut != null) queryParams['date_debut'] = dateDebut;
+      if (dateFin != null) queryParams['date_fin'] = dateFin;
 
-    final response = await _dioClient.get(
-      ApiConstants.financesRapport,
-      queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      final response = await _dioClient.get(
+        ApiConstants.financesRapport,
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
+      return RapportFinancier.fromJson(
+          response.data["data"] as Map<String, dynamic>);
+    } catch (e) {
+      // Hors ligne / serveur injoignable : pas d'endpoint dédié à mettre en
+      // cache pour un rapport (donnée calculée) — on le recalcule localement
+      // à partir des transactions déjà en cache plutôt que de tout perdre.
+      // Une période filtrée reste néanmoins impossible à honorer hors ligne.
+      if (dateDebut != null || dateFin != null || _databaseService == null) {
+        rethrow;
+      }
+      final cached = await _databaseService.getItems('finances');
+      if (cached.isEmpty) rethrow;
+      final transactions = cached.map((e) => Transaction.fromJson(e)).toList();
+      return _computeLocalRapport(transactions);
+    }
+  }
+
+  RapportFinancier _computeLocalRapport(List<Transaction> transactions) {
+    double totalRecettes = 0;
+    double totalDepenses = 0;
+    final parCategorie = <String, double>{};
+    for (final t in transactions) {
+      parCategorie[t.categorie] = (parCategorie[t.categorie] ?? 0) + t.montant;
+      if (t.type == 'recette') {
+        totalRecettes += t.montant;
+      } else if (t.type == 'depense') {
+        totalDepenses += t.montant;
+      }
+    }
+    return RapportFinancier(
+      totalRecettes: totalRecettes,
+      totalDepenses: totalDepenses,
+      balance: totalRecettes - totalDepenses,
+      parCategorie: parCategorie,
+      parMois: const [],
     );
-    return RapportFinancier.fromJson(response.data["data"] as Map<String, dynamic>);
   }
 
   Future<List<Transaction>> getMembreDons(int membreId) async {

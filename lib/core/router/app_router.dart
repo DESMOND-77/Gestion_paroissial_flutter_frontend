@@ -30,15 +30,24 @@ class AppRouter {
     debugLogDiagnostics: false,
     redirect: (context, state) {
       final authState = authBloc.state;
-      final isAuthenticated = authState is AuthAuthenticated;
       final isLoginRoute = state.matchedLocation == '/login' ||
           state.matchedLocation == '/forgot-password' ||
           state.matchedLocation == '/register';
 
-      if (!isAuthenticated && !isLoginRoute) {
+      // Seul un état explicitement "non connecté" (déconnexion, session
+      // expirée, échec de la vérification initiale) doit renvoyer vers le
+      // login. Des états transitoires comme AuthError (ex: rafraîchissement
+      // du profil qui échoue faute de réseau) ne signifient PAS que la
+      // session est invalide — les jetons sont toujours valides en storage —
+      // donc ils ne doivent pas éjecter l'utilisateur de l'écran courant.
+      final isLoggedOut = authState is AuthUnauthenticated;
+      final isConfirmedAuthenticated =
+          authState is AuthAuthenticated || authState is AuthLoginSuccess;
+
+      if (isLoggedOut && !isLoginRoute) {
         return '/login';
       }
-      if (isAuthenticated && isLoginRoute) {
+      if (isConfirmedAuthenticated && isLoginRoute) {
         return '/dashboard';
       }
       return null;

@@ -76,7 +76,8 @@ class AuthBaseUrlUpdated extends AuthEvent {
 class AuthPasswordChanged extends AuthEvent {
   final String oldPassword;
   final String newPassword;
-  const AuthPasswordChanged({required this.oldPassword, required this.newPassword});
+  const AuthPasswordChanged(
+      {required this.oldPassword, required this.newPassword});
   @override
   List<Object?> get props => [oldPassword, newPassword];
 }
@@ -256,7 +257,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final user = await _authRepository.getUserProfile();
       emit(AuthAuthenticated(user: user));
     } catch (e) {
-      emit(AuthError(message: e.toString().replaceAll('Exception: ', '')));
+      // Hors-ligne / serveur injoignable : on retombe sur les dernières
+      // données connues (stockées localement) plutôt que d'afficher une
+      // erreur qui laisserait l'écran Profil vide.
+      final cached = await _authRepository.getCachedUser();
+      if (cached != null) {
+        emit(AuthAuthenticated(user: cached));
+      } else {
+        emit(AuthError(message: e.toString().replaceAll('Exception: ', '')));
+      }
     }
   }
 
@@ -280,8 +289,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(const AuthLoading());
     try {
-      final user =
-          await _authRepository.updateProfilePicture(event.filePath);
+      final user = await _authRepository.updateProfilePicture(event.filePath);
       emit(AuthProfileUpdateSuccess(user: user));
       emit(AuthAuthenticated(user: user));
     } catch (e) {
@@ -295,7 +303,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(const AuthLoading());
     try {
-      await _authRepository.changePassword(event.oldPassword, event.newPassword);
+      await _authRepository.changePassword(
+          event.oldPassword, event.newPassword);
       emit(const AuthPasswordChangeSuccess());
       // Keep user authenticated
       final user = await _authRepository.getCachedUser();

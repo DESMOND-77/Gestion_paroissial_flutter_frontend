@@ -14,20 +14,9 @@ class LibrairieRepository {
       : _dioClient = dioClient,
         _databaseService = databaseService;
 
-  Future<List<Article>> getArticles({
-    String? search,
-    String? categorie,
-    bool? enAlerte,
-  }) async {
-    final queryParams = <String, dynamic>{};
-    if (search != null && search.isNotEmpty) queryParams['search'] = search;
-    if (categorie != null) queryParams['categorie'] = categorie;
-    if (enAlerte != null) queryParams['en_alerte'] = enAlerte;
-
-    final response = await _dioClient.get(
-      ApiConstants.articles,
-      queryParameters: queryParams.isNotEmpty ? queryParams : null,
-    );
+  // Récupère les articles depuis le serveur (pour la synchronisation)
+  Future<List<Article>> fetchArticles() async {
+    final response = await _dioClient.get(ApiConstants.articles);
 
     final data = response.data["data"];
     List<dynamic> results;
@@ -42,6 +31,50 @@ class LibrairieRepository {
     return results
         .map((e) => Article.fromJson(e as Map<String, dynamic>))
         .toList();
+  }
+
+  Future<List<Article>> getArticles({
+    String? search,
+    String? categorie,
+    bool? enAlerte,
+  }) async {
+    // Si recherche ou filtrage: toujours du serveur
+    if (search != null || categorie != null || enAlerte != null) {
+      final queryParams = <String, dynamic>{};
+      if (search != null && search.isNotEmpty) queryParams['search'] = search;
+      if (categorie != null) queryParams['categorie'] = categorie;
+      if (enAlerte != null) queryParams['en_alerte'] = enAlerte;
+
+      final response = await _dioClient.get(
+        ApiConstants.articles,
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
+
+      final data = response.data["data"];
+      List<dynamic> results;
+      if (data is Map && data.containsKey('results')) {
+        results = data['results'] as List<dynamic>;
+      } else if (data is List) {
+        results = data;
+      } else {
+        results = [];
+      }
+
+      return results
+          .map((e) => Article.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+
+    // Sinon, chercher en cache d'abord
+    if (_databaseService != null) {
+      final cached = await _databaseService.getItems('librairie');
+      if (cached.isNotEmpty) {
+        return cached.map((e) => Article.fromJson(e)).toList();
+      }
+    }
+
+    // Pas de cache, requête au serveur
+    return fetchArticles();
   }
 
   Future<Article> getArticleById(int id) async {

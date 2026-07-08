@@ -47,6 +47,7 @@ Future<void> setupDependencies() async {
     () => MembreRepository(
       dioClient: sl<DioClient>(),
       databaseService: sl<DatabaseService>(),
+      secureStorage: sl<SecureStorage>(),
     ),
   );
 
@@ -72,7 +73,10 @@ Future<void> setupDependencies() async {
   );
 
   sl.registerLazySingleton<LibrairieRepository>(
-    () => LibrairieRepository(dioClient: sl<DioClient>()),
+    () => LibrairieRepository(
+      dioClient: sl<DioClient>(),
+      databaseService: sl<DatabaseService>(),
+    ),
   );
 
   // Sync Service
@@ -83,6 +87,7 @@ Future<void> setupDependencies() async {
       groupeRepository: sl<GroupeRepository>(),
       evenementRepository: sl<EvenementRepository>(),
       financeRepository: sl<FinanceRepository>(),
+      librairieRepository: sl<LibrairieRepository>(),
       connectivity: sl<Connectivity>(),
       secureStorage: sl<SecureStorage>(),
     ),

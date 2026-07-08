@@ -4,6 +4,225 @@ A chronological log of bug fixes applied to this project. Each entry: date, symp
 
 ---
 
+## 2026-07-06 — Tableau de bord, Finances et Librairie n'affichent plus rien hors ligne
+
+### Symptom
+
+Sans connexion réseau, les écrans Tableau de bord, Finances et Librairie
+n'affichent plus aucune donnée (alors que Membres/Groupes/Événements
+continuent de fonctionner grâce à leur cache).
+
+### Root cause
+
+Trois bugs distincts, chacun cassant une source de données différente :
+
+- **Librairie** : `LibrairieRepository.getArticles()` n'avait **aucune**
+  logique de cache — appel direct au serveur à chaque fois, sans repli. Pire,
+  le repository était même enregistré dans le DI **sans** `DatabaseService`
+  du tout, et `SyncService` ne connaissait pas `LibrairieRepository` : la
+  table SQLite `librairie` (pourtant créée par le schéma) n'était donc jamais
+  alimentée par la synchronisation périodique.
+- **Finances** : `FinanceRepository.getRapport()` (utilisé par l'écran
+  Finances ET par le Tableau de bord) tape un endpoint dédié
+  (`/finances/rapport/`) sans aucun repli cache — hors ligne, il lève
+  toujours une exception.
+- **Tableau de bord** : `DashboardBloc._loadData()` charge 5 sources via
+  `Future.wait([...])`. Dès qu'**une seule** échoue (typiquement
+  `getRapport()`, cf. ci-dessus), `Future.wait` rejette immédiatement et
+  **toutes** les données sont perdues — y compris membres/groupes/événements/
+  transactions qui, eux, avaient un cache valide et auraient pu s'afficher.
+
+Bonus (repéré en cours de route, corrigé au passage car directement dans le
+code touché) : la réponse de `/finances/rapport/` renvoyait `solde` et
+`par_categorie` sous forme de **liste** `[{"categorie":..,"total":..}]`,
+alors que le modèle Flutter `RapportFinancier.fromJson` attend `balance` et
+un **dict** `{categorie: total}` — la balance et la répartition par
+catégorie étaient donc silencieusement toujours à zéro/vides, même en ligne.
+
+### Fix
+
+- `backend/finances/views.py` : `RapportFinancierView` renvoie désormais
+  `balance` (au lieu de `solde`) et `par_categorie` sous forme de dict.
+- `lib/data/repositories/finance_repository.dart` : `getRapport()` retombe,
+  hors ligne et sans filtre de période, sur un rapport **recalculé
+  localement** à partir des transactions déjà en cache (`_computeLocalRapport`).
+  Une période filtrée reste, comme documenté, impossible à honorer hors ligne.
+- `lib/data/repositories/librairie_repository.dart` : `getArticles()` suit
+  désormais le même schéma cache-first que les autres repositories
+  (`fetchArticles()` + cache SQLite `librairie` quand aucun filtre n'est
+  actif).
+- `lib/core/sync/sync_service.dart` : ajout de `_syncLibrairie()`, appelé
+  dans `syncAll()` et `syncEntity('librairie')`.
+- `lib/core/di/injection.dart` : `LibrairieRepository` reçoit enfin un
+  `DatabaseService` ; `SyncService` reçoit `LibrairieRepository`.
+- `lib/presentation/blocs/dashboard/dashboard_bloc.dart` : chaque source est
+  désormais isolée via `_safeList`/`_safeRapport` (repli sur liste vide /
+  rapport à zéro en cas d'échec individuel) avant le `Future.wait`, pour que
+  l'échec d'une seule source n'efface plus les autres.
+
+### Files touched
+
+- `backend/finances/views.py`
+- `lib/data/repositories/finance_repository.dart`
+- `lib/data/repositories/librairie_repository.dart`
+- `lib/core/sync/sync_service.dart`
+- `lib/core/di/injection.dart`
+- `lib/presentation/blocs/dashboard/dashboard_bloc.dart`
+
+### Follow-up
+
+- Le rapport recalculé localement (hors ligne) n'inclut pas de ventilation
+  `par_mois` (le backend ne la calcule pas non plus — champ toujours vide,
+  y compris en ligne). Fonctionnalité à ajouter séparément si le graphique
+  mensuel doit réellement se remplir.
+- Vérifié la transformation `par_categorie` liste→dict directement contre la
+  base de données de dev (résultats corrects) ; pas de test end-to-end HTTP
+  réel (même limitation que le fix précédent).
+
+## 2026-07-06 — L'app éjecte vers /login quand le profil ne peut pas être rafraîchi hors connexion
+
+### Symptom
+
+En consultant l'écran Profil sans connexion réseau (ou serveur injoignable),
+l'utilisateur est brutalement renvoyé à l'écran de connexion — alors que ses
+jetons sont toujours valides. Perçu comme un crash de l'application.
+
+### Root cause
+
+`ProfileScreen` déclenche systématiquement `AuthUserProfileRefreshed` à
+l'ouverture (GET `/user/profile/`), même quand un utilisateur est déjà
+affiché. En cas d'échec réseau, `AuthBloc` émettait `AuthError`. Le guard de
+`AppRouter` (`redirect`) considérait **tout état différent de
+`AuthAuthenticated`** — y compris `AuthError`, qui est un état transitoire
+sans rapport avec la validité de la session — comme "non authentifié", et
+renvoyait donc immédiatement vers `/login` via `refreshListenable:
+GoRouterRefreshStream(authBloc.stream)`.
+
+Par ailleurs, rien n'était mis en cache localement pour le profil membre
+(date de naissance/sexe/quartier ajoutés le 2026-07-04) : hors connexion,
+`MembreRepository.getMyMembre()` remontait directement l'exception réseau.
+
+### Fix
+
+- `lib/core/router/app_router.dart` : le redirect ne force `/login` que sur
+  un état explicitement déconnecté (`AuthUnauthenticated` — vraie
+  déconnexion/session expirée), et ne quitte `/login` que sur un état
+  confirmant l'authentification (`AuthAuthenticated`/`AuthLoginSuccess`).
+  Tout état transitoire (`AuthError`, `AuthLoading`, states de succès d'une
+  sous-action) laisse l'utilisateur sur l'écran courant.
+- `lib/presentation/blocs/auth/auth_bloc.dart` : `AuthUserProfileRefreshed`
+  retombe sur `AuthRepository.getCachedUser()` (déjà stocké en secure
+  storage) en cas d'échec réseau, au lieu d'émettre `AuthError`.
+- `lib/data/repositories/membre_repository.dart` : `getMyMembre()` /
+  `updateMyMembre()` mettent désormais en cache la fiche membre personnelle
+  (secure storage, nouvelle clé `membre_self_data`) et y retombent en cas
+  d'échec réseau (`ApiException` non-404 ou `NetworkException`).
+- La photo de profil elle-même reste mise en cache disque automatiquement via
+  `CachedNetworkImage` (déjà utilisé par `UserAvatar` depuis le 2026-07-04) :
+  une fois chargée en ligne au moins une fois, elle reste affichable hors
+  connexion sans changement supplémentaire.
+
+### Files touched
+
+- `lib/core/router/app_router.dart`
+- `lib/presentation/blocs/auth/auth_bloc.dart`
+- `lib/data/repositories/membre_repository.dart`
+- `lib/core/storage/secure_storage.dart`, `lib/core/constants/app_constants.dart`
+  (clé `membre_self_data`)
+- `lib/core/di/injection.dart` (injection de `SecureStorage` dans
+  `MembreRepository`)
+
+### Follow-up
+
+- Ce même bug de redirect touchait potentiellement toute action émettant
+  `AuthError` pendant une session déjà active (changement de mot de passe,
+  mise à jour du profil, changement de photo, changement d'URL serveur) —
+  le fix au niveau du router les corrige toutes en une fois, pas seulement le
+  cas du profil.
+- Pas de reproduction end-to-end (coupure réseau réelle dans l'app) faute
+  d'environnement de test disponible ; à confirmer manuellement en coupant le
+  réseau puis en ouvrant l'écran Profil.
+
+---
+
+## 2026-07-06 — Les filtres/tri des listes ne filtraient rien (Membres, Groupes, Finances, Librairie)
+
+### Symptom
+
+Sur l'écran Membres, changer le filtre Sexe (Masculin/Féminin) ou taper dans
+la recherche ne changeait jamais la liste affichée. Constaté ensuite comme un
+problème plus large touchant Groupes, Finances et Librairie.
+
+### Root cause
+
+Chaque module avait un bug différent, mais avec le même effet (le filtre est
+un no-op) :
+
+- **Membres** : `MembreRepository.getMembres()` avait toute sa logique de
+  filtrage en commentaire — la méthode ignorait `search`/`groupe`/`sexe`/`page`
+  et renvoyait toujours le cache ou la liste complète. Même corrigé côté app,
+  le backend (`MembreService.search_membres`) ne connaissait pas du tout le
+  paramètre `sexe`, et n'acceptait pas de recherche libre (seulement `nom`/
+  `prenom` séparés, alors que l'app n'a qu'une seule boîte de recherche
+  envoyant `search`).
+- **Groupes** : l'app envoie `?search=`, mais `GroupeListView.get()` ne lisait
+  que `?nom=` — mismatch de nom de paramètre, la recherche ne faisait rien.
+- **Finances** (`TransactionListView`) et **Librairie**
+  (`ArticleListView`) : ces vues ne lisaient **aucun** query param et
+  renvoyaient systématiquement la liste complète, quels que soient les filtres
+  envoyés par l'app (type/catégorie/dates/membre pour les transactions,
+  recherche/catégorie/alerte stock pour les articles).
+- **Événements** : cas à part, les filtres `type`/`upcoming` fonctionnaient
+  déjà réellement ; seule la recherche libre (`search`, sur le titre) était
+  ignorée côté backend.
+
+### Fix
+
+- `backend/membres/services.py` : `search_membres()` accepte désormais
+  `sexe` et un paramètre `search` générique (nom OU prénom, prioritaire sur
+  `nom`/`prenom` séparés).
+- `backend/membres/views.py` : `MembreListView.get()` lit et transmet
+  `search`/`sexe`.
+- `backend/groupes/views.py` : `GroupeListView.get()` lit `search` (avec
+  repli sur `nom` pour compatibilité).
+- `backend/evenements/views.py` : `EvenementListView.get()` filtre désormais
+  sur `search` (titre).
+- `backend/finances/views.py` : `TransactionListView.get()` filtre
+  maintenant réellement sur `type`/`categorie`/`date_debut`/`date_fin`/
+  `membre`.
+- `backend/librairie/views.py` : `ArticleListView.get()` filtre maintenant
+  sur `search` (nom)/`categorie`/`en_alerte`.
+- `lib/data/repositories/membre_repository.dart` : `getMembres()` — code de
+  filtrage restauré (décommenté et corrigé), suit désormais le même schéma
+  que les autres repositories (filtre présent → toujours serveur ; sinon
+  cache-first).
+
+### Files touched
+
+- `backend/membres/services.py`, `backend/membres/views.py`
+- `backend/groupes/views.py`
+- `backend/evenements/views.py`
+- `backend/finances/views.py`
+- `backend/librairie/views.py`
+- `lib/data/repositories/membre_repository.dart`
+
+### Follow-up
+
+- La pagination (`page`) envoyée par `MembreRepository.getMembres` et
+  `FinanceRepository.getTransactions` n'est toujours pas appliquée côté
+  backend (ces vues sont de simples `APIView`, pas des `ListAPIView` avec
+  pagination DRF). Pas de bouton de pagination visible dans l'UI actuelle
+  donc pas d'impact utilisateur constaté, mais à corriger si une pagination
+  de liste est ajoutée plus tard.
+- Vérifié uniquement au niveau ORM/service (requêtes exécutées directement
+  contre la base de données de dev, résultats cohérents) — le test bout-en-bout
+  via une requête HTTP authentifiée n'a pas pu être exécuté facilement depuis
+  le shell (l'authentification JWT de l'app n'est pas trivialement simulable
+  hors HTTP réel) ; à valider manuellement dans l'app sur les écrans Membres,
+  Groupes, Finances et Librairie.
+
+---
+
 ## 2026-07-04 — Auto-modification par un membre de sa date de naissance / sexe / quartier
 
 ### Symptom

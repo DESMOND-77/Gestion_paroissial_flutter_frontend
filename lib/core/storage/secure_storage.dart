@@ -101,6 +101,13 @@ class SecureStorage {
 
   Future<void> deleteUserData() => _safeDelete(AppConstants.userKey);
 
+  Future<void> saveMembreSelfData(String membreData) =>
+      _safeWrite(AppConstants.membreSelfKey, membreData);
+
+  Future<String?> getMembreSelfData() => _safeRead(AppConstants.membreSelfKey);
+
+  Future<void> deleteMembreSelfData() =>
+      _safeDelete(AppConstants.membreSelfKey);
 
   Future<void> saveBaseUrl(String baseUrl) =>
       _safeWrite(AppConstants.apiBaseUrlKey, baseUrl);

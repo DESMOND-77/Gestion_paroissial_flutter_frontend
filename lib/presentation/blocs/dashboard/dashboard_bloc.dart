@@ -122,13 +122,16 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
 
   Future<void> _loadData(Emitter<DashboardState> emit) async {
     try {
-      // Load all data in parallel
+      // Chargées en parallèle, mais chacune est isolée : si l'une échoue
+      // (ex: hors ligne et pas encore de cache pour cette source), les
+      // autres restent affichées au lieu de faire échouer tout le tableau
+      // de bord (Future.wait abandonnerait sinon dès la première erreur).
       final results = await Future.wait([
-        _membreRepository.getMembres(),
-        _groupeRepository.getGroupes(),
-        _evenementRepository.getEvenements(),
-        _financeRepository.getTransactions(),
-        _financeRepository.getRapport(),
+        _safeList(_membreRepository.getMembres),
+        _safeList(_groupeRepository.getGroupes),
+        _safeList(_evenementRepository.getEvenements),
+        _safeList(_financeRepository.getTransactions),
+        _safeRapport(_financeRepository.getRapport),
       ]);
 
       final membres = results[0] as List;
@@ -157,6 +160,30 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       ));
     } catch (e) {
       emit(DashboardError(message: e.toString().replaceAll('Exception: ', '')));
+    }
+  }
+
+  Future<List<T>> _safeList<T>(Future<List<T>> Function() call) async {
+    try {
+      return await call();
+    } catch (_) {
+      return <T>[];
+    }
+  }
+
+  Future<RapportFinancier> _safeRapport(
+    Future<RapportFinancier> Function() call,
+  ) async {
+    try {
+      return await call();
+    } catch (_) {
+      return const RapportFinancier(
+        totalRecettes: 0,
+        totalDepenses: 0,
+        balance: 0,
+        parCategorie: {},
+        parMois: [],
+      );
     }
   }
 }
