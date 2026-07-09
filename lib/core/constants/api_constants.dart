@@ -1,8 +1,10 @@
 class ApiConstants {
-  static const String baseUrl = 'https://gestiparr.onrender.com/api';
+  static const String baseUrl = 
+'https://gestiparr.onrender.com';
+  // '127.0.0.1:8100/api';
+  // 'https://4xd38wf9-8100.uks1.devtunnels.ms/api';
 // 127.0.0.1
 // gestion-paroissiale.onrender.com
-// https://gestiparr.onrender.com
   // Auth
   static const String login = '/auth/login/';
   static const String logout = '/auth/logout/';
