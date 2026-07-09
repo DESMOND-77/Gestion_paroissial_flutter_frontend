@@ -1,5 +1,5 @@
 class ApiConstants {
-  static const String baseUrl = 'http://192.168.1.87:8000/api';
+  static const String baseUrl = 'https://gestion-paroissiale.onrender.com/api';
 // 127.0.0.1
 // gestion-paroissiale.onrender.com
   // Auth

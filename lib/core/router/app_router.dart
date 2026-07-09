@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../presentation/blocs/auth/auth_bloc.dart';
+import '../../presentation/screens/splash/splash_screen.dart';
 import '../../presentation/screens/auth/login_screen.dart';
 import '../../presentation/screens/auth/forgot_password_screen.dart';
 import '../../presentation/screens/auth/register_screen.dart';
@@ -26,13 +27,17 @@ class AppRouter {
   AppRouter({required this.authBloc});
 
   late final GoRouter router = GoRouter(
-    initialLocation: '/dashboard',
+    initialLocation: '/splash',
     debugLogDiagnostics: false,
     redirect: (context, state) {
       final authState = authBloc.state;
       final isLoginRoute = state.matchedLocation == '/login' ||
           state.matchedLocation == '/forgot-password' ||
           state.matchedLocation == '/register';
+      // Le splash gère lui-même sa navigation une fois l'animation terminée
+      // et l'état d'authentification connu ; le redirect ne doit pas le
+      // court-circuiter pendant que l'animation joue.
+      final isSplashRoute = state.matchedLocation == '/splash';
 
       // Seul un état explicitement "non connecté" (déconnexion, session
       // expirée, échec de la vérification initiale) doit renvoyer vers le
@@ -44,7 +49,7 @@ class AppRouter {
       final isConfirmedAuthenticated =
           authState is AuthAuthenticated || authState is AuthLoginSuccess;
 
-      if (isLoggedOut && !isLoginRoute) {
+      if (isLoggedOut && !isLoginRoute && !isSplashRoute) {
         return '/login';
       }
       if (isConfirmedAuthenticated && isLoginRoute) {
@@ -54,6 +59,11 @@ class AppRouter {
     },
     refreshListenable: GoRouterRefreshStream(authBloc.stream),
     routes: [
+      GoRoute(
+        path: '/splash',
+        name: 'splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
       GoRoute(
         path: '/login',
         name: 'login',
