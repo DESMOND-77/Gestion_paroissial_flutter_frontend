@@ -1,10 +1,11 @@
 class ApiConstants {
   static const String baseUrl = 
-'https://gestiparr.onrender.com';
-  // '127.0.0.1:8100/api';
-  // 'https://4xd38wf9-8100.uks1.devtunnels.ms/api';
-// 127.0.0.1
-// gestion-paroissiale.onrender.com
+  'http://192.168.1.87:8000/api/v1';
+  // 'https://gestiparr.onrender.com/api/v1';
+  // 'http://127.0.0.1:8100/api/v1';
+  // 'https://4xd38wf9-8100.uks1.devtunnels.ms/api/v1';
+  // 'https://gestion-paroissiale.onrender.com/api/v1';
+
   // Auth
   static const String login = '/auth/login/';
   static const String logout = '/auth/logout/';
@@ -23,7 +24,8 @@ class ApiConstants {
   static const String membreMe = '/membres/me/';
   static String membreById(int id) => '/membres/$id/';
   static String membreSacrements(int id) => '/membres/$id/sacrements/';
-  static String membreAjouterSacrement(int id) => '/membres/$id/ajouter_sacrement/';
+  static String membreAjouterSacrement(int id) =>
+      '/membres/$id/ajouter_sacrement/';
 
   // Groupes
   static const String groupes = '/groupes/';
@@ -34,7 +36,8 @@ class ApiConstants {
   static const String evenements = '/evenements/';
   static String evenementById(int id) => '/evenements/$id/';
   static String evenementInscrire(int id) => '/evenements/$id/inscrire/';
-  static String evenementParticipants(int id) => '/evenements/$id/participants/';
+  static String evenementParticipants(int id) =>
+      '/evenements/$id/participants/';
 
   // Finances
   static const String transactions = '/finances/transactions/';
