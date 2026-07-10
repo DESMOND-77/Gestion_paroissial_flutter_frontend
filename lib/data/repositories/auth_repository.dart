@@ -1,19 +1,49 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:dio/dio.dart';
 import '../../core/network/dio_client.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/storage/secure_storage.dart';
+import '../../core/storage/file_storage_service.dart';
 import '../models/auth_model.dart';
 
 class AuthRepository {
+  static const _profilePictureCategory = 'profile_pictures';
+
   final DioClient _dioClient;
   final SecureStorage _secureStorage;
+  final FileStorageService _fileStorage;
 
   AuthRepository({
     required DioClient dioClient,
     required SecureStorage secureStorage,
+    required FileStorageService fileStorage,
   })  : _dioClient = dioClient,
-        _secureStorage = secureStorage;
+        _secureStorage = secureStorage,
+        _fileStorage = fileStorage;
+
+  String _profilePictureFileName(int userId) => 'user_$userId';
+
+  /// Fichier local mis en cache pour cet utilisateur, s'il existe — utilisé
+  /// pour afficher la photo de profil sans réseau.
+  File? getCachedProfilePicture(int userId) {
+    return _fileStorage.getCachedFile(
+      _profilePictureCategory,
+      _profilePictureFileName(userId),
+    );
+  }
+
+  /// Télécharge la photo de profil distante et la met en cache localement
+  /// (accès hors ligne). Les échecs sont ignorés : l'avatar retombe sur le
+  /// cache déjà présent ou sur les initiales.
+  Future<void> _cacheProfilePicture(AuthUser user) async {
+    if (user.profilePictureUrl.isEmpty) return;
+    await _fileStorage.downloadAndCache(
+      user.profilePictureUrl,
+      _profilePictureCategory,
+      _profilePictureFileName(user.id),
+    );
+  }
 
   Future<AuthUser> register(Map<String, dynamic> data) async {
     final response = await _dioClient.post(ApiConstants.register, data: data);
@@ -44,6 +74,7 @@ class AuthRepository {
     await _secureStorage.saveAccessToken(loginResponse.access);
     await _secureStorage.saveRefreshToken(loginResponse.refresh);
     await _secureStorage.saveUserData(jsonEncode(loginResponse.user.toJson()));
+    await _cacheProfilePicture(loginResponse.user);
     return loginResponse;
   }
 
@@ -61,7 +92,10 @@ class AuthRepository {
 
   Future<AuthUser> getCurrentUser() async {
     final response = await _dioClient.get(ApiConstants.me);
-    return AuthUser.fromJson(response.data["data"] as Map<String, dynamic>);
+    final user =
+        AuthUser.fromJson(response.data["data"] as Map<String, dynamic>);
+    await _cacheProfilePicture(user);
+    return user;
   }
 
   Future<AuthUser?> getCachedUser() async {
@@ -120,6 +154,7 @@ class AuthRepository {
     final user =
         AuthUser.fromJson(response.data["data"] as Map<String, dynamic>);
     await _secureStorage.saveUserData(jsonEncode(user.toJson()));
+    await _cacheProfilePicture(user);
     return user;
   }
 
@@ -141,6 +176,7 @@ class AuthRepository {
     final user =
         AuthUser.fromJson(response.data["data"] as Map<String, dynamic>);
     await _secureStorage.saveUserData(jsonEncode(user.toJson()));
+    await _cacheProfilePicture(user);
     return user;
   }
 

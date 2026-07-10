@@ -412,6 +412,9 @@ class _ProfileScreenViewState extends State<_ProfileScreenView>
               children: [
                 UserAvatar(
                   imageUrl: user?.profilePictureUrl,
+                  localImageFile: user != null
+                      ? sl<AuthRepository>().getCachedProfilePicture(user.id)
+                      : null,
                   initials: initials,
                   radius: 52,
                   showHalo: true,

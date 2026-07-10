@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../network/dio_client.dart';
 import '../storage/secure_storage.dart';
+import '../storage/file_storage_service.dart';
 import '../database/database_service.dart';
 import '../sync/sync_service.dart';
 import '../sync/periodic_sync_manager.dart';
@@ -24,6 +25,10 @@ final GetIt sl = GetIt.instance;
 Future<void> setupDependencies() async {
   // Storage
   sl.registerLazySingleton<SecureStorage>(() => SecureStorage());
+  sl.registerLazySingleton<FileStorageService>(() => FileStorageService());
+  // Répertoire applicatif résolu une fois ; nécessaire avant tout accès
+  // synchrone à FileStorageService (ex: affichage d'un avatar en cache).
+  await sl<FileStorageService>().init();
 
   // Database & Sync
   sl.registerLazySingleton<DatabaseService>(() => DatabaseService());
@@ -40,6 +45,7 @@ Future<void> setupDependencies() async {
     () => AuthRepository(
       dioClient: sl<DioClient>(),
       secureStorage: sl<SecureStorage>(),
+      fileStorage: sl<FileStorageService>(),
     ),
   );
 
