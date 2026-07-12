@@ -1,10 +1,20 @@
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:isar_plus/isar_plus.dart';
+import 'package:path_provider/path_provider.dart';
+import 'cached_entity.dart';
 
+/// Cache local hors ligne, sur Isar (remplace l'ancien moteur sqflite).
+///
+/// Conserve volontairement la même API publique que l'ancienne implémentation
+/// SQLite (saveItems/getItems/getItemById/getLastSyncTime/isCacheValid/
+/// hasData/clearDatabase/clearTable/close) : `SyncService` et les 5
+/// repositories (membres, groupes, evenements, finances, librairie)
+/// continuent d'appeler ces méthodes sans aucune modification — seul le
+/// moteur de stockage change.
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
-  static Database? _database;
+  static Isar? _isar;
 
   factory DatabaseService() {
     return _instance;
@@ -12,153 +22,95 @@ class DatabaseService {
 
   DatabaseService._internal();
 
-  Future<Database> get database async {
-    _database ??= await _initDatabase();
-    return _database!;
+  Future<Isar> get database async {
+    _isar ??= await _openIsar();
+    return _isar!;
   }
 
-  Future<Database> _initDatabase() async {
-    final path = join(await getDatabasesPath(), 'paroissiale.db');
-    return openDatabase(
-      path,
-      version: 2,
-      onCreate: _createTables,
-      onUpgrade: _upgradeTables,
+  Future<Isar> _openIsar() async {
+    // Web : le moteur Isar tourne en WASM (chargé via Isar.initialize dans
+    // main.dart) et persiste dans IndexedDB — pas de répertoire de fichiers.
+    // Natif (Android/iOS/Linux/macOS/Windows) : répertoire applicatif privé,
+    // cohérent avec FileStorageService (pas le dossier "Documents" visible).
+    final directory = kIsWeb
+        ? ''
+        : (await getApplicationSupportDirectory()).path;
+
+    return Isar.openAsync(
+      schemas: [CachedEntitySchema, SyncMetadataEntitySchema],
+      directory: directory,
+      name: 'paroissiale',
     );
   }
 
-  Future<void> _createTables(Database db, int version) async {
-    await db.execute('''
-      CREATE TABLE membres (
-        id INTEGER PRIMARY KEY,
-        data TEXT NOT NULL,
-        syncedAt TEXT NOT NULL
-      )
-    ''');
+  int _cachedId(String entityType, int entityId) =>
+      Isar.fastHash('$entityType|$entityId');
 
-    await db.execute('''
-      CREATE TABLE groupes (
-        id INTEGER PRIMARY KEY,
-        data TEXT NOT NULL,
-        syncedAt TEXT NOT NULL
-      )
-    ''');
+  int _syncMetadataId(String entityType) => Isar.fastHash(entityType);
 
-    await db.execute('''
-      CREATE TABLE evenements (
-        id INTEGER PRIMARY KEY,
-        data TEXT NOT NULL,
-        syncedAt TEXT NOT NULL
-      )
-    ''');
-
-    await db.execute('''
-      CREATE TABLE finances (
-        id INTEGER PRIMARY KEY,
-        data TEXT NOT NULL,
-        syncedAt TEXT NOT NULL
-      )
-    ''');
-
-    await db.execute('''
-      CREATE TABLE librairie (
-        id INTEGER PRIMARY KEY,
-        data TEXT NOT NULL,
-        syncedAt TEXT NOT NULL
-      )
-    ''');
-
-    await db.execute('''
-      CREATE TABLE sync_metadata (
-        entityType TEXT PRIMARY KEY,
-        lastSyncAt TEXT NOT NULL
-      )
-    ''');
-  }
-
-  Future<void> _upgradeTables(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      // Drop old tables and recreate with new schema
-      await db.execute('DROP TABLE IF EXISTS membres');
-      await db.execute('DROP TABLE IF EXISTS groupes');
-      await db.execute('DROP TABLE IF EXISTS evenements');
-      await db.execute('DROP TABLE IF EXISTS finances');
-      await db.execute('DROP TABLE IF EXISTS librairie');
-      await db.execute('DROP TABLE IF EXISTS sync_metadata');
-      
-      // Recreate tables with correct schema
-      await _createTables(db, newVersion);
-    }
-  }
-
-  // Sauvegarde une liste d'éléments dans une table
-  Future<void> saveItems<T>(
-    String tableName,
+  // Sauvegarde une liste d'éléments pour un type d'entité (remplace le
+  // contenu existant de ce type, comme l'ancien "DELETE puis INSERT" sqflite).
+  Future<void> saveItems(
+    String entityType,
     List<Map<String, dynamic>> items,
   ) async {
-    final db = await database;
-    await db.transaction((txn) async {
-      // Supprimer les anciens éléments
-      await txn.delete(tableName);
-      // Insérer les nouveaux
-      for (final item in items) {
-        await txn.insert(
-          tableName,
-          {
-            'id': item['id'],
-            'data': jsonEncode(item),
-            'syncedAt': DateTime.now().toIso8601String(),
-          },
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
-      }
-      // Mettre à jour la métadonnée de sync
-      await txn.insert(
-        'sync_metadata',
-        {
-          'entityType': tableName,
-          'lastSyncAt': DateTime.now().toIso8601String(),
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+    final isar = await database;
+    final now = DateTime.now();
+
+    final entities = items.map((item) {
+      return CachedEntity()
+        ..id = _cachedId(entityType, item['id'] as int)
+        ..entityType = entityType
+        ..entityId = item['id'] as int
+        ..dataJson = jsonEncode(item)
+        ..syncedAt = now;
+    }).toList();
+
+    final syncMetadata = SyncMetadataEntity()
+      ..id = _syncMetadataId(entityType)
+      ..entityType = entityType
+      ..lastSyncAt = now;
+
+    await isar.writeAsync((isar) {
+      isar.cachedEntitys
+          .where()
+          .entityTypeEqualTo(entityType)
+          .deleteAll();
+      isar.cachedEntitys.putAll(entities);
+      isar.syncMetadataEntitys.put(syncMetadata);
     });
   }
 
-  // Récupère tous les éléments d'une table
-  Future<List<Map<String, dynamic>>> getItems(String tableName) async {
-    final db = await database;
-    final rows = await db.query(tableName);
+  // Récupère tous les éléments d'un type d'entité
+  Future<List<Map<String, dynamic>>> getItems(String entityType) async {
+    final isar = await database;
+    final rows = await isar.cachedEntitys
+        .where()
+        .entityTypeEqualTo(entityType)
+        .findAllAsync();
     return rows
-        .map((row) => jsonDecode(row['data'] as String) as Map<String, dynamic>)
+        .map((row) => jsonDecode(row.dataJson) as Map<String, dynamic>)
         .toList();
   }
 
   // Récupère un élément par ID
   Future<Map<String, dynamic>?> getItemById(
-    String tableName,
+    String entityType,
     int id,
   ) async {
-    final db = await database;
-    final rows = await db.query(
-      tableName,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    if (rows.isEmpty) return null;
-    return jsonDecode(rows.first['data'] as String) as Map<String, dynamic>;
+    final isar = await database;
+    final row = await isar.cachedEntitys.getAsync(_cachedId(entityType, id));
+    if (row == null) return null;
+    return jsonDecode(row.dataJson) as Map<String, dynamic>;
   }
 
   // Récupère la dernière synchronisation pour une entité
   Future<DateTime?> getLastSyncTime(String entityType) async {
-    final db = await database;
-    final rows = await db.query(
-      'sync_metadata',
-      where: 'entityType = ?',
-      whereArgs: [entityType],
+    final isar = await database;
+    final row = await isar.syncMetadataEntitys.getAsync(
+      _syncMetadataId(entityType),
     );
-    if (rows.isEmpty) return null;
-    final lastSync = rows.first['lastSyncAt'] as String;
-    return DateTime.parse(lastSync);
+    return row?.lastSyncAt;
   }
 
   // Vérifie si le cache est valide (moins de 5 minutes)
@@ -170,38 +122,37 @@ class DatabaseService {
     return difference.inMinutes < 5;
   }
 
-  // Vérifie si une table a du contenu
-  Future<bool> hasData(String tableName) async {
-    final db = await database;
-    final count = Sqflite.firstIntValue(
-      await db.rawQuery('SELECT COUNT(*) FROM $tableName'),
-    );
-    return (count ?? 0) > 0;
+  // Vérifie si un type d'entité a du contenu
+  Future<bool> hasData(String entityType) async {
+    final isar = await database;
+    final count = await isar.cachedEntitys
+        .where()
+        .entityTypeEqualTo(entityType)
+        .countAsync();
+    return count > 0;
   }
 
   // Efface toutes les données
   Future<void> clearDatabase() async {
-    final db = await database;
-    await db.transaction((txn) async {
-      await txn.delete('membres');
-      await txn.delete('groupes');
-      await txn.delete('evenements');
-      await txn.delete('finances');
-      await txn.delete('librairie');
-      await txn.delete('sync_metadata');
+    final isar = await database;
+    await isar.writeAsync((isar) {
+      isar.cachedEntitys.clear();
+      isar.syncMetadataEntitys.clear();
     });
   }
 
-  // Efface une table spécifique
-  Future<void> clearTable(String tableName) async {
-    final db = await database;
-    await db.delete(tableName);
+  // Efface un type d'entité spécifique
+  Future<void> clearTable(String entityType) async {
+    final isar = await database;
+    await isar.writeAsync((isar) {
+      isar.cachedEntitys.where().entityTypeEqualTo(entityType).deleteAll();
+    });
   }
 
   // Ferme la base de données
   Future<void> close() async {
-    final db = await database;
-    await db.close();
-    _database = null;
+    final isar = await database;
+    isar.close();
+    _isar = null;
   }
 }

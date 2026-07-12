@@ -226,17 +226,19 @@ Reduces server load and enables offline functionality. Auto-initialized in `main
 
 ### Database Architecture
 
-- **SQLite Local Database** (`lib/core/database/database_service.dart`):
-  - Tables auto-created on first run for: `membres`, `groupes`, `evenements`, `finances`, `librairie`
-  - `sync_metadata` table tracks last sync timestamp per entity
-  - Automatic schema management via `sqflite` package
-  - No manual migration needed
+- **Isar NoSQL Database** (`lib/core/database/database_service.dart`, via the `isar_plus` package):
+  - Two collections defined in `lib/core/database/cached_entity.dart`: `CachedEntity` (one JSON blob per `(entityType, entityId)`, standing in for what used to be five separate SQLite tables — `membres`, `groupes`, `evenements`, `finances`, `librairie`) and `SyncMetadataEntity` (last sync timestamp per entity type, replaces the old `sync_metadata` table)
+  - `DatabaseService`'s public API (`saveItems`/`getItems`/`getItemById`/`getLastSyncTime`/`isCacheValid`/`hasData`/`clearDatabase`/`clearTable`/`close`) is unchanged from the old SQLite implementation on purpose — `SyncService` and all 5 repositories call it exactly as before; only the storage engine changed
+  - Ids are deterministic (`Isar.fastHash('$entityType|$entityId')`), not auto-incremented — `getItemById` is an O(1) primary-key read, not a filtered query
+  - Schema is generated code: after editing `cached_entity.dart`, run `dart run build_runner build --delete-conflicting-outputs` to regenerate `cached_entity.g.dart`
 
-### Desktop platform setup (Linux/macOS/Windows)
+### Cross-platform setup (Android/iOS/Linux/macOS/Windows/Web)
 
-- `sqflite` has no native backend on desktop, so `main.dart` calls `sqfliteFfiInit()` and sets `databaseFactory = databaseFactoryFfi` **before** `setupDependencies()` (guarded by `!kIsWeb && (Platform.isLinux || Platform.isWindows || Platform.isMacOS)` so Android/iOS keep using native sqflite).
-- `sqlite3_flutter_libs` is included to bundle the native SQLite library — no system `libsqlite3` install required.
-- If you add desktop-only init logic, place it inside the same platform guard in `main.dart` so mobile builds aren't affected.
+- `isar_plus` (not the original/unmaintained `isar` or web-less `isar_community`) is the only Isar fork with genuine support for all of Android, iOS, Linux, macOS, Windows **and** Web — required since this app targets all of them
+- Native platforms: `isar_plus_flutter_libs` bundles the native engine per platform automatically, no manual init needed in `main.dart`
+- Web: the engine runs as WASM and must be loaded explicitly before first use — `main.dart` calls `await Isar.initialize('isar_plus.wasm')` when `kIsWeb`. The `.wasm`/`.js` pair is **self-hosted** under `web/isar_plus.{wasm,js}` (copied from `unpkg.com/isar_plus@<version>`) rather than fetched from the CDN at runtime, in keeping with the app's offline-first design — if you bump `isar_plus`'s version, re-download both files for the new version from unpkg and keep them in sync with the pinned pubspec version
+- `isar_plus` embeds its own code generator (registered via its `build.yaml`, builder name `isar_generator`) — no separate `isar_plus_generator` package exists, just `build_runner` as a dev dependency
+- `isar_plus` currently requires `meta: ^1.18.0`, newer than the version pinned by the bundled Flutter SDK's `flutter_test` — hence the `dependency_overrides: meta: ^1.18.0` in `pubspec.yaml`. Remove it only once the Flutter SDK's own `meta` pin catches up.
 
 ### Sync Strategy
 
@@ -323,11 +325,14 @@ Test file structure mirrors src:
 **Issue**: Queries with filters returning wrong results  
 **Solution**: Filtered queries (`search`, pagination, date ranges) always hit the server—this is intentional; for cache-only filtering, fetch unfiltered data and filter locally
 
-**Issue**: Database locked error or SQLite errors  
+**Issue**: Database locked / "Isar instance not found" errors  
 **Solution**: Ensure only one instance of `DatabaseService` is used (registered as lazy singleton in DI); check that async database operations aren't blocking the UI thread
 
-**Issue**: `SqfliteFfiException: Couldn't resolve native function 'sqlite3_initialize'` on desktop  
-**Solution**: Confirm `sqfliteFfiInit()` + `databaseFactory = databaseFactoryFfi` run before `setupDependencies()` in `main.dart` and that `sqlite3_flutter_libs` is in `pubspec.yaml`; run `flutter clean` to rebuild the desktop bundle. See `fix.md` (2026-05-29).
+**Issue**: `IsarNotReadyError` on web ("call Isar.initialize() manually before using Isar")  
+**Solution**: Confirm `main.dart` calls `await Isar.initialize('isar_plus.wasm')` when `kIsWeb`, before `setupDependencies()`, and that `web/isar_plus.wasm` + `web/isar_plus.js` exist and match the `isar_plus` version pinned in `pubspec.yaml`.
+
+**Issue**: Isar schema changes not taking effect  
+**Solution**: Re-run `dart run build_runner build --delete-conflicting-outputs` after editing `lib/core/database/cached_entity.dart` to regenerate `cached_entity.g.dart`.
 
 ## Key Dependencies
 
@@ -343,7 +348,7 @@ Test file structure mirrors src:
 - `data_table_2`: Advanced data tables
 - `sidebarx`: Sidebar navigation
 - `equatable`: Value equality helper
-- `sqflite`: SQLite database for local caching
+- `isar_plus` / `isar_plus_flutter_libs`: NoSQL database for local caching (Android/iOS/Linux/macOS/Windows/Web)
 - `connectivity_plus`: Network connectivity detection
 - `intl`: Internationalization (French locale)
 
@@ -364,7 +369,7 @@ Test file structure mirrors src:
 | Need to... | Look in... |
 | ----------- | ----------- |
 | Add a new API endpoint | `lib/data/repositories/<feature>_repository.dart`, then expose in BLoC |
-| Add new database table | `lib/core/database/database_service.dart` and add to sync in `lib/core/sync/sync_service.dart` |
+| Cache a new entity type offline | Just add `_sync<Entity>()` in `lib/core/sync/sync_service.dart` calling `saveItems('<entityType>', ...)` — `database_service.dart`/`cached_entity.dart` need no changes, the `CachedEntity` collection is generic |
 | Create new screen | `lib/presentation/screens/<feature>/` and add route to `lib/core/router/app_router.dart` |
 | Create new BLoC | `lib/presentation/blocs/<feature>/` (events, states, bloc class) |
 | Create new model | `lib/data/models/` (ensure JSON serializable with fromJson/toJson) |

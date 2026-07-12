@@ -2,7 +2,7 @@
 
 ## Vue d'ensemble
 
-Le système de cache local réduit la charge serveur en stockant les données paroissiales dans une base de données SQLite locale sur l'appareil. Les données sont synchronisées automatiquement toutes les 5 minutes.
+Le système de cache local réduit la charge serveur en stockant les données paroissiales dans une base de données Isar locale sur l'appareil (NoSQL, via `isar_plus` — compatible Android, iOS, Linux, macOS, Windows et Web). Les données sont synchronisées automatiquement toutes les 5 minutes.
 
 ## Architecture
 
@@ -16,7 +16,7 @@ Repository (handles API calls + local cache)
     ├→ Retourner le cache si disponible
     └→ Sinon, requête serveur + cache
     ↓
-DatabaseService (SQLite local) ← SyncService (sync toutes les 5 min)
+DatabaseService (Isar local) ← SyncService (sync toutes les 5 min)
 ```
 
 ## Flux de données
@@ -105,8 +105,9 @@ Les entités suivantes sont synchronisées automatiquement:
 
 Pour ajouter une nouvelle entité, modifiez:
 1. `lib/core/sync/sync_service.dart` - ajouter `_sync<Entity>()`
-2. `lib/core/database/database_service.dart` - ajouter la table
-3. `lib/core/di/injection.dart` - enregistrer le repository avec DatabaseService
+2. `lib/core/di/injection.dart` - enregistrer le repository avec DatabaseService
+
+(depuis le passage à Isar, `database_service.dart` n'a plus besoin d'être modifié : la collection `CachedEntity` est générique et stocke n'importe quel type d'entité via son champ `entityType` — il n'y a plus de table par entité à créer.)
 
 ## Mode hors ligne
 

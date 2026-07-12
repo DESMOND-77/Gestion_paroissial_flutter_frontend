@@ -30,6 +30,12 @@
 @import image_picker_ios;
 #endif
 
+#if __has_include(<isar_plus_flutter_libs/IsarPlusFlutterLibsPlugin.h>)
+#import <isar_plus_flutter_libs/IsarPlusFlutterLibsPlugin.h>
+#else
+@import isar_plus_flutter_libs;
+#endif
+
 #if __has_include(<shared_preferences_foundation/SharedPreferencesPlugin.h>)
 #import <shared_preferences_foundation/SharedPreferencesPlugin.h>
 #else
@@ -42,12 +48,6 @@
 @import sqflite_darwin;
 #endif
 
-#if __has_include(<sqlite3_flutter_libs/Sqlite3FlutterLibsPlugin.h>)
-#import <sqlite3_flutter_libs/Sqlite3FlutterLibsPlugin.h>
-#else
-@import sqlite3_flutter_libs;
-#endif
-
 @implementation GeneratedPluginRegistrant
 
 + (void)registerWithRegistry:(NSObject<FlutterPluginRegistry>*)registry {
@@ -55,9 +55,9 @@
   [FlutterNativeSplashPlugin registerWithRegistrar:[registry registrarForPlugin:@"FlutterNativeSplashPlugin"]];
   [FlutterSecureStorageDarwinPlugin registerWithRegistrar:[registry registrarForPlugin:@"FlutterSecureStorageDarwinPlugin"]];
   [FLTImagePickerPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTImagePickerPlugin"]];
+  [IsarPlusFlutterLibsPlugin registerWithRegistrar:[registry registrarForPlugin:@"IsarPlusFlutterLibsPlugin"]];
   [SharedPreferencesPlugin registerWithRegistrar:[registry registrarForPlugin:@"SharedPreferencesPlugin"]];
   [SqflitePlugin registerWithRegistrar:[registry registrarForPlugin:@"SqflitePlugin"]];
-  [Sqlite3FlutterLibsPlugin registerWithRegistrar:[registry registrarForPlugin:@"Sqlite3FlutterLibsPlugin"]];
 }
 
 @end
