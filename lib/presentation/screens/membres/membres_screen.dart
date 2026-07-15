@@ -6,8 +6,10 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/di/injection.dart';
 import '../../blocs/membres/membres_bloc.dart';
 import '../../../data/models/membre_model.dart';
+import '../../../data/repositories/auth_repository.dart';
 import '../../widgets/loading_widget.dart';
 import '../../widgets/refresh_wrapper.dart';
+import '../../widgets/user_avatar.dart';
 
 class MembresScreen extends StatelessWidget {
   const MembresScreen({super.key});
@@ -231,12 +233,32 @@ class _MembresViewState extends State<_MembresView> {
                 DataCell(
                   InkWell(
                     onTap: () => context.push('/membres/${membre.id}'),
-                    child: Text(
-                      membre.nomComplet,
-                      style: const TextStyle(
-                        color: AppTheme.primaryColor,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    child: Row(
+                      children: [
+                        UserAvatar(
+                          imageUrl: membre.profilePictureUrl,
+                          localImageFile: membre.user != null
+                              ? sl<AuthRepository>()
+                                  .getCachedProfilePicture(membre.user!)
+                              : null,
+                          initials: membre.prenom.isNotEmpty
+                              ? membre.prenom[0].toUpperCase()
+                              : 'M',
+                          radius: 14,
+                          backgroundColor: AppTheme.secondaryColor,
+                        ),
+                        const SizedBox(width: 10),
+                        Flexible(
+                          child: Text(
+                            membre.nomComplet,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppTheme.primaryColor,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
