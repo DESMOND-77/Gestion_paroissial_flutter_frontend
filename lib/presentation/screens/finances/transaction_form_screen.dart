@@ -9,7 +9,7 @@ import '../../blocs/finances/finances_bloc.dart';
 import '../../blocs/membres/membres_bloc.dart';
 
 class TransactionFormScreen extends StatelessWidget {
-  final int? transactionId;
+  final String? transactionId;
 
   const TransactionFormScreen({super.key, this.transactionId});
 
@@ -34,7 +34,7 @@ class TransactionFormScreen extends StatelessWidget {
 }
 
 class _TransactionFormView extends StatefulWidget {
-  final int? transactionId;
+  final String? transactionId;
   const _TransactionFormView({this.transactionId});
 
   @override
@@ -48,7 +48,7 @@ class _TransactionFormViewState extends State<_TransactionFormView> {
   String _type = 'recette';
   String _categorie = 'don';
   String _date = DateFormat('yyyy-MM-dd').format(DateTime.now());
-  int? _selectedMembre;
+  String? _selectedMembre;
   @override
   void dispose() {
     _montantController.dispose();
@@ -221,7 +221,7 @@ class _TransactionFormViewState extends State<_TransactionFormView> {
                           BlocBuilder<MembresBloc, MembresState>(
                             builder: (context, membresState) {
                               final membres = membresState is MembresLoaded ? membresState.membres : [];
-                              return DropdownButtonFormField<int?>(
+                              return DropdownButtonFormField<String?>(
                                 initialValue: _selectedMembre,
                                 decoration: const InputDecoration(
                                   labelText: 'Membre (optionnel)',

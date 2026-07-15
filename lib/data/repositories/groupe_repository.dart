@@ -1,6 +1,8 @@
 import '../../core/network/dio_client.dart';
+import '../../core/network/api_exception.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/database/database_service.dart';
+import '../../core/sync/offline_write.dart';
 import '../models/groupe_model.dart';
 import '../models/membre_model.dart';
 
@@ -70,35 +72,79 @@ class GroupeRepository {
     return fetchGroupes();
   }
 
-  Future<Groupe> getGroupeById(int id) async {
+  Future<Groupe> getGroupeById(String id) async {
     final response = await _dioClient.get(ApiConstants.groupeById(id));
     return Groupe.fromJson(response.data["data"] as Map<String, dynamic>);
   }
 
   Future<Groupe> createGroupe(Map<String, dynamic> data) async {
-    final response = await _dioClient.post(ApiConstants.groupes, data: data);
-    await _databaseService?.clearTable('groupes');
-    return Groupe.fromJson(response.data["data"] as Map<String, dynamic>);
+    try {
+      final response = await _dioClient.post(ApiConstants.groupes, data: data);
+      await _databaseService?.clearTable('groupes');
+      return Groupe.fromJson(response.data["data"] as Map<String, dynamic>);
+    } on NetworkException {
+      final record = await queueOfflineWrite(
+        db: _databaseService,
+        collection: 'groupes',
+        cacheEntityType: 'groupes',
+        data: data,
+      );
+      return Groupe.fromJson(record);
+    }
   }
 
-  Future<Groupe> updateGroupe(int id, Map<String, dynamic> data) async {
-    final response = await _dioClient.put(ApiConstants.groupeById(id), data: data);
-    await _databaseService?.clearTable('groupes');
-    return Groupe.fromJson(response.data["data"] as Map<String, dynamic>);
+  Future<Groupe> updateGroupe(String id, Map<String, dynamic> data) async {
+    try {
+      final response =
+          await _dioClient.put(ApiConstants.groupeById(id), data: data);
+      await _databaseService?.clearTable('groupes');
+      return Groupe.fromJson(response.data["data"] as Map<String, dynamic>);
+    } on NetworkException {
+      final record = await queueOfflineWrite(
+        db: _databaseService,
+        collection: 'groupes',
+        cacheEntityType: 'groupes',
+        id: id,
+        data: data,
+      );
+      return Groupe.fromJson(record);
+    }
   }
 
-  Future<Groupe> patchGroupe(int id, Map<String, dynamic> data) async {
-    final response = await _dioClient.patch(ApiConstants.groupeById(id), data: data);
-    await _databaseService?.clearTable('groupes');
-    return Groupe.fromJson(response.data["data"] as Map<String, dynamic>);
+  Future<Groupe> patchGroupe(String id, Map<String, dynamic> data) async {
+    try {
+      final response =
+          await _dioClient.patch(ApiConstants.groupeById(id), data: data);
+      await _databaseService?.clearTable('groupes');
+      return Groupe.fromJson(response.data["data"] as Map<String, dynamic>);
+    } on NetworkException {
+      final record = await queueOfflineWrite(
+        db: _databaseService,
+        collection: 'groupes',
+        cacheEntityType: 'groupes',
+        id: id,
+        data: data,
+      );
+      return Groupe.fromJson(record);
+    }
   }
 
-  Future<void> deleteGroupe(int id) async {
-    await _dioClient.delete(ApiConstants.groupeById(id));
-    await _databaseService?.clearTable('groupes');
+  Future<void> deleteGroupe(String id) async {
+    try {
+      await _dioClient.delete(ApiConstants.groupeById(id));
+      await _databaseService?.clearTable('groupes');
+    } on NetworkException {
+      await queueOfflineWrite(
+        db: _databaseService,
+        collection: 'groupes',
+        cacheEntityType: 'groupes',
+        id: id,
+        isDeleted: true,
+      );
+    }
   }
 
-  Future<List<Membre>> getGroupeMembres(int id) async {
+  Future<List<Membre>> getGroupeMembres(String id) async {
     final response = await _dioClient.get(ApiConstants.groupeMembres(id));
     final data = response.data["data"];
     List<dynamic> results;

@@ -22,11 +22,11 @@ class AuthRepository {
         _secureStorage = secureStorage,
         _fileStorage = fileStorage;
 
-  String _profilePictureFileName(int userId) => 'user_$userId';
+  String _profilePictureFileName(String userId) => 'user_$userId';
 
   /// Fichier local mis en cache pour cet utilisateur, s'il existe — utilisé
   /// pour afficher la photo de profil sans réseau.
-  File? getCachedProfilePicture(int userId) {
+  File? getCachedProfilePicture(String userId) {
     return _fileStorage.getCachedFile(
       _profilePictureCategory,
       _profilePictureFileName(userId),

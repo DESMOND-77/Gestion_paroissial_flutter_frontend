@@ -9,7 +9,7 @@ import '../../blocs/evenements/evenements_bloc.dart';
 import '../../widgets/loading_widget.dart';
 
 class EvenementFormScreen extends StatelessWidget {
-  final int? evenementId;
+  final String? evenementId;
 
   const EvenementFormScreen({super.key, this.evenementId});
 
@@ -27,7 +27,7 @@ class EvenementFormScreen extends StatelessWidget {
 }
 
 class _EvenementFormView extends StatefulWidget {
-  final int? evenementId;
+  final String? evenementId;
   const _EvenementFormView({this.evenementId});
 
   @override

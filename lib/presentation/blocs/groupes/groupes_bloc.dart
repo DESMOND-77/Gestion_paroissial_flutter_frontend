@@ -19,14 +19,14 @@ class LoadGroupes extends GroupesEvent {
 }
 
 class LoadGroupeDetail extends GroupesEvent {
-  final int id;
+  final String id;
   const LoadGroupeDetail({required this.id});
   @override
   List<Object?> get props => [id];
 }
 
 class LoadGroupeMembres extends GroupesEvent {
-  final int id;
+  final String id;
   const LoadGroupeMembres({required this.id});
   @override
   List<Object?> get props => [id];
@@ -40,7 +40,7 @@ class CreateGroupe extends GroupesEvent {
 }
 
 class UpdateGroupe extends GroupesEvent {
-  final int id;
+  final String id;
   final Map<String, dynamic> data;
   const UpdateGroupe({required this.id, required this.data});
   @override
@@ -48,7 +48,7 @@ class UpdateGroupe extends GroupesEvent {
 }
 
 class DeleteGroupe extends GroupesEvent {
-  final int id;
+  final String id;
   const DeleteGroupe({required this.id});
   @override
   List<Object?> get props => [id];
@@ -85,7 +85,7 @@ class GroupeDetailLoaded extends GroupesState {
 }
 
 class GroupeMembresLoaded extends GroupesState {
-  final int groupeId;
+  final String groupeId;
   final List<Membre> membres;
   const GroupeMembresLoaded({required this.groupeId, required this.membres});
   @override
@@ -107,7 +107,7 @@ class GroupeUpdated extends GroupesState {
 }
 
 class GroupeDeleted extends GroupesState {
-  final int id;
+  final String id;
   const GroupeDeleted({required this.id});
   @override
   List<Object?> get props => [id];

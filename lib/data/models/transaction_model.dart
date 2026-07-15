@@ -1,15 +1,15 @@
 import 'package:equatable/equatable.dart';
 
 class Transaction extends Equatable {
-  final int id;
+  final String id;
   final String type;
   final String categorie;
   final double montant;
   final String? description;
   final String date;
-  final int? membre;
+  final String? membre;
   final String? membreNom;
-  final int? enregistrePar;
+  final String? enregistrePar;
   final String? enregistreParNom;
 
   const Transaction({
@@ -27,7 +27,7 @@ class Transaction extends Equatable {
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
     return Transaction(
-      id: json['id'] as int? ?? 0,
+      id: json['id'] as String? ?? '',
       type: json['type'] as String? ?? '',
       categorie: json['categorie'] as String? ?? '',
       montant: (json['montant'] is String
@@ -37,9 +37,9 @@ class Transaction extends Equatable {
           0.0,
       description: json['description'] as String?,
       date: json['date'] as String? ?? '',
-      membre: json['membre'] as int?,
+      membre: json['membre'] as String?,
       membreNom: json['membre_nom'] as String?,
-      enregistrePar: json['enregistre_par'] as int?,
+      enregistrePar: json['enregistre_par'] as String?,
       enregistreParNom: json['enregistre_par_nom'] as String?,
     );
   }
@@ -78,15 +78,15 @@ class Transaction extends Equatable {
   bool get isRecette => type == 'recette';
 
   Transaction copyWith({
-    int? id,
+    String? id,
     String? type,
     String? categorie,
     double? montant,
     String? description,
     String? date,
-    int? membre,
+    String? membre,
     String? membreNom,
-    int? enregistrePar,
+    String? enregistrePar,
     String? enregistreParNom,
   }) {
     return Transaction(

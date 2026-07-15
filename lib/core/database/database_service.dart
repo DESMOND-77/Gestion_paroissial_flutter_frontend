@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:isar_plus/isar_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'cached_entity.dart';
+import 'pending_change_entity.dart';
 
 /// Cache local hors ligne, sur Isar (remplace l'ancien moteur sqflite).
 ///
@@ -37,14 +38,25 @@ class DatabaseService {
         : (await getApplicationSupportDirectory()).path;
 
     return Isar.openAsync(
-      schemas: [CachedEntitySchema, SyncMetadataEntitySchema],
+      schemas: [
+        CachedEntitySchema,
+        SyncMetadataEntitySchema,
+        PendingChangeEntitySchema,
+      ],
       directory: directory,
-      name: 'paroissiale',
+      name: 'gestiparr',
     );
   }
 
-  int _cachedId(String entityType, int entityId) =>
+  // Curseur de synchronisation `/sync/` (dernier `server_time` renvoyé par le
+  // serveur), stocké comme une ligne SyncMetadataEntity à clé réservée.
+  static const String _syncCursorKey = '__sync_cursor__';
+
+  int _cachedId(String entityType, String entityId) =>
       Isar.fastHash('$entityType|$entityId');
+
+  int _pendingId(String collection, String entityId) =>
+      Isar.fastHash('pending|$collection|$entityId');
 
   int _syncMetadataId(String entityType) => Isar.fastHash(entityType);
 
@@ -59,9 +71,9 @@ class DatabaseService {
 
     final entities = items.map((item) {
       return CachedEntity()
-        ..id = _cachedId(entityType, item['id'] as int)
+        ..id = _cachedId(entityType, item['id'] as String)
         ..entityType = entityType
-        ..entityId = item['id'] as int
+        ..entityId = item['id'] as String
         ..dataJson = jsonEncode(item)
         ..syncedAt = now;
     }).toList();
@@ -96,7 +108,7 @@ class DatabaseService {
   // Récupère un élément par ID
   Future<Map<String, dynamic>?> getItemById(
     String entityType,
-    int id,
+    String id,
   ) async {
     final isar = await database;
     final row = await isar.cachedEntitys.getAsync(_cachedId(entityType, id));
@@ -138,6 +150,7 @@ class DatabaseService {
     await isar.writeAsync((isar) {
       isar.cachedEntitys.clear();
       isar.syncMetadataEntitys.clear();
+      isar.pendingChangeEntitys.clear();
     });
   }
 
@@ -146,6 +159,145 @@ class DatabaseService {
     final isar = await database;
     await isar.writeAsync((isar) {
       isar.cachedEntitys.where().entityTypeEqualTo(entityType).deleteAll();
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Upsert / suppression d'un seul enregistrement (fusion incrémentale : sert à
+  // intégrer les résultats de conflit renvoyés par `/sync/`, sans remplacer
+  // toute la liste comme `saveItems`).
+  // ---------------------------------------------------------------------------
+
+  Future<void> upsertItem(String entityType, Map<String, dynamic> item) async {
+    final isar = await database;
+    final entity = CachedEntity()
+      ..id = _cachedId(entityType, item['id'] as String)
+      ..entityType = entityType
+      ..entityId = item['id'] as String
+      ..dataJson = jsonEncode(item)
+      ..syncedAt = DateTime.now();
+    await isar.writeAsync((isar) {
+      isar.cachedEntitys.put(entity);
+    });
+  }
+
+  Future<void> deleteItem(String entityType, String entityId) async {
+    final isar = await database;
+    await isar.writeAsync((isar) {
+      isar.cachedEntitys.delete(_cachedId(entityType, entityId));
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Curseur de synchronisation `/sync/`.
+  // ---------------------------------------------------------------------------
+
+  Future<DateTime?> getSyncCursor() => getLastSyncTime(_syncCursorKey);
+
+  Future<void> setSyncCursor(DateTime cursor) async {
+    final isar = await database;
+    final row = SyncMetadataEntity()
+      ..id = _syncMetadataId(_syncCursorKey)
+      ..entityType = _syncCursorKey
+      ..lastSyncAt = cursor;
+    await isar.writeAsync((isar) {
+      isar.syncMetadataEntitys.put(row);
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Outbox : file d'attente des écritures hors ligne à pousser via `/sync/`.
+  // ---------------------------------------------------------------------------
+
+  /// Met en file d'attente une écriture locale et l'applique de façon optimiste
+  /// au cache (pour un affichage immédiat, y compris hors ligne).
+  ///
+  /// [record] doit contenir `id`. `updated_at` est estampillé si absent.
+  ///
+  /// Deux fusions distinctes ont lieu :
+  /// - **outbox** : avec l'éventuel enregistrement déjà en attente pour ce
+  ///   (collection, id) — une création puis des modifications successives ne
+  ///   forment qu'une seule ligne à pousser (le serveur applique un upsert).
+  /// - **cache** : avec l'enregistrement déjà en cache — une modification
+  ///   partielle (PATCH) ne doit pas écraser les champs absents à l'affichage.
+  ///
+  /// Renvoie l'enregistrement fusionné tel qu'appliqué au cache (utile pour
+  /// reconstruire le modèle rendu à l'UI).
+  Future<Map<String, dynamic>> enqueueLocalChange({
+    required String collection,
+    required String cacheEntityType,
+    required Map<String, dynamic> record,
+  }) async {
+    final isar = await database;
+    final entityId = record['id'] as String;
+    record.putIfAbsent(
+        'updated_at', () => DateTime.now().toUtc().toIso8601String());
+    final isDeleted = record['is_deleted'] == true;
+
+    final pendingId = _pendingId(collection, entityId);
+    final existingPending = await isar.pendingChangeEntitys.getAsync(pendingId);
+    final outboxMerged = <String, dynamic>{
+      if (existingPending != null)
+        ...jsonDecode(existingPending.dataJson) as Map<String, dynamic>,
+      ...record,
+    };
+
+    final existingCache =
+        await getItemById(cacheEntityType, entityId) ?? const {};
+    final cacheMerged = <String, dynamic>{...existingCache, ...outboxMerged};
+
+    final pending = PendingChangeEntity()
+      ..id = pendingId
+      ..syncCollection = collection
+      ..entityId = entityId
+      ..dataJson = jsonEncode(outboxMerged)
+      ..queuedAt = DateTime.now();
+
+    final cacheId = _cachedId(cacheEntityType, entityId);
+    final cacheRow = CachedEntity()
+      ..id = cacheId
+      ..entityType = cacheEntityType
+      ..entityId = entityId
+      ..dataJson = jsonEncode(cacheMerged)
+      ..syncedAt = DateTime.now();
+
+    await isar.writeAsync((isar) {
+      isar.pendingChangeEntitys.put(pending);
+      if (isDeleted) {
+        isar.cachedEntitys.delete(cacheId);
+      } else {
+        isar.cachedEntitys.put(cacheRow);
+      }
+    });
+
+    return cacheMerged;
+  }
+
+  /// Renvoie les changements en attente groupés par collection (au format
+  /// attendu par le corps `changes` de `POST /sync/`).
+  Future<Map<String, List<Map<String, dynamic>>>> getPendingChanges() async {
+    final isar = await database;
+    final rows = await isar.pendingChangeEntitys.where().findAllAsync();
+    final grouped = <String, List<Map<String, dynamic>>>{};
+    for (final row in rows) {
+      grouped
+          .putIfAbsent(row.syncCollection, () => [])
+          .add(jsonDecode(row.dataJson) as Map<String, dynamic>);
+    }
+    return grouped;
+  }
+
+  Future<void> removePending(String collection, String entityId) async {
+    final isar = await database;
+    await isar.writeAsync((isar) {
+      isar.pendingChangeEntitys.delete(_pendingId(collection, entityId));
+    });
+  }
+
+  Future<void> clearPending() async {
+    final isar = await database;
+    await isar.writeAsync((isar) {
+      isar.pendingChangeEntitys.clear();
     });
   }
 

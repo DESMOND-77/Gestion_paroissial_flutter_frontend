@@ -65,7 +65,7 @@ class _FinancesViewState extends State<_FinancesView>
     }
   }
 
-  void _deleteTransaction(BuildContext ctx, int id) {
+  void _deleteTransaction(BuildContext ctx, String id) {
     showDialog(
       context: ctx,
       builder: (context) => AlertDialog(

@@ -20,7 +20,7 @@ class LoadEvenements extends EvenementsEvent {
 }
 
 class LoadEvenementDetail extends EvenementsEvent {
-  final int id;
+  final String id;
   const LoadEvenementDetail({required this.id});
   @override
   List<Object?> get props => [id];
@@ -34,7 +34,7 @@ class CreateEvenement extends EvenementsEvent {
 }
 
 class UpdateEvenement extends EvenementsEvent {
-  final int id;
+  final String id;
   final Map<String, dynamic> data;
   const UpdateEvenement({required this.id, required this.data});
   @override
@@ -42,14 +42,14 @@ class UpdateEvenement extends EvenementsEvent {
 }
 
 class DeleteEvenement extends EvenementsEvent {
-  final int id;
+  final String id;
   const DeleteEvenement({required this.id});
   @override
   List<Object?> get props => [id];
 }
 
 class InscrireEvenement extends EvenementsEvent {
-  final int id;
+  final String id;
   const InscrireEvenement({required this.id});
   @override
   List<Object?> get props => [id];
@@ -99,7 +99,7 @@ class EvenementUpdated extends EvenementsState {
 }
 
 class EvenementDeleted extends EvenementsState {
-  final int id;
+  final String id;
   const EvenementDeleted({required this.id});
   @override
   List<Object?> get props => [id];

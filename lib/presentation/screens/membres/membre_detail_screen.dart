@@ -2,16 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:paroisse_gest/presentation/widgets/user_avatar.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../data/repositories/auth_repository.dart';
 import '../../blocs/membres/membres_bloc.dart';
 import '../../../data/models/membre_model.dart';
 import '../../../data/models/sacrement_model.dart';
 import '../../widgets/loading_widget.dart';
 
 class MembreDetailScreen extends StatelessWidget {
-  final int membreId;
+  final String membreId;
 
   const MembreDetailScreen({super.key, required this.membreId});
 
@@ -25,7 +27,7 @@ class MembreDetailScreen extends StatelessWidget {
 }
 
 class _MembreDetailView extends StatelessWidget {
-  final int membreId;
+  final String membreId;
 
   const _MembreDetailView({required this.membreId});
 
@@ -146,19 +148,20 @@ class _MembreDetailView extends StatelessWidget {
             Center(
               child: Column(
                 children: [
-                  CircleAvatar(
-                    radius: 36,
-                    backgroundColor: AppTheme.primaryColor,
-                    child: Text(
-                      membre.prenom.isNotEmpty
-                          ? membre.prenom[0].toUpperCase()
-                          : 'M',
-                      style: const TextStyle(
-                        fontSize: 28,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                  UserAvatar(
+                    imageUrl: membre.profilePictureUrl,
+                    // Repli hors ligne : photo mise en cache par
+                    // FileStorageService (clé = id du compte user lié).
+                    localImageFile: membre.user != null
+                        ? sl<AuthRepository>()
+                            .getCachedProfilePicture(membre.user!)
+                        : null,
+                    initials: membre.prenom.isNotEmpty
+                        ? membre.prenom[0].toUpperCase()
+                        : 'M',
+                    radius: 44,
+                    showHalo: true,
+                    backgroundColor: AppTheme.secondaryColor,
                   ),
                   const SizedBox(height: 12),
                   Text(
@@ -368,7 +371,7 @@ class _MembreDetailView extends StatelessWidget {
     );
   }
 
-  void _showAjouterSacrementDialog(BuildContext context, int membreId) {
+  void _showAjouterSacrementDialog(BuildContext context, String membreId) {
     final formKey = GlobalKey<FormState>();
     String selectedType = 'bapteme';
     final dateController = TextEditingController(

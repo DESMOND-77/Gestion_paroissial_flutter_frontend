@@ -26,7 +26,7 @@ final CachedEntitySchema = IsarGeneratedSchema(
       ),
       IsarPropertySchema(
         name: 'entityId',
-        type: IsarType.long,
+        type: IsarType.string,
       ),
       IsarPropertySchema(
         name: 'dataJson',
@@ -59,7 +59,7 @@ final CachedEntitySchema = IsarGeneratedSchema(
 @isarProtected
 int serializeCachedEntity(IsarWriter writer, CachedEntity object) {
   IsarCore.writeString(writer, 1, object.entityType);
-  IsarCore.writeLong(writer, 2, object.entityId);
+  IsarCore.writeString(writer, 2, object.entityId);
   IsarCore.writeString(writer, 3, object.dataJson);
   IsarCore.writeLong(writer, 4, object.syncedAt.toUtc().microsecondsSinceEpoch);
   return object.id;
@@ -70,7 +70,7 @@ CachedEntity deserializeCachedEntity(IsarReader reader) {
   final object = CachedEntity();
   object.id = IsarCore.readId(reader);
   object.entityType = IsarCore.readString(reader, 1) ?? '';
-  object.entityId = IsarCore.readLong(reader, 2);
+  object.entityId = IsarCore.readString(reader, 2) ?? '';
   object.dataJson = IsarCore.readString(reader, 3) ?? '';
   {
     final value = IsarCore.readLong(reader, 4);
@@ -93,7 +93,7 @@ dynamic deserializeCachedEntityProp(IsarReader reader, int property) {
     case 1:
       return IsarCore.readString(reader, 1) ?? '';
     case 2:
-      return IsarCore.readLong(reader, 2);
+      return IsarCore.readString(reader, 2) ?? '';
     case 3:
       return IsarCore.readString(reader, 3) ?? '';
     case 4:
@@ -115,7 +115,7 @@ sealed class _CachedEntityUpdate {
   bool call({
     required int id,
     String? entityType,
-    int? entityId,
+    String? entityId,
     String? dataJson,
     DateTime? syncedAt,
   });
@@ -138,7 +138,7 @@ class _CachedEntityUpdateImpl implements _CachedEntityUpdate {
           id
         ], {
           if (entityType != ignore) 1: entityType as String?,
-          if (entityId != ignore) 2: entityId as int?,
+          if (entityId != ignore) 2: entityId as String?,
           if (dataJson != ignore) 3: dataJson as String?,
           if (syncedAt != ignore) 4: syncedAt as DateTime?,
         }) >
@@ -150,7 +150,7 @@ sealed class _CachedEntityUpdateAll {
   int call({
     required List<int> id,
     String? entityType,
-    int? entityId,
+    String? entityId,
     String? dataJson,
     DateTime? syncedAt,
   });
@@ -171,7 +171,7 @@ class _CachedEntityUpdateAllImpl implements _CachedEntityUpdateAll {
   }) {
     return collection.updateProperties(id, {
       if (entityType != ignore) 1: entityType as String?,
-      if (entityId != ignore) 2: entityId as int?,
+      if (entityId != ignore) 2: entityId as String?,
       if (dataJson != ignore) 3: dataJson as String?,
       if (syncedAt != ignore) 4: syncedAt as DateTime?,
     });
@@ -187,7 +187,7 @@ extension CachedEntityUpdate on IsarCollection<int, CachedEntity> {
 sealed class _CachedEntityQueryUpdate {
   int call({
     String? entityType,
-    int? entityId,
+    String? entityId,
     String? dataJson,
     DateTime? syncedAt,
   });
@@ -208,7 +208,7 @@ class _CachedEntityQueryUpdateImpl implements _CachedEntityQueryUpdate {
   }) {
     return query.updateProperties(limit: limit, {
       if (entityType != ignore) 1: entityType as String?,
-      if (entityId != ignore) 2: entityId as int?,
+      if (entityId != ignore) 2: entityId as String?,
       if (dataJson != ignore) 3: dataJson as String?,
       if (syncedAt != ignore) 4: syncedAt as DateTime?,
     });
@@ -239,7 +239,7 @@ class _CachedEntityQueryBuilderUpdateImpl implements _CachedEntityQueryUpdate {
     try {
       return q.updateProperties(limit: limit, {
         if (entityType != ignore) 1: entityType as String?,
-        if (entityId != ignore) 2: entityId as int?,
+        if (entityId != ignore) 2: entityId as String?,
         if (dataJson != ignore) 3: dataJson as String?,
         if (syncedAt != ignore) 4: syncedAt as DateTime?,
       });
@@ -524,13 +524,15 @@ extension CachedEntityQueryFilter
 
   QueryBuilder<CachedEntity, CachedEntity, QAfterFilterCondition>
       entityIdEqualTo(
-    int value,
-  ) {
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         EqualCondition(
           property: 2,
           value: value,
+          caseSensitive: caseSensitive,
         ),
       );
     });
@@ -538,13 +540,15 @@ extension CachedEntityQueryFilter
 
   QueryBuilder<CachedEntity, CachedEntity, QAfterFilterCondition>
       entityIdGreaterThan(
-    int value,
-  ) {
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterCondition(
           property: 2,
           value: value,
+          caseSensitive: caseSensitive,
         ),
       );
     });
@@ -552,13 +556,15 @@ extension CachedEntityQueryFilter
 
   QueryBuilder<CachedEntity, CachedEntity, QAfterFilterCondition>
       entityIdGreaterThanOrEqualTo(
-    int value,
-  ) {
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
           property: 2,
           value: value,
+          caseSensitive: caseSensitive,
         ),
       );
     });
@@ -566,13 +572,15 @@ extension CachedEntityQueryFilter
 
   QueryBuilder<CachedEntity, CachedEntity, QAfterFilterCondition>
       entityIdLessThan(
-    int value,
-  ) {
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         LessCondition(
           property: 2,
           value: value,
+          caseSensitive: caseSensitive,
         ),
       );
     });
@@ -580,13 +588,15 @@ extension CachedEntityQueryFilter
 
   QueryBuilder<CachedEntity, CachedEntity, QAfterFilterCondition>
       entityIdLessThanOrEqualTo(
-    int value,
-  ) {
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         LessOrEqualCondition(
           property: 2,
           value: value,
+          caseSensitive: caseSensitive,
         ),
       );
     });
@@ -594,15 +604,99 @@ extension CachedEntityQueryFilter
 
   QueryBuilder<CachedEntity, CachedEntity, QAfterFilterCondition>
       entityIdBetween(
-    int lower,
-    int upper,
-  ) {
+    String lower,
+    String upper, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         BetweenCondition(
           property: 2,
           lower: lower,
           upper: upper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<CachedEntity, CachedEntity, QAfterFilterCondition>
+      entityIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        StartsWithCondition(
+          property: 2,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<CachedEntity, CachedEntity, QAfterFilterCondition>
+      entityIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EndsWithCondition(
+          property: 2,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<CachedEntity, CachedEntity, QAfterFilterCondition>
+      entityIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        ContainsCondition(
+          property: 2,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<CachedEntity, CachedEntity, QAfterFilterCondition>
+      entityIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        MatchesCondition(
+          property: 2,
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<CachedEntity, CachedEntity, QAfterFilterCondition>
+      entityIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const EqualCondition(
+          property: 2,
+          value: '',
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<CachedEntity, CachedEntity, QAfterFilterCondition>
+      entityIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const GreaterCondition(
+          property: 2,
+          value: '',
         ),
       );
     });
@@ -913,15 +1007,24 @@ extension CachedEntityQuerySortBy
     });
   }
 
-  QueryBuilder<CachedEntity, CachedEntity, QAfterSortBy> sortByEntityId() {
+  QueryBuilder<CachedEntity, CachedEntity, QAfterSortBy> sortByEntityId(
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(2);
+      return query.addSortBy(
+        2,
+        caseSensitive: caseSensitive,
+      );
     });
   }
 
-  QueryBuilder<CachedEntity, CachedEntity, QAfterSortBy> sortByEntityIdDesc() {
+  QueryBuilder<CachedEntity, CachedEntity, QAfterSortBy> sortByEntityIdDesc(
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(2, sort: Sort.desc);
+      return query.addSortBy(
+        2,
+        sort: Sort.desc,
+        caseSensitive: caseSensitive,
+      );
     });
   }
 
@@ -987,15 +1090,17 @@ extension CachedEntityQuerySortThenBy
     });
   }
 
-  QueryBuilder<CachedEntity, CachedEntity, QAfterSortBy> thenByEntityId() {
+  QueryBuilder<CachedEntity, CachedEntity, QAfterSortBy> thenByEntityId(
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(2);
+      return query.addSortBy(2, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<CachedEntity, CachedEntity, QAfterSortBy> thenByEntityIdDesc() {
+  QueryBuilder<CachedEntity, CachedEntity, QAfterSortBy> thenByEntityIdDesc(
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(2, sort: Sort.desc);
+      return query.addSortBy(2, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
@@ -1035,10 +1140,10 @@ extension CachedEntityQueryWhereDistinct
     });
   }
 
-  QueryBuilder<CachedEntity, CachedEntity, QAfterDistinct>
-      distinctByEntityId() {
+  QueryBuilder<CachedEntity, CachedEntity, QAfterDistinct> distinctByEntityId(
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(2);
+      return query.addDistinctBy(2, caseSensitive: caseSensitive);
     });
   }
 
@@ -1071,7 +1176,7 @@ extension CachedEntityQueryProperty1
     });
   }
 
-  QueryBuilder<CachedEntity, int, QAfterProperty> entityIdProperty() {
+  QueryBuilder<CachedEntity, String, QAfterProperty> entityIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(2);
     });
@@ -1104,7 +1209,7 @@ extension CachedEntityQueryProperty2<R>
     });
   }
 
-  QueryBuilder<CachedEntity, (R, int), QAfterProperty> entityIdProperty() {
+  QueryBuilder<CachedEntity, (R, String), QAfterProperty> entityIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(2);
     });
@@ -1138,7 +1243,7 @@ extension CachedEntityQueryProperty3<R1, R2>
     });
   }
 
-  QueryBuilder<CachedEntity, (R1, R2, int), QOperations> entityIdProperty() {
+  QueryBuilder<CachedEntity, (R1, R2, String), QOperations> entityIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(2);
     });

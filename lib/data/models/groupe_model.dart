@@ -1,10 +1,10 @@
 import 'package:equatable/equatable.dart';
 
 class Groupe extends Equatable {
-  final int id;
+  final String id;
   final String nom;
   final String? description;
-  final int? responsable;
+  final String? responsable;
   final String? responsableNom;
   final String dateCreation;
 
@@ -19,10 +19,10 @@ class Groupe extends Equatable {
 
   factory Groupe.fromJson(Map<String, dynamic> json) {
     return Groupe(
-      id: json['id'] as int? ?? 0,
+      id: json['id'] as String? ?? '',
       nom: json['nom'] as String? ?? '',
       description: json['description'] as String?,
-      responsable: json['responsable'] as int?,
+      responsable: json['responsable'] as String?,
       responsableNom: json['responsable_nom'] as String?,
       dateCreation: json['date_creation'] as String? ?? '',
     );
@@ -40,10 +40,10 @@ class Groupe extends Equatable {
   }
 
   Groupe copyWith({
-    int? id,
+    String? id,
     String? nom,
     String? description,
-    int? responsable,
+    String? responsable,
     String? responsableNom,
     String? dateCreation,
   }) {

@@ -4,6 +4,225 @@ A chronological log of bug fixes applied to this project. Each entry: date, symp
 
 ---
 
+## 2026-07-15 — Photo de profil du membre absente du `membre_detail_screen`
+
+### Symptom
+
+L'en-tête du détail membre n'affichait pas la photo de profil. Le code de
+l'avatar était par ailleurs cassé (5 erreurs de compilation) : il lisait
+`membre.user?.profilePictureUrl` / `membre.user?.firstName` alors que
+`membre.user` est un `String?` (l'UUID du compte lié), pas un objet, et un
+`CircleAvatar` en doublon subsistait juste après.
+
+### Root cause
+
+Le serializer `MembreSerializer` n'exposait aucune URL de photo : la photo
+appartient au compte `user` associé (`user.profile_picture`), mais seuls
+`email` et `phone_number` en étaient dérivés. Le frontend n'avait donc aucune
+URL à afficher.
+
+### Fix
+
+Bout-en-bout (backend + frontend) :
+
+- **Backend** (`membres/serializers.py`) : ajout d'un
+  `profile_picture_url = SerializerMethodField()` sur `MembreSerializer` (donc
+  hérité par `MembreDetailSerializer`), renvoyant l'URL absolue de
+  `obj.user.profile_picture` (repli URL relative si `request` hors contexte).
+  `membres/views.py` : passage de `context={"request": request}` aux
+  serializers de la liste et du détail pour obtenir une URL absolue.
+- **Frontend** (`lib/data/models/membre_model.dart`) : nouveau champ
+  `profilePictureUrl` (parse `profile_picture_url`, inclus dans
+  toJson/copyWith/props et la sous-classe `MembreDetail`).
+- **Écran** (`membre_detail_screen.dart`) : avatar réparé — un seul
+  `UserAvatar` (halo activé) avec `imageUrl: membre.profilePictureUrl`, repli
+  hors ligne sur `getCachedProfilePicture(membre.user!)`, initiales sur le
+  prénom ; doublon `CircleAvatar` supprimé ; import `AuthRepository` ajouté.
+
+### Files
+
+- `../backend/membres/serializers.py`, `../backend/membres/views.py`
+- `lib/data/models/membre_model.dart`
+- `lib/presentation/screens/membres/membre_detail_screen.dart`
+
+### Follow-up
+
+- `flutter analyze` : 0 erreur. Backend `py_compile` OK.
+- `getCachedProfilePicture` est indexé par id de compte user : la copie locale
+  n'existe que pour l'utilisateur connecté ; pour les autres membres, le repli
+  hors ligne tombe sur les initiales (la photo distante s'affiche en ligne).
+- La colonne du tableau (`membres_screen`) pourrait aussi afficher l'avatar —
+  non fait ici (demande limitée au détail).
+
+## 2026-07-15 — Le numéro de téléphone ne s'affiche pas dans le tableau des membres
+
+### Symptom
+
+La colonne « Téléphone » du tableau des membres (et le détail membre) affiche
+toujours « - », quel que soit le membre.
+
+### Root cause
+
+Le serializer backend expose le téléphone sous la clé **`phone_number`**
+(source `user.phone_number`) ; il n'existe aucun champ `telephone` sur le
+modèle `Membre`. Or `Membre.fromJson` lisait `json['telephone']` → toujours
+`null`.
+
+### Fix
+
+`lib/data/models/membre_model.dart` : `fromJson` lit désormais
+`json['phone_number']` (repli sur `telephone` pour compat), et `toJson` émet la
+clé `phone_number` pour que la valeur survive à l'aller-retour par le cache
+local (`saveItems`/`getItems`).
+
+### Files
+
+- `lib/data/models/membre_model.dart`
+
+### Follow-up
+
+- `phone_number` est en lecture seule côté backend (dérivé du compte `user`) :
+  éditer le téléphone depuis la fiche membre n'a aucun effet serveur — à
+  traiter séparément si le besoin se confirme.
+
+## 2026-07-15 — Intégration de l'endpoint de synchronisation offline `/api/v1/sync/`
+
+### Symptom
+
+Le backend expose un endpoint de synchronisation bidirectionnelle
+(`POST /api/v1/sync/`, push/pull, last-write-wins via `updated_at`, soft-delete
+`is_deleted`, UUID générés côté client) mais le frontend ne l'utilisait pas :
+les écritures (création / modification / suppression) échouaient purement et
+simplement hors ligne, sans file d'attente ni reprise.
+
+### Root cause
+
+La synchro frontend était **pull-only** : `SyncService` rechargeait les listes
+REST dans le cache Isar toutes les 5 min, mais aucune brique ne poussait les
+écritures locales. Les repositories faisaient un appel réseau direct
+(POST/PUT/PATCH/DELETE) qui levait `NetworkException` hors ligne.
+
+### Fix
+
+Ajout d'une couche de synchro **bidirectionnelle additive** (le pull REST
+historique `SyncService.syncAll` reste l'autorité de rafraîchissement) :
+
+- **Outbox** (`lib/core/database/pending_change_entity.dart`, collection Isar
+  `PendingChangeEntity`) : file d'attente des écritures locales. Champ nommé
+  `syncCollection` et **non** `collection` — un champ `collection` casse le code
+  généré par isar_plus (collision avec sa variable interne `collection`).
+- **UUID côté client** (`lib/core/utils/id_generator.dart`, v4 sans dépendance).
+- **DatabaseService** étendu : `enqueueLocalChange` (fusion outbox + fusion
+  cache pour ne pas perdre de champs sur un PATCH ; renvoie l'enregistrement
+  fusionné), `getPendingChanges`/`removePending`/`clearPending`, curseur
+  `get/setSyncCursor`, `upsertItem`/`deleteItem` (upsert d'un seul
+  enregistrement).
+- **Transport** `lib/core/sync/sync_api.dart` (`POST /sync/` → `{server_time,
+  results, changes}`), endpoint `ApiConstants.sync = '/sync/'`.
+- **Moteur** `lib/core/sync/offline_sync_service.dart` (`pushPull`) : pousse
+  l'outbox, traite `results` (applied → purge ; conflicts → la copie serveur
+  écrase le cache ; errors → journalisé + purgé pour éviter une boucle
+  d'empoisonnement), intègre `changes` dans le cache, avance le curseur. Table
+  de correspondance collection `/sync/` → type de cache
+  (`transactions`→`finances`, `articles`→`librairie`, etc.).
+- **PeriodicSyncManager** : chaque passe fait `pushPull()` **puis** `syncAll()`
+  (pousser avant rafraîchir). `forceSyncNow` fait les deux ; nouveau
+  `pushLocalChanges()`.
+- **Repositories** (membres/groupes/évènements/finances/librairie + sacrements,
+  ventes) : `create/update/patch/delete` interceptent `NetworkException` et
+  basculent sur `queueOfflineWrite` (`lib/core/sync/offline_write.dart`) —
+  file d'attente + application optimiste au cache, retour d'un modèle local. Le
+  comportement **en ligne est inchangé** (appel direct + `clearTable`).
+- Correctif au passage : `createVente` vidait `clearTable('evenements')` (copié-
+  collé erroné) → corrigé en `'librairie'` (une vente décrémente le stock).
+
+### Files
+
+- `lib/core/database/pending_change_entity.dart` (+ `.g.dart` régénéré),
+  `database_service.dart`, `cached_entity.dart`
+- `lib/core/utils/id_generator.dart`
+- `lib/core/sync/sync_api.dart`, `offline_sync_service.dart`,
+  `offline_write.dart`, `periodic_sync_manager.dart`
+- `lib/core/constants/api_constants.dart`, `lib/core/di/injection.dart`
+- `lib/data/repositories/{membre,groupe,evenement,finance,librairie}_repository.dart`
+
+### Follow-up
+
+- `flutter analyze` : 0 erreur (un `info` de style pré-existant demeure). Le test
+  `widget_test.dart` « Counter increments smoke test » échoue mais c'est le
+  boilerplate Flutter d'origine (aucun compteur dans l'app), pré-existant.
+- **Limitations connues** : l'inscription à un évènement (`inscrire`,
+  collection `participations`) et l'auto-modification de profil
+  (`updateMyMembre`) restent en ligne uniquement. La pagination de `syncAll`
+  (PAGE_SIZE 50) peut ne pas re-télécharger un élément au-delà de la 1re page
+  juste après sa poussée — limitation pré-existante du pull REST.
+- **À vérifier en conditions réelles** : un aller-retour hors ligne complet
+  (créer/modifier/supprimer hors connexion, puis reconnecter et confirmer la
+  poussée + la résolution de conflit) sur un appareil, non exécutable ici.
+
+## 2026-07-15 — Alignement frontend sur les clés primaires UUID du backend
+
+### Symptom
+
+Le backend est passé de clés primaires entières auto-incrémentées à des UUID
+(commit backend `feat: Implement UUID primary keys and offline sync
+functionality`). Toutes les entités (`Membre`, `Groupe`, `Evenement`,
+`Transaction`, `Article`, `Vente`, `Sacrement`, `UserActivity`, `User`)
+renvoient désormais un `id` chaîne UUID, et les routes de détail attendent
+`<uuid:pk>` au lieu de `<int:pk>`. Côté frontend, les `json['id'] as int?`
+levaient une exception de cast à la désérialisation, et les URLs de détail /
+mise à jour / suppression étaient malformées.
+
+### Root cause
+
+Le contrat d'API a changé de type d'identifiant (int → UUID string). Le
+frontend typait tous les `id` et clés étrangères en `int`, aussi bien dans les
+modèles que dans les helpers d'URL, les repositories, les BLoCs, les écrans et
+le routeur. Le cache Isar indexait aussi les entités par `entityId` entier.
+
+### Fix
+
+Migration mécanique `int → String` de tous les identifiants et clés étrangères
+(en conservant les compteurs : `nb_participants`, `stock_disponible`,
+`seuil_alerte`, `quantite`, et les totaux du tableau de bord, en `int`) :
+
+- **Modèles** (`lib/data/models/*.dart`) : `id` + FK (`user`, `groupe`,
+  `responsable`, `createur`, `membre`, `officiant`, `article`,
+  `enregistre_par`) passés en `String`/`String?`, désérialisation
+  `as String? ?? ''` / `as String?`, `copyWith` et `props` mis à jour.
+- **URLs** (`lib/core/constants/api_constants.dart`) : tous les helpers
+  `xById(int id)` → `(String id)`.
+- **Cache Isar** (`lib/core/database/cached_entity.dart` +
+  `database_service.dart`) : `entityId` `int → String`, `_cachedId`,
+  `saveItems`, `getItemById` réalignés ; `cached_entity.g.dart` régénéré via
+  `dart run build_runner build --delete-conflicting-outputs`.
+- **Repositories / BLoCs / écrans / routeur** : paramètres `int id` →
+  `String id`, `int.parse(pathParameters['id'])` supprimé (les UUID sont déjà
+  des chaînes), variables et dropdowns de sélection (`_selectedGroupe`,
+  `_selectedMembre`, `DropdownButtonFormField<int?>`) retypés en `String?`.
+
+Le préfixe `/api/v1/` était déjà en place dans `ApiConstants.baseUrl`.
+
+### Files
+
+- `lib/data/models/{membre,groupe,evenement,transaction,article,vente,sacrement,activity,auth}_model.dart`
+- `lib/core/constants/api_constants.dart`
+- `lib/core/database/cached_entity.dart`, `database_service.dart`, `cached_entity.g.dart`
+- `lib/data/repositories/*.dart`
+- `lib/presentation/blocs/{membres,groupes,evenements,finances,librairie}/*.dart`
+- `lib/presentation/screens/**` (formulaires, détails, listes) et `lib/core/router/app_router.dart`
+
+### Follow-up
+
+- `flutter analyze` : aucune erreur (reste un seul `info` de style pré-existant
+  sur un commentaire de doc).
+- **Non fait — décision produit en attente** : le backend expose un nouvel
+  endpoint `POST /api/v1/sync/` (push/pull bidirectionnel, last-write-wins via
+  `updated_at`, soft-delete `is_deleted`, UUID générés côté client). Le
+  frontend garde pour l'instant son cache Isar en lecture seule + pull
+  périodique REST ; l'intégration de la synchro d'écritures hors ligne reste à
+  planifier.
+
 ## 2026-07-06 — Tableau de bord, Finances et Librairie n'affichent plus rien hors ligne
 
 ### Symptom

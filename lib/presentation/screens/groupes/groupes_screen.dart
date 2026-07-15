@@ -45,7 +45,7 @@ class _GroupesViewState extends State<_GroupesView> {
     await bloc.stream.firstWhere((s) => s is GroupesLoaded || s is GroupesError);
   }
 
-  void _deleteGroupe(BuildContext ctx, int id, String nom) {
+  void _deleteGroupe(BuildContext ctx, String id, String nom) {
     showDialog(
       context: ctx,
       builder: (context) => AlertDialog(

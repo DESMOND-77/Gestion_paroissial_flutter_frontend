@@ -22,7 +22,9 @@ class CachedEntity {
   @Index()
   late String entityType;
 
-  late int entityId;
+  // Id serveur de l'entité (UUID depuis la migration backend vers des clés
+  // primaires UUID). Auparavant un entier auto-incrémenté.
+  late String entityId;
 
   late String dataJson;
 

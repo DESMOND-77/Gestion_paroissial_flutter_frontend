@@ -1,15 +1,15 @@
 import 'package:equatable/equatable.dart';
 
 class Vente extends Equatable {
-  final int id;
-  final int article;
+  final String id;
+  final String article;
   final String articleNom;
   final int quantite;
   final double prixTotal;
   final String date;
-  final int? membre;
+  final String? membre;
   final String? membreNom;
-  final int? enregistrePar;
+  final String? enregistrePar;
   final String? enregistreParNom;
 
   const Vente({
@@ -27,17 +27,17 @@ class Vente extends Equatable {
 
   factory Vente.fromJson(Map<String, dynamic> json) {
     return Vente(
-      id: json['id'] as int? ?? 0,
-      article: json['article'] as int? ?? 0,
+      id: json['id'] as String? ?? '',
+      article: json['article'] as String? ?? '',
       articleNom: json['article_nom'] as String? ?? '',
       quantite: json['quantite'] as int? ?? 0,
       prixTotal: (json['prix_total'] is String 
           ? double.tryParse(json['prix_total'] as String)
           : json['prix_total'] as num?)?.toDouble() ?? 0.0,
       date: json['date'] as String? ?? '',
-      membre: json['membre'] as int?,
+      membre: json['membre'] as String?,
       membreNom: json['membre_nom'] as String?,
-      enregistrePar: json['enregistre_par'] as int?,
+      enregistrePar: json['enregistre_par'] as String?,
       enregistreParNom: json['enregistre_par_nom'] as String?,
     );
   }
@@ -52,15 +52,15 @@ class Vente extends Equatable {
   }
 
   Vente copyWith({
-    int? id,
-    int? article,
+    String? id,
+    String? article,
     String? articleNom,
     int? quantite,
     double? prixTotal,
     String? date,
-    int? membre,
+    String? membre,
     String? membreNom,
-    int? enregistrePar,
+    String? enregistrePar,
     String? enregistreParNom,
   }) {
     return Vente(

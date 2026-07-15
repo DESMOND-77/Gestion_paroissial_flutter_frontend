@@ -1,7 +1,9 @@
 import 'package:paroisse_gest/core/database/database_service.dart';
 
 import '../../core/network/dio_client.dart';
+import '../../core/network/api_exception.dart';
 import '../../core/constants/api_constants.dart';
+import '../../core/sync/offline_write.dart';
 import '../models/article_model.dart';
 import '../models/vente_model.dart';
 
@@ -77,36 +79,76 @@ class LibrairieRepository {
     return fetchArticles();
   }
 
-  Future<Article> getArticleById(int id) async {
+  Future<Article> getArticleById(String id) async {
     final response = await _dioClient.get(ApiConstants.articleById(id));
     return Article.fromJson(response.data["data"] as Map<String, dynamic>);
   }
 
   Future<Article> createArticle(Map<String, dynamic> data) async {
-    final response = await _dioClient.post(ApiConstants.articles, data: data);
-    await _databaseService?.clearTable('librairie');
-    return Article.fromJson(response.data["data"] as Map<String, dynamic>);
+    try {
+      final response = await _dioClient.post(ApiConstants.articles, data: data);
+      await _databaseService?.clearTable('librairie');
+      return Article.fromJson(response.data["data"] as Map<String, dynamic>);
+    } on NetworkException {
+      final record = await queueOfflineWrite(
+        db: _databaseService,
+        collection: 'articles',
+        cacheEntityType: 'librairie',
+        data: data,
+      );
+      return Article.fromJson(record);
+    }
   }
 
-  Future<Article> updateArticle(int id, Map<String, dynamic> data) async {
-    final response =
-        await _dioClient.put(ApiConstants.articleById(id), data: data);
-    await _databaseService?.clearTable('librairie');
-
-    return Article.fromJson(response.data["data"] as Map<String, dynamic>);
+  Future<Article> updateArticle(String id, Map<String, dynamic> data) async {
+    try {
+      final response =
+          await _dioClient.put(ApiConstants.articleById(id), data: data);
+      await _databaseService?.clearTable('librairie');
+      return Article.fromJson(response.data["data"] as Map<String, dynamic>);
+    } on NetworkException {
+      final record = await queueOfflineWrite(
+        db: _databaseService,
+        collection: 'articles',
+        cacheEntityType: 'librairie',
+        id: id,
+        data: data,
+      );
+      return Article.fromJson(record);
+    }
   }
 
-  Future<Article> patchArticle(int id, Map<String, dynamic> data) async {
-    final response =
-        await _dioClient.patch(ApiConstants.articleById(id), data: data);
-    await _databaseService?.clearTable('librairie');
-
-    return Article.fromJson(response.data["data"] as Map<String, dynamic>);
+  Future<Article> patchArticle(String id, Map<String, dynamic> data) async {
+    try {
+      final response =
+          await _dioClient.patch(ApiConstants.articleById(id), data: data);
+      await _databaseService?.clearTable('librairie');
+      return Article.fromJson(response.data["data"] as Map<String, dynamic>);
+    } on NetworkException {
+      final record = await queueOfflineWrite(
+        db: _databaseService,
+        collection: 'articles',
+        cacheEntityType: 'librairie',
+        id: id,
+        data: data,
+      );
+      return Article.fromJson(record);
+    }
   }
 
-  Future<void> deleteArticle(int id) async {
-    await _dioClient.delete(ApiConstants.articleById(id));
-    await _databaseService?.clearTable('librairie');
+  Future<void> deleteArticle(String id) async {
+    try {
+      await _dioClient.delete(ApiConstants.articleById(id));
+      await _databaseService?.clearTable('librairie');
+    } on NetworkException {
+      await queueOfflineWrite(
+        db: _databaseService,
+        collection: 'articles',
+        cacheEntityType: 'librairie',
+        id: id,
+        isDeleted: true,
+      );
+    }
   }
 
   Future<List<Article>> getAlertes() async {
@@ -125,7 +167,7 @@ class LibrairieRepository {
         .toList();
   }
 
-  Future<List<Vente>> getVentes({int? articleId, int? membreId}) async {
+  Future<List<Vente>> getVentes({String? articleId, String? membreId}) async {
     final queryParams = <String, dynamic>{};
     if (articleId != null) queryParams['article'] = articleId;
     if (membreId != null) queryParams['membre'] = membreId;
@@ -150,14 +192,26 @@ class LibrairieRepository {
         .toList();
   }
 
-  Future<Vente> getVenteById(int id) async {
+  Future<Vente> getVenteById(String id) async {
     final response = await _dioClient.get(ApiConstants.venteById(id));
     return Vente.fromJson(response.data["data"] as Map<String, dynamic>);
   }
 
   Future<Vente> createVente(Map<String, dynamic> data) async {
-    final response = await _dioClient.post(ApiConstants.ventes, data: data);
-    await _databaseService?.clearTable('evenements');
-    return Vente.fromJson(response.data["data"] as Map<String, dynamic>);
+    try {
+      final response = await _dioClient.post(ApiConstants.ventes, data: data);
+      // Une vente décrémente le stock d'un article : le cache librairie doit
+      // être rafraîchi à la prochaine synchro.
+      await _databaseService?.clearTable('librairie');
+      return Vente.fromJson(response.data["data"] as Map<String, dynamic>);
+    } on NetworkException {
+      final record = await queueOfflineWrite(
+        db: _databaseService,
+        collection: 'ventes',
+        cacheEntityType: 'ventes',
+        data: data,
+      );
+      return Vente.fromJson(record);
+    }
   }
 }

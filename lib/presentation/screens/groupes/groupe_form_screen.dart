@@ -7,7 +7,7 @@ import '../../blocs/groupes/groupes_bloc.dart';
 import '../../widgets/loading_widget.dart';
 
 class GroupeFormScreen extends StatelessWidget {
-  final int? groupeId;
+  final String? groupeId;
 
   const GroupeFormScreen({super.key, this.groupeId});
 
@@ -25,7 +25,7 @@ class GroupeFormScreen extends StatelessWidget {
 }
 
 class _GroupeFormView extends StatefulWidget {
-  final int? groupeId;
+  final String? groupeId;
   const _GroupeFormView({this.groupeId});
 
   @override

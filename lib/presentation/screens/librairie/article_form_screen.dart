@@ -7,7 +7,7 @@ import '../../../data/models/article_model.dart';
 import '../../blocs/librairie/librairie_bloc.dart';
 
 class ArticleFormScreen extends StatefulWidget {
-  final int? articleId;
+  final String? articleId;
 
   const ArticleFormScreen({super.key, this.articleId});
 

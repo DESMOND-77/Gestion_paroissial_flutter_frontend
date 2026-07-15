@@ -5,6 +5,8 @@ import '../storage/secure_storage.dart';
 import '../storage/file_storage_service.dart';
 import '../database/database_service.dart';
 import '../sync/sync_service.dart';
+import '../sync/sync_api.dart';
+import '../sync/offline_sync_service.dart';
 import '../sync/periodic_sync_manager.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/membre_repository.dart';
@@ -99,9 +101,25 @@ Future<void> setupDependencies() async {
     ),
   );
 
+  // Offline Sync (push/pull bidirectionnel via /api/v1/sync/)
+  sl.registerLazySingleton<SyncApi>(
+    () => SyncApi(dioClient: sl<DioClient>()),
+  );
+  sl.registerLazySingleton<OfflineSyncService>(
+    () => OfflineSyncService(
+      databaseService: sl<DatabaseService>(),
+      syncApi: sl<SyncApi>(),
+      connectivity: sl<Connectivity>(),
+      secureStorage: sl<SecureStorage>(),
+    ),
+  );
+
   // Periodic Sync Manager
   sl.registerLazySingleton<PeriodicSyncManager>(
-    () => PeriodicSyncManager(syncService: sl<SyncService>()),
+    () => PeriodicSyncManager(
+      syncService: sl<SyncService>(),
+      offlineSyncService: sl<OfflineSyncService>(),
+    ),
   );
 
   // BLoCs (factories so each screen gets fresh instance)

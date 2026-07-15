@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 class AuthUser extends Equatable {
-  final int id;
+  final String id;
   final String email;
   final String firstName;
   final String lastName;
@@ -25,7 +25,7 @@ class AuthUser extends Equatable {
 
   factory AuthUser.fromJson(Map<String, dynamic> json) {
     return AuthUser(
-      id: json['id'] as int? ?? 0,
+      id: json['id'] as String? ?? '',
       email: json['email'] as String? ?? '',
       firstName: (json['first_name'] ?? json['prenom']) as String? ?? '',
       lastName: (json['last_name'] ?? json['nom']) as String? ?? '',
@@ -50,7 +50,7 @@ class AuthUser extends Equatable {
   }
 
   AuthUser copyWith({
-    int? id,
+    String? id,
     String? email,
     String? firstName,
     String? lastName,

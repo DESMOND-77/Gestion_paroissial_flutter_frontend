@@ -15,7 +15,7 @@ class LoadTransactions extends FinancesEvent {
   final String? categorie;
   final String? dateDebut;
   final String? dateFin;
-  final int? membreId;
+  final String? membreId;
   const LoadTransactions({
     this.type,
     this.categorie,
@@ -43,7 +43,7 @@ class CreateTransaction extends FinancesEvent {
 }
 
 class UpdateTransaction extends FinancesEvent {
-  final int id;
+  final String id;
   final Map<String, dynamic> data;
   const UpdateTransaction({required this.id, required this.data});
   @override
@@ -51,7 +51,7 @@ class UpdateTransaction extends FinancesEvent {
 }
 
 class DeleteTransaction extends FinancesEvent {
-  final int id;
+  final String id;
   const DeleteTransaction({required this.id});
   @override
   List<Object?> get props => [id];
@@ -102,7 +102,7 @@ class TransactionUpdated extends FinancesState {
 }
 
 class TransactionDeleted extends FinancesState {
-  final int id;
+  final String id;
   const TransactionDeleted({required this.id});
   @override
   List<Object?> get props => [id];

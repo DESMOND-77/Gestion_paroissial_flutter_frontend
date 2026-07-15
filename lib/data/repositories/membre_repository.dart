@@ -5,6 +5,7 @@ import '../../core/network/dio_client.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/database/database_service.dart';
 import '../../core/storage/secure_storage.dart';
+import '../../core/sync/offline_write.dart';
 import '../models/membre_model.dart';
 import '../models/sacrement_model.dart';
 
@@ -90,29 +91,62 @@ class MembreRepository {
     return fetchMembers();
   }
 
-  Future<MembreDetail> getMembreById(int id) async {
+  Future<MembreDetail> getMembreById(String id) async {
     final response = await _dioClient.get(ApiConstants.membreById(id));
     return MembreDetail.fromJson(response.data["data"] as Map<String, dynamic>);
   }
 
   Future<Membre> createMembre(Map<String, dynamic> data) async {
-    final response = await _dioClient.post(ApiConstants.membres, data: data);
-    await _databaseService?.clearTable('membres');
-    return Membre.fromJson(response.data["data"] as Map<String, dynamic>);
+    try {
+      final response = await _dioClient.post(ApiConstants.membres, data: data);
+      await _databaseService?.clearTable('membres');
+      return Membre.fromJson(response.data["data"] as Map<String, dynamic>);
+    } on NetworkException {
+      // Hors ligne : mise en file d'attente + application optimiste au cache.
+      final record = await queueOfflineWrite(
+        db: _databaseService,
+        collection: 'membres',
+        cacheEntityType: 'membres',
+        data: data,
+      );
+      return Membre.fromJson(record);
+    }
   }
 
-  Future<Membre> updateMembre(int id, Map<String, dynamic> data) async {
-    final response =
-        await _dioClient.put(ApiConstants.membreById(id), data: data);
-    await _databaseService?.clearTable('membres');
-    return Membre.fromJson(response.data["data"] as Map<String, dynamic>);
+  Future<Membre> updateMembre(String id, Map<String, dynamic> data) async {
+    try {
+      final response =
+          await _dioClient.put(ApiConstants.membreById(id), data: data);
+      await _databaseService?.clearTable('membres');
+      return Membre.fromJson(response.data["data"] as Map<String, dynamic>);
+    } on NetworkException {
+      final record = await queueOfflineWrite(
+        db: _databaseService,
+        collection: 'membres',
+        cacheEntityType: 'membres',
+        id: id,
+        data: data,
+      );
+      return Membre.fromJson(record);
+    }
   }
 
-  Future<Membre> patchMembre(int id, Map<String, dynamic> data) async {
-    final response =
-        await _dioClient.patch(ApiConstants.membreById(id), data: data);
-    await _databaseService?.clearTable('membres');
-    return Membre.fromJson(response.data["data"] as Map<String, dynamic>);
+  Future<Membre> patchMembre(String id, Map<String, dynamic> data) async {
+    try {
+      final response =
+          await _dioClient.patch(ApiConstants.membreById(id), data: data);
+      await _databaseService?.clearTable('membres');
+      return Membre.fromJson(response.data["data"] as Map<String, dynamic>);
+    } on NetworkException {
+      final record = await queueOfflineWrite(
+        db: _databaseService,
+        collection: 'membres',
+        cacheEntityType: 'membres',
+        id: id,
+        data: data,
+      );
+      return Membre.fromJson(record);
+    }
   }
 
   /// Profil membre lié au compte connecté, ou `null` si aucun membre n'est
@@ -163,12 +197,22 @@ class MembreRepository {
     return membre;
   }
 
-  Future<void> deleteMembre(int id) async {
-    await _dioClient.delete(ApiConstants.membreById(id));
-    await _databaseService?.clearTable('membres');
+  Future<void> deleteMembre(String id) async {
+    try {
+      await _dioClient.delete(ApiConstants.membreById(id));
+      await _databaseService?.clearTable('membres');
+    } on NetworkException {
+      await queueOfflineWrite(
+        db: _databaseService,
+        collection: 'membres',
+        cacheEntityType: 'membres',
+        id: id,
+        isDeleted: true,
+      );
+    }
   }
 
-  Future<List<Sacrement>> getMembreSacrements(int id) async {
+  Future<List<Sacrement>> getMembreSacrements(String id) async {
     final response = await _dioClient.get(ApiConstants.membreSacrements(id));
     final data = response.data["data"];
     List<dynamic> results;
@@ -185,11 +229,21 @@ class MembreRepository {
   }
 
   Future<Sacrement> ajouterSacrement(
-      int membreId, Map<String, dynamic> data) async {
-    final response = await _dioClient.post(
-      ApiConstants.membreAjouterSacrement(membreId),
-      data: data,
-    );
-    return Sacrement.fromJson(response.data["data"] as Map<String, dynamic>);
+      String membreId, Map<String, dynamic> data) async {
+    try {
+      final response = await _dioClient.post(
+        ApiConstants.membreAjouterSacrement(membreId),
+        data: data,
+      );
+      return Sacrement.fromJson(response.data["data"] as Map<String, dynamic>);
+    } on NetworkException {
+      final record = await queueOfflineWrite(
+        db: _databaseService,
+        collection: 'sacrements',
+        cacheEntityType: 'sacrements',
+        data: {...data, 'membre': membreId},
+      );
+      return Sacrement.fromJson(record);
+    }
   }
 }

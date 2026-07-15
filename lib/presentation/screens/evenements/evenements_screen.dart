@@ -58,7 +58,7 @@ class _EvenementsViewState extends State<_EvenementsView> with SingleTickerProvi
         .firstWhere((s) => s is EvenementsLoaded || s is EvenementsError);
   }
 
-  void _deleteEvenement(BuildContext ctx, int id, String titre) {
+  void _deleteEvenement(BuildContext ctx, String id, String titre) {
     showDialog(
       context: ctx,
       builder: (context) => AlertDialog(

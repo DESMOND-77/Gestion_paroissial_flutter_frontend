@@ -21,8 +21,8 @@ class LoadArticles extends LibrairieEvent {
 }
 
 class LoadVentes extends LibrairieEvent {
-  final int? articleId;
-  final int? membreId;
+  final String? articleId;
+  final String? membreId;
   const LoadVentes({this.articleId, this.membreId});
   @override
   List<Object?> get props => [articleId, membreId];
@@ -40,7 +40,7 @@ class CreateArticle extends LibrairieEvent {
 }
 
 class UpdateArticle extends LibrairieEvent {
-  final int id;
+  final String id;
   final Map<String, dynamic> data;
   const UpdateArticle({required this.id, required this.data});
   @override
@@ -48,7 +48,7 @@ class UpdateArticle extends LibrairieEvent {
 }
 
 class DeleteArticle extends LibrairieEvent {
-  final int id;
+  final String id;
   const DeleteArticle({required this.id});
   @override
   List<Object?> get props => [id];
@@ -112,7 +112,7 @@ class ArticleUpdated extends LibrairieState {
 }
 
 class ArticleDeleted extends LibrairieState {
-  final int id;
+  final String id;
   const ArticleDeleted({required this.id});
   @override
   List<Object?> get props => [id];

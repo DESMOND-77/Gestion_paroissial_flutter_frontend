@@ -2,8 +2,8 @@ import 'package:equatable/equatable.dart';
 import 'sacrement_model.dart';
 
 class Membre extends Equatable {
-  final int id;
-  final int? user;
+  final String id;
+  final String? user;
   final String nom;
   final String prenom;
   final String nomComplet;
@@ -11,11 +11,12 @@ class Membre extends Equatable {
   final String sexe;
   final String? telephone;
   final String? email;
+  final String? profilePictureUrl;
   final String? quartier;
   final String dateInscription;
   final bool estBaptise;
   final bool estConfirme;
-  final int? groupe;
+  final String? groupe;
   final String? groupeNom;
 
   const Membre({
@@ -28,6 +29,7 @@ class Membre extends Equatable {
     required this.sexe,
     this.telephone,
     this.email,
+    this.profilePictureUrl,
     this.quartier,
     required this.dateInscription,
     required this.estBaptise,
@@ -38,20 +40,25 @@ class Membre extends Equatable {
 
   factory Membre.fromJson(Map<String, dynamic> json) {
     return Membre(
-      id: json['id'] as int? ?? 0,
-      user: json['user'] as int?,
+      id: json['id'] as String? ?? '',
+      user: json['user'] as String?,
       nom: json['nom'] as String? ?? '',
       prenom: json['prenom'] as String? ?? '',
       nomComplet: json['nom_complet'] as String? ?? '',
       dateNaissance: json['date_naissance'] as String?,
       sexe: json['sexe'] as String? ?? 'M',
-      telephone: json['telephone'] as String?,
+      // Le backend expose le téléphone sous `phone_number` (source
+      // `user.phone_number`) ; `telephone` gardé en repli/compat.
+      telephone: (json['phone_number'] ?? json['telephone']) as String?,
       email: json['email'] as String?,
+      // Photo de profil du compte `user` associé (source backend
+      // `user.profile_picture`).
+      profilePictureUrl: json['profile_picture_url'] as String?,
       quartier: json['quartier'] as String?,
       dateInscription: json['date_inscription'] as String? ?? '',
       estBaptise: json['est_baptise'] as bool? ?? false,
       estConfirme: json['est_confirme'] as bool? ?? false,
-      groupe: json['groupe'] as int?,
+      groupe: json['groupe'] as String?,
       groupeNom: json['groupe_nom'] as String?,
     );
   }
@@ -65,8 +72,9 @@ class Membre extends Equatable {
       'nom_complet': nomComplet,
       if (dateNaissance != null) 'date_naissance': dateNaissance,
       'sexe': sexe,
-      if (telephone != null) 'telephone': telephone,
+      if (telephone != null) 'phone_number': telephone,
       if (email != null) 'email': email,
+      if (profilePictureUrl != null) 'profile_picture_url': profilePictureUrl,
       if (quartier != null) 'quartier': quartier,
       'date_inscription': dateInscription,
       'est_baptise': estBaptise,
@@ -77,8 +85,8 @@ class Membre extends Equatable {
   }
 
   Membre copyWith({
-    int? id,
-    int? user,
+    String? id,
+    String? user,
     String? nom,
     String? prenom,
     String? nomComplet,
@@ -86,11 +94,12 @@ class Membre extends Equatable {
     String? sexe,
     String? telephone,
     String? email,
+    String? profilePictureUrl,
     String? quartier,
     String? dateInscription,
     bool? estBaptise,
     bool? estConfirme,
-    int? groupe,
+    String? groupe,
     String? groupeNom,
   }) {
     return Membre(
@@ -103,6 +112,7 @@ class Membre extends Equatable {
       sexe: sexe ?? this.sexe,
       telephone: telephone ?? this.telephone,
       email: email ?? this.email,
+      profilePictureUrl: profilePictureUrl ?? this.profilePictureUrl,
       quartier: quartier ?? this.quartier,
       dateInscription: dateInscription ?? this.dateInscription,
       estBaptise: estBaptise ?? this.estBaptise,
@@ -123,6 +133,7 @@ class Membre extends Equatable {
         sexe,
         telephone,
         email,
+        profilePictureUrl,
         quartier,
         dateInscription,
         estBaptise,
@@ -145,6 +156,7 @@ class MembreDetail extends Membre {
     required super.sexe,
     super.telephone,
     super.email,
+    super.profilePictureUrl,
     super.quartier,
     required super.dateInscription,
     required super.estBaptise,
@@ -166,6 +178,7 @@ class MembreDetail extends Membre {
       sexe: base.sexe,
       telephone: base.telephone,
       email: base.email,
+      profilePictureUrl: base.profilePictureUrl,
       quartier: base.quartier,
       dateInscription: base.dateInscription,
       estBaptise: base.estBaptise,

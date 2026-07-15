@@ -8,7 +8,7 @@ This is a Flutter application called **Gestion Paroissiale** (Parish Management 
 
 - **Language**: Dart (Flutter)
 - **Min SDK**: 3.3.0
-- **Target Platforms**: iOS, Android, Linux, macOS (Windows and Web are not scaffolded)
+- **Target Platforms**: Android, iOS, Linux, macOS, Windows, and Web (all six are scaffolded; the `isar_plus` caching layer is chosen specifically because it supports all of them — see Local Caching System)
 
 ## Architecture
 
@@ -23,7 +23,9 @@ Infrastructure and configuration layer:
 - **`network/`**: Dio HTTP client and exception handling
 - **`router/`**: GoRouter configuration with nested routes and auth guards
 - **`theme/`**: Material design theme definitions
-- **`storage/`**: Secure token storage using flutter_secure_storage
+- **`storage/`**: `SecureStorage` (JWT tokens via flutter_secure_storage) and `FileStorageService` (`file_storage_service.dart`) — caches downloaded files (e.g. profile pictures) to disk via `path_provider` for offline use; `AuthRepository` uses it for profile-picture caching
+- **`database/`**: Isar (`isar_plus`) local cache — see Local Caching System
+- **`sync/`**: Background sync (`PeriodicSyncManager`, `SyncService`) — see Local Caching System
 
 ### `/lib/data`
 
@@ -242,8 +244,13 @@ Reduces server load and enables offline functionality. Auto-initialized in `main
 
 ### Sync Strategy
 
-- **PeriodicSyncManager** (`lib/core/sync/periodic_sync_manager.dart`) syncs all data every 5 minutes in background
-- **SyncService** (`lib/core/sync/sync_service.dart`) coordinates API calls with local database
+Each 5-minute cycle (`PeriodicSyncManager._syncCycle`) runs two steps in order: **push then pull**.
+
+- **Push — offline writes** (`lib/core/sync/offline_sync_service.dart`, `OfflineSyncService.pushPull`): sends the local outbox to `POST /api/v1/sync/` (bidirectional endpoint), then processes `results` (applied → dequeue; conflicts → server copy overwrites cache, last-write-wins on `updated_at`; errors → logged + dequeued to avoid a poison-pill loop), merges server `changes` into the cache, and advances the sync cursor (`server_time`). Backend collection names map to cache entity types via `OfflineSyncService._cacheEntityType` (`transactions`→`finances`, `articles`→`librairie`, etc.).
+- **Pull — REST refresh** (`SyncService.syncAll`): the historical pull path, still the authority for the 5 read entity types (reloads full lists into cache).
+- **Offline writes**: repository `create/update/patch/delete` call the API directly when online (unchanged); on `NetworkException` they fall back to `queueOfflineWrite` (`lib/core/sync/offline_write.dart`) → enqueue in the `PendingChangeEntity` outbox + optimistic cache write. Client-generated UUIDs (`lib/core/utils/id_generator.dart`) keep offline-created ids stable through sync (backend `WritableIDModelSerializer` accepts them). A record's outbox row carries the business fields plus `updated_at` and `is_deleted` (a delete is `is_deleted: true`, not a removed row).
+- The `PendingChangeEntity` field is named `syncCollection`, **not** `collection` — a field literally named `collection` collides with the isar_plus generator's internal variable and breaks the generated `.g.dart`.
+- **Not yet offline-capable**: event registration (`inscrire` / `participations`) and self-profile edit (`updateMyMembre`) stay online-only.
 - When fetching data from repositories:
   1. **No filters** → Check local cache first; return if valid (< 5 min old)
   2. **Cache miss/expired** → Fetch from server and update cache
@@ -351,6 +358,10 @@ Test file structure mirrors src:
 - `isar_plus` / `isar_plus_flutter_libs`: NoSQL database for local caching (Android/iOS/Linux/macOS/Windows/Web)
 - `connectivity_plus`: Network connectivity detection
 - `intl`: Internationalization (French locale)
+- `path_provider`: Resolves platform cache/documents dirs (used by `FileStorageService`)
+- `image_picker`: Picking profile/article images from gallery or camera
+- `lottie`: Animated illustrations (e.g. splash screen)
+- `flutter_native_splash` / `flutter_launcher_icons`: Generate native splash screens and app launcher icons (config lives in `pubspec.yaml`; regenerate with `dart run flutter_native_splash:create` / `dart run flutter_launcher_icons`)
 
 ## Key Configuration Files
 

@@ -36,11 +36,13 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
-  build_runner: ^2.4.13
+  flutter_lints: ^6.0.0
+  analyzer: ^13.0.0
+  build_runner: ^2.15.1
+  source_gen: ^4.2.3
 
-dependency_overrides:
-  meta: ^1.18.0
+# dependency_overrides:
+#   meta: ^1.18.0
 flutter_launcher_icons:
   android: "launcher_icon"
   image_path: "assets/images/gestparr_logo.png"

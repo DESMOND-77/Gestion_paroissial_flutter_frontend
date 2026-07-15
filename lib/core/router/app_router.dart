@@ -101,7 +101,7 @@ class AppRouter {
                 path: ':id',
                 name: 'membre-detail',
                 builder: (context, state) {
-                  final id = int.parse(state.pathParameters['id']!);
+                  final id = state.pathParameters['id']!;
                   return MembreDetailScreen(membreId: id);
                 },
                 routes: [
@@ -109,7 +109,7 @@ class AppRouter {
                     path: 'edit',
                     name: 'membre-edit',
                     builder: (context, state) {
-                      final id = int.parse(state.pathParameters['id']!);
+                      final id = state.pathParameters['id']!;
                       return MembreFormScreen(membreId: id);
                     },
                   ),
@@ -131,7 +131,7 @@ class AppRouter {
                 path: ':id/edit',
                 name: 'groupe-edit',
                 builder: (context, state) {
-                  final id = int.parse(state.pathParameters['id']!);
+                  final id = state.pathParameters['id']!;
                   return GroupeFormScreen(groupeId: id);
                 },
               ),
@@ -151,7 +151,7 @@ class AppRouter {
                 path: ':id/edit',
                 name: 'evenement-edit',
                 builder: (context, state) {
-                  final id = int.parse(state.pathParameters['id']!);
+                  final id = state.pathParameters['id']!;
                   return EvenementFormScreen(evenementId: id);
                 },
               ),
@@ -171,7 +171,7 @@ class AppRouter {
                 path: ':id/edit',
                 name: 'transaction-edit',
                 builder: (context, state) {
-                  final id = int.parse(state.pathParameters['id']!);
+                  final id = state.pathParameters['id']!;
                   return TransactionFormScreen(transactionId: id);
                 },
               ),
@@ -191,7 +191,7 @@ class AppRouter {
                 path: 'articles/:id/edit',
                 name: 'article-edit',
                 builder: (context, state) {
-                  final id = int.parse(state.pathParameters['id']!);
+                  final id = state.pathParameters['id']!;
                   return ArticleFormScreen(articleId: id);
                 },
               ),

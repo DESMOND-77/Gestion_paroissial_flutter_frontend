@@ -1,11 +1,11 @@
 import 'package:equatable/equatable.dart';
 
 class Sacrement extends Equatable {
-  final int id;
+  final String id;
   final String type;
-  final int membre;
+  final String membre;
   final String date;
-  final int? officiant;
+  final String? officiant;
   final String? officiantNom;
   final String? observations;
 
@@ -32,11 +32,11 @@ class Sacrement extends Equatable {
 
   factory Sacrement.fromJson(Map<String, dynamic> json) {
     return Sacrement(
-      id: json['id'] as int? ?? 0,
+      id: json['id'] as String? ?? '',
       type: json['type'] as String? ?? '',
-      membre: json['membre'] as int? ?? 0,
+      membre: json['membre'] as String? ?? '',
       date: json['date'] as String? ?? '',
-      officiant: json['officiant'] as int?,
+      officiant: json['officiant'] as String?,
       officiantNom: json['officiant_nom'] as String?,
       observations: json['observations'] as String?,
     );

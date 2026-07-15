@@ -21,7 +21,7 @@ class LoadMembres extends MembresEvent {
 }
 
 class LoadMembreDetail extends MembresEvent {
-  final int id;
+  final String id;
   const LoadMembreDetail({required this.id});
   @override
   List<Object?> get props => [id];
@@ -35,7 +35,7 @@ class CreateMembre extends MembresEvent {
 }
 
 class UpdateMembre extends MembresEvent {
-  final int id;
+  final String id;
   final Map<String, dynamic> data;
   const UpdateMembre({required this.id, required this.data});
   @override
@@ -54,14 +54,14 @@ class UpdateMyMembre extends MembresEvent {
 }
 
 class DeleteMembre extends MembresEvent {
-  final int id;
+  final String id;
   const DeleteMembre({required this.id});
   @override
   List<Object?> get props => [id];
 }
 
 class AjouterSacrement extends MembresEvent {
-  final int membreId;
+  final String membreId;
   final Map<String, dynamic> data;
   const AjouterSacrement({required this.membreId, required this.data});
   @override
@@ -126,7 +126,7 @@ class MyMembreUpdated extends MembresState {
 }
 
 class MembreDeleted extends MembresState {
-  final int id;
+  final String id;
   const MembreDeleted({required this.id});
   @override
   List<Object?> get props => [id];

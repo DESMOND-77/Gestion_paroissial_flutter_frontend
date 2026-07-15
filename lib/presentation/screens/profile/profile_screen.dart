@@ -544,6 +544,7 @@ class _ProfileScreenViewState extends State<_ProfileScreenView>
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
+                      readOnly : true,
                       controller: _emailController,
                       decoration: const InputDecoration(
                         labelText: 'Adresse email',
@@ -559,6 +560,7 @@ class _ProfileScreenViewState extends State<_ProfileScreenView>
                         }
                         return null;
                       },
+                      
                     ),
                     const SizedBox(height: 16),
                     TextFormField(

@@ -1,6 +1,8 @@
 import '../../core/network/dio_client.dart';
+import '../../core/network/api_exception.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/database/database_service.dart';
+import '../../core/sync/offline_write.dart';
 import '../models/evenement_model.dart';
 import '../models/membre_model.dart';
 
@@ -79,39 +81,84 @@ class EvenementRepository {
     return fetchEvenements();
   }
 
-  Future<Evenement> getEvenementById(int id) async {
+  Future<Evenement> getEvenementById(String id) async {
     final response = await _dioClient.get(ApiConstants.evenementById(id));
     return Evenement.fromJson(response.data["data"] as Map<String, dynamic>);
   }
 
   Future<Evenement> createEvenement(Map<String, dynamic> data) async {
-    final response = await _dioClient.post(ApiConstants.evenements, data: data);
-    await _databaseService?.clearTable('evenements');
-    return Evenement.fromJson(response.data["data"] as Map<String, dynamic>);
+    try {
+      final response =
+          await _dioClient.post(ApiConstants.evenements, data: data);
+      await _databaseService?.clearTable('evenements');
+      return Evenement.fromJson(response.data["data"] as Map<String, dynamic>);
+    } on NetworkException {
+      final record = await queueOfflineWrite(
+        db: _databaseService,
+        collection: 'evenements',
+        cacheEntityType: 'evenements',
+        data: data,
+      );
+      return Evenement.fromJson(record);
+    }
   }
 
-  Future<Evenement> updateEvenement(int id, Map<String, dynamic> data) async {
-    final response = await _dioClient.put(ApiConstants.evenementById(id), data: data);
-    await _databaseService?.clearTable('evenements');
-    return Evenement.fromJson(response.data["data"] as Map<String, dynamic>);
+  Future<Evenement> updateEvenement(String id, Map<String, dynamic> data) async {
+    try {
+      final response =
+          await _dioClient.put(ApiConstants.evenementById(id), data: data);
+      await _databaseService?.clearTable('evenements');
+      return Evenement.fromJson(response.data["data"] as Map<String, dynamic>);
+    } on NetworkException {
+      final record = await queueOfflineWrite(
+        db: _databaseService,
+        collection: 'evenements',
+        cacheEntityType: 'evenements',
+        id: id,
+        data: data,
+      );
+      return Evenement.fromJson(record);
+    }
   }
 
-  Future<Evenement> patchEvenement(int id, Map<String, dynamic> data) async {
-    final response = await _dioClient.patch(ApiConstants.evenementById(id), data: data);
-    await _databaseService?.clearTable('evenements');
-    return Evenement.fromJson(response.data["data"] as Map<String, dynamic>);
+  Future<Evenement> patchEvenement(String id, Map<String, dynamic> data) async {
+    try {
+      final response =
+          await _dioClient.patch(ApiConstants.evenementById(id), data: data);
+      await _databaseService?.clearTable('evenements');
+      return Evenement.fromJson(response.data["data"] as Map<String, dynamic>);
+    } on NetworkException {
+      final record = await queueOfflineWrite(
+        db: _databaseService,
+        collection: 'evenements',
+        cacheEntityType: 'evenements',
+        id: id,
+        data: data,
+      );
+      return Evenement.fromJson(record);
+    }
   }
 
-  Future<void> deleteEvenement(int id) async {
-    await _dioClient.delete(ApiConstants.evenementById(id));
-    await _databaseService?.clearTable('evenements');
+  Future<void> deleteEvenement(String id) async {
+    try {
+      await _dioClient.delete(ApiConstants.evenementById(id));
+      await _databaseService?.clearTable('evenements');
+    } on NetworkException {
+      await queueOfflineWrite(
+        db: _databaseService,
+        collection: 'evenements',
+        cacheEntityType: 'evenements',
+        id: id,
+        isDeleted: true,
+      );
+    }
   }
 
-  Future<void> inscrire(int id) async {
+  Future<void> inscrire(String id) async {
     await _dioClient.post(ApiConstants.evenementInscrire(id));
   }
 
-  Future<List<Membre>> getParticipants(int id) async {
+  Future<List<Membre>> getParticipants(String id) async {
     final response = await _dioClient.get(ApiConstants.evenementParticipants(id));
     final data = response.data["data"];
     List<dynamic> results;

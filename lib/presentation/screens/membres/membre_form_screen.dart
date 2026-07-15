@@ -8,7 +8,7 @@ import '../../blocs/groupes/groupes_bloc.dart';
 import '../../widgets/loading_widget.dart';
 
 class MembreFormScreen extends StatelessWidget {
-  final int? membreId;
+  final String? membreId;
 
   const MembreFormScreen({super.key, this.membreId});
 
@@ -35,7 +35,7 @@ class MembreFormScreen extends StatelessWidget {
 }
 
 class _MembreFormView extends StatefulWidget {
-  final int? membreId;
+  final String? membreId;
 
   const _MembreFormView({this.membreId});
 
@@ -52,7 +52,7 @@ class _MembreFormViewState extends State<_MembreFormView> {
   final _quartierController = TextEditingController();
   String _sexe = 'M';
   String? _dateNaissance;
-  int? _selectedGroupe;
+  String? _selectedGroupe;
   bool _estBaptise = false;
   bool _estConfirme = false;
   bool _dataLoaded = false;
@@ -229,6 +229,7 @@ class _MembreFormViewState extends State<_MembreFormView> {
                           ),
                           const SizedBox(height: 16),
                           TextFormField(
+                            readOnly : true,
                             controller: _emailController,
                             decoration: const InputDecoration(
                               labelText: 'Email',
@@ -388,7 +389,7 @@ class _MembreFormViewState extends State<_MembreFormView> {
     return BlocBuilder<GroupesBloc, GroupesState>(
       builder: (context, state) {
         final groupes = state is GroupesLoaded ? state.groupes : [];
-        return DropdownButtonFormField<int?>(
+        return DropdownButtonFormField<String?>(
           initialValue: _selectedGroupe,
           decoration: const InputDecoration(
             labelText: 'Groupe',

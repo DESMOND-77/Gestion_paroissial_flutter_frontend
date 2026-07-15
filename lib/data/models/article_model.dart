@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 class Article extends Equatable {
-  final int id;
+  final String id;
   final String nom;
   final String? description;
   final String categorie;
@@ -25,7 +25,7 @@ class Article extends Equatable {
 
   factory Article.fromJson(Map<String, dynamic> json) {
     return Article(
-      id: json['id'] as int? ?? 0,
+      id: json['id'] as String? ?? '',
       nom: json['nom'] as String? ?? '',
       description: json['description'] as String?,
       categorie: json['categorie'] as String? ?? '',
@@ -65,7 +65,7 @@ class Article extends Equatable {
   }
 
   Article copyWith({
-    int? id,
+    String? id,
     String? nom,
     String? description,
     String? categorie,

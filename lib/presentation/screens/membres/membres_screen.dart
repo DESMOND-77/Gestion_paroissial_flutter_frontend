@@ -60,7 +60,7 @@ class _MembresViewState extends State<_MembresView> {
         .firstWhere((s) => s is MembresLoaded || s is MembresError);
   }
 
-  void _deleteMembre(BuildContext ctx, int id, String nom) {
+  void _deleteMembre(BuildContext ctx, String id, String nom) {
     showDialog(
       context: ctx,
       builder: (context) => AlertDialog(

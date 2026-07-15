@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 class UserActivity extends Equatable {
-  final int id;
+  final String id;
   final String userEmail;
   final String userFullName;
   final String action;
@@ -23,7 +23,7 @@ class UserActivity extends Equatable {
 
   factory UserActivity.fromJson(Map<String, dynamic> json) {
     return UserActivity(
-      id: json['id'] as int? ?? 0,
+      id: json['id'] as String? ?? '',
       userEmail: json['user_email'] as String? ?? '',
       userFullName: json['user_full_name'] as String? ?? '',
       action: json['action'] as String? ?? '',

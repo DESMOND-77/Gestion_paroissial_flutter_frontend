@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 class Evenement extends Equatable {
-  final int id;
+  final String id;
   final String titre;
   final String type;
   final String? typeDisplay;
@@ -10,7 +10,7 @@ class Evenement extends Equatable {
   final String? dateFin;
   final String? lieu;
   final bool estInscriptionRequise;
-  final int? createur;
+  final String? createur;
   final String? createurNom;
   final int nbParticipants;
 
@@ -31,7 +31,7 @@ class Evenement extends Equatable {
 
   factory Evenement.fromJson(Map<String, dynamic> json) {
     return Evenement(
-      id: json['id'] as int? ?? 0,
+      id: json['id'] as String? ?? '',
       titre: json['titre'] as String? ?? '',
       type: json['type'] as String? ?? '',
       typeDisplay: json['type_display'] as String?,
@@ -40,7 +40,7 @@ class Evenement extends Equatable {
       dateFin: json['date_fin'] as String?,
       lieu: json['lieu'] as String?,
       estInscriptionRequise: json['est_inscription_requise'] as bool? ?? false,
-      createur: json['createur'] as int?,
+      createur: json['createur'] as String?,
       createurNom: json['createur_nom'] as String?,
       nbParticipants: json['nb_participants'] as int? ?? 0,
     );
@@ -64,7 +64,7 @@ class Evenement extends Equatable {
   }
 
   Evenement copyWith({
-    int? id,
+    String? id,
     String? titre,
     String? type,
     String? typeDisplay,
@@ -73,7 +73,7 @@ class Evenement extends Equatable {
     String? dateFin,
     String? lieu,
     bool? estInscriptionRequise,
-    int? createur,
+    String? createur,
     String? createurNom,
     int? nbParticipants,
   }) {

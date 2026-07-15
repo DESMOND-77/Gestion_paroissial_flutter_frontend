@@ -1,6 +1,8 @@
 import '../../core/network/dio_client.dart';
+import '../../core/network/api_exception.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/database/database_service.dart';
+import '../../core/sync/offline_write.dart';
 import '../models/transaction_model.dart' show Transaction, RapportFinancier;
 
 class FinanceRepository {
@@ -37,7 +39,7 @@ class FinanceRepository {
     String? categorie,
     String? dateDebut,
     String? dateFin,
-    int? membreId,
+    String? membreId,
     int? page,
   }) async {
     // Si paramètres de filtrage: toujours du serveur
@@ -87,37 +89,82 @@ class FinanceRepository {
     return fetchTransactions();
   }
 
-  Future<Transaction> getTransactionById(int id) async {
+  Future<Transaction> getTransactionById(String id) async {
     final response = await _dioClient.get(ApiConstants.transactionById(id));
     return Transaction.fromJson(response.data["data"] as Map<String, dynamic>);
   }
 
   Future<Transaction> createTransaction(Map<String, dynamic> data) async {
-    final response =
-        await _dioClient.post(ApiConstants.transactions, data: data);
-    await _databaseService?.clearTable('finances');
-    return Transaction.fromJson(response.data["data"] as Map<String, dynamic>);
+    try {
+      final response =
+          await _dioClient.post(ApiConstants.transactions, data: data);
+      await _databaseService?.clearTable('finances');
+      return Transaction.fromJson(
+          response.data["data"] as Map<String, dynamic>);
+    } on NetworkException {
+      final record = await queueOfflineWrite(
+        db: _databaseService,
+        collection: 'transactions',
+        cacheEntityType: 'finances',
+        data: data,
+      );
+      return Transaction.fromJson(record);
+    }
   }
 
   Future<Transaction> updateTransaction(
-      int id, Map<String, dynamic> data) async {
-    final response =
-        await _dioClient.put(ApiConstants.transactionById(id), data: data);
-    await _databaseService?.clearTable('finances');
-    return Transaction.fromJson(response.data["data"] as Map<String, dynamic>);
+      String id, Map<String, dynamic> data) async {
+    try {
+      final response =
+          await _dioClient.put(ApiConstants.transactionById(id), data: data);
+      await _databaseService?.clearTable('finances');
+      return Transaction.fromJson(
+          response.data["data"] as Map<String, dynamic>);
+    } on NetworkException {
+      final record = await queueOfflineWrite(
+        db: _databaseService,
+        collection: 'transactions',
+        cacheEntityType: 'finances',
+        id: id,
+        data: data,
+      );
+      return Transaction.fromJson(record);
+    }
   }
 
   Future<Transaction> patchTransaction(
-      int id, Map<String, dynamic> data) async {
-    final response =
-        await _dioClient.patch(ApiConstants.transactionById(id), data: data);
-    await _databaseService?.clearTable('finances');
-    return Transaction.fromJson(response.data["data"] as Map<String, dynamic>);
+      String id, Map<String, dynamic> data) async {
+    try {
+      final response =
+          await _dioClient.patch(ApiConstants.transactionById(id), data: data);
+      await _databaseService?.clearTable('finances');
+      return Transaction.fromJson(
+          response.data["data"] as Map<String, dynamic>);
+    } on NetworkException {
+      final record = await queueOfflineWrite(
+        db: _databaseService,
+        collection: 'transactions',
+        cacheEntityType: 'finances',
+        id: id,
+        data: data,
+      );
+      return Transaction.fromJson(record);
+    }
   }
 
-  Future<void> deleteTransaction(int id) async {
-    await _dioClient.delete(ApiConstants.transactionById(id));
-    await _databaseService?.clearTable('finances');
+  Future<void> deleteTransaction(String id) async {
+    try {
+      await _dioClient.delete(ApiConstants.transactionById(id));
+      await _databaseService?.clearTable('finances');
+    } on NetworkException {
+      await queueOfflineWrite(
+        db: _databaseService,
+        collection: 'transactions',
+        cacheEntityType: 'finances',
+        id: id,
+        isDeleted: true,
+      );
+    }
   }
 
   Future<RapportFinancier> getRapport({
@@ -171,7 +218,7 @@ class FinanceRepository {
     );
   }
 
-  Future<List<Transaction>> getMembreDons(int membreId) async {
+  Future<List<Transaction>> getMembreDons(String membreId) async {
     final response = await _dioClient.get(ApiConstants.membreDons(membreId));
     final data = response.data["data"];
     List<dynamic> results;
