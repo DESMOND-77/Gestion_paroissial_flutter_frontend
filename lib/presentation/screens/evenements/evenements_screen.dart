@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/auth/permissions.dart';
 import '../../blocs/evenements/evenements_bloc.dart';
 import '../../../data/models/evenement_model.dart';
 import '../../widgets/loading_widget.dart';
@@ -134,11 +135,13 @@ class _EvenementsViewState extends State<_EvenementsView> with SingleTickerProvi
               ),
             ],
           ),
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: () => context.push('/evenements/new'),
-            icon: const Icon(Icons.event_outlined),
-            label: const Text('Nouvel événement'),
-          ),
+          floatingActionButton: context.perms.canManageEvenements
+              ? FloatingActionButton.extended(
+                  onPressed: () => context.push('/evenements/new'),
+                  icon: const Icon(Icons.event_outlined),
+                  label: const Text('Nouvel événement'),
+                )
+              : null,
         );
       },
     );
@@ -320,24 +323,31 @@ class _EvenementsViewState extends State<_EvenementsView> with SingleTickerProvi
                   ],
                 ),
               ),
-              // Un événement passé ne peut plus être modifié ni supprimé.
-              PopupMenuButton<String>(
-                enabled: !ev.estPasse,
-                onSelected: (value) {
-                  if (value == 'edit') {
-                    context.push('/evenements/${ev.id}/edit');
-                  } else if (value == 'delete') {
-                    _deleteEvenement(context, ev.id, ev.titre);
-                  }
-                },
-                itemBuilder: (_) => [
-                  const PopupMenuItem(value: 'edit', child: Text('Modifier')),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Text('Supprimer', style: TextStyle(color: AppTheme.errorColor)),
-                  ),
-                ],
-              ),
+              // Modifier/Supprimer : selon le rôle, et jamais pour un événement
+              // passé.
+              if (context.perms.canManageEvenements ||
+                  context.perms.canDeleteEvenements)
+                PopupMenuButton<String>(
+                  enabled: !ev.estPasse,
+                  onSelected: (value) {
+                    if (value == 'edit') {
+                      context.push('/evenements/${ev.id}/edit');
+                    } else if (value == 'delete') {
+                      _deleteEvenement(context, ev.id, ev.titre);
+                    }
+                  },
+                  itemBuilder: (_) => [
+                    if (context.perms.canManageEvenements)
+                      const PopupMenuItem(
+                          value: 'edit', child: Text('Modifier')),
+                    if (context.perms.canDeleteEvenements)
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Text('Supprimer',
+                            style: TextStyle(color: AppTheme.errorColor)),
+                      ),
+                  ],
+                ),
             ],
           ),
         ),

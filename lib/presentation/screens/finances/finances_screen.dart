@@ -8,6 +8,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/auth/permissions.dart';
 import '../../blocs/finances/finances_bloc.dart';
 import '../../../data/models/transaction_model.dart';
 import '../../widgets/loading_widget.dart';
@@ -153,11 +154,13 @@ class _FinancesViewState extends State<_FinancesView>
               ),
             ],
           ),
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: () => context.push('/finances/new'),
-            icon: const Icon(Icons.add),
-            label: const Text('Nouvelle transaction'),
-          ),
+          floatingActionButton: context.perms.canManageFinances
+              ? FloatingActionButton.extended(
+                  onPressed: () => context.push('/finances/new'),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Nouvelle transaction'),
+                )
+              : null,
         );
       },
     );
@@ -354,20 +357,22 @@ class _FinancesViewState extends State<_FinancesView>
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit, size: 18),
-                        onPressed: () =>
-                            context.push('/finances/${tx.id}/edit'),
-                        constraints: const BoxConstraints(),
-                        padding: const EdgeInsets.all(4),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete,
-                            size: 18, color: AppTheme.errorColor),
-                        onPressed: () => _deleteTransaction(context, tx.id),
-                        constraints: const BoxConstraints(),
-                        padding: const EdgeInsets.all(4),
-                      ),
+                      if (context.perms.canManageFinances)
+                        IconButton(
+                          icon: const Icon(Icons.edit, size: 18),
+                          onPressed: () =>
+                              context.push('/finances/${tx.id}/edit'),
+                          constraints: const BoxConstraints(),
+                          padding: const EdgeInsets.all(4),
+                        ),
+                      if (context.perms.canDeleteFinances)
+                        IconButton(
+                          icon: const Icon(Icons.delete,
+                              size: 18, color: AppTheme.errorColor),
+                          onPressed: () => _deleteTransaction(context, tx.id),
+                          constraints: const BoxConstraints(),
+                          padding: const EdgeInsets.all(4),
+                        ),
                     ],
                   ),
                 ),

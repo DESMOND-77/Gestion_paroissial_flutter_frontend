@@ -6,6 +6,7 @@ import 'package:paroisse_gest/presentation/widgets/user_avatar.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/auth/permissions.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../blocs/membres/membres_bloc.dart';
 import '../../../data/models/membre_model.dart';
@@ -44,7 +45,7 @@ class _MembreDetailView extends StatelessWidget {
         actions: [
           BlocBuilder<MembresBloc, MembresState>(
             builder: (context, state) {
-              if (state is MembreDetailLoaded) {
+              if (state is MembreDetailLoaded && context.perms.canManageMembres) {
                 return IconButton(
                   icon: const Icon(Icons.edit),
                   onPressed: () => context.push('/membres/$membreId/edit'),
@@ -290,16 +291,17 @@ class _MembreDetailView extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                ElevatedButton.icon(
-                  onPressed: () =>
-                      _showAjouterSacrementDialog(context, membre.id),
-                  icon: const Icon(Icons.add, size: 16),
-                  label: const Text('Ajouter'),
-                  style: ElevatedButton.styleFrom(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                if (context.perms.canRecordSacrement)
+                  ElevatedButton.icon(
+                    onPressed: () =>
+                        _showAjouterSacrementDialog(context, membre.id),
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text('Ajouter'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                    ),
                   ),
-                ),
               ],
             ),
             const SizedBox(height: 16),

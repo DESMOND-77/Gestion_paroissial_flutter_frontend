@@ -4,6 +4,7 @@ import 'package:sidebarx/sidebarx.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/auth/permissions.dart';
 import '../blocs/auth/auth_bloc.dart';
 import 'app_drawer.dart';
 
@@ -19,7 +20,7 @@ class MainLayout extends StatefulWidget {
 class _MainLayoutState extends State<MainLayout> {
   late final SidebarXController _sidebarController;
 
-  final List<_NavItem> _navItems = const [
+  final List<_NavItem> _navItems = [
     _NavItem(
       icon: Icons.dashboard_outlined,
       selectedIcon: Icons.dashboard,
@@ -49,6 +50,9 @@ class _MainLayoutState extends State<MainLayout> {
       selectedIcon: Icons.account_balance_wallet,
       label: 'Finances',
       route: '/finances',
+      // Réservé au trésorier et au-dessus (la vue backend exige
+      // IsTreasurerOrAbove).
+      visibleWhen: (p) => p.canViewFinances,
     ),
     _NavItem(
       icon: Icons.menu_book_outlined,
@@ -76,11 +80,22 @@ class _MainLayoutState extends State<MainLayout> {
     _updateSelectedIndex();
   }
 
+  /// Éléments de nav visibles pour l'utilisateur courant (filtre par rôle).
+  List<_NavItem> _visibleItems(BuildContext context) {
+    final state = context.read<AuthBloc>().state;
+    final perms =
+        AppPermissions(state is AuthAuthenticated ? state.user.role : 'fidele');
+    return _navItems
+        .where((i) => i.visibleWhen == null || i.visibleWhen!(perms))
+        .toList();
+  }
+
   void _updateSelectedIndex() {
+    final items = _visibleItems(context);
     final location = GoRouterState.of(context).matchedLocation;
     int index = 0;
-    for (int i = 0; i < _navItems.length; i++) {
-      if (location.startsWith(_navItems[i].route)) {
+    for (int i = 0; i < items.length; i++) {
+      if (location.startsWith(items[i].route)) {
         index = i;
         break;
       }
@@ -164,7 +179,7 @@ class _MainLayoutState extends State<MainLayout> {
             builder: (context, state) {
               final location = GoRouterState.of(context).matchedLocation;
               String title = 'Tableau de bord';
-              for (final item in _navItems) {
+              for (final item in _visibleItems(context)) {
                 if (location.startsWith(item.route)) {
                   title = item.label;
                   break;
@@ -217,6 +232,7 @@ class _MainLayoutState extends State<MainLayout> {
   }
 
   Widget _buildSidebar() {
+    final items = _visibleItems(context);
     return SidebarX(
       controller: _sidebarController,
       theme: SidebarXTheme(
@@ -303,11 +319,11 @@ class _MainLayoutState extends State<MainLayout> {
                 ),
         );
       },
-      items: _navItems
+      items: items
           .map(
             (item) => SidebarXItem(
               iconWidget: Icon(
-                _sidebarController.selectedIndex == _navItems.indexOf(item)
+                _sidebarController.selectedIndex == items.indexOf(item)
                     ? item.selectedIcon
                     : item.icon,
                 size: 20,
@@ -406,10 +422,14 @@ class _NavItem {
   final String label;
   final String route;
 
+  /// Prédicat de visibilité selon les permissions. `null` = toujours visible.
+  final bool Function(AppPermissions)? visibleWhen;
+
   const _NavItem({
     required this.icon,
     required this.selectedIcon,
     required this.label,
     required this.route,
+    this.visibleWhen,
   });
 }

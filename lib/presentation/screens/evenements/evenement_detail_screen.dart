@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/auth/permissions.dart';
 import '../../blocs/evenements/evenements_bloc.dart';
 import '../../../data/models/evenement_model.dart';
 import '../../widgets/loading_widget.dart';
@@ -73,19 +74,22 @@ class _EvenementDetailView extends StatelessWidget {
               final disabled = ev.estPasse;
               return Row(
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit),
-                    tooltip: disabled ? 'Événement passé' : 'Modifier',
-                    onPressed: disabled
-                        ? null
-                        : () => context.push('/evenements/$evenementId/edit'),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline),
-                    tooltip: disabled ? 'Événement passé' : 'Supprimer',
-                    onPressed:
-                        disabled ? null : () => _confirmDelete(context, ev),
-                  ),
+                  if (context.perms.canManageEvenements)
+                    IconButton(
+                      icon: const Icon(Icons.edit),
+                      tooltip: disabled ? 'Événement passé' : 'Modifier',
+                      onPressed: disabled
+                          ? null
+                          : () =>
+                              context.push('/evenements/$evenementId/edit'),
+                    ),
+                  if (context.perms.canDeleteEvenements)
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline),
+                      tooltip: disabled ? 'Événement passé' : 'Supprimer',
+                      onPressed:
+                          disabled ? null : () => _confirmDelete(context, ev),
+                    ),
                 ],
               );
             },

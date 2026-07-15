@@ -10,6 +10,11 @@ class AuthUser extends Equatable {
   final String profilePictureUrl;
   final String phoneNumber;
 
+  /// Rôle métier (accounts.User.role) : fidele, responsable, secretaire,
+  /// tresorier, pretre, admin. Base du contrôle d'affichage UI (voir
+  /// core/auth/permissions.dart).
+  final String role;
+
   const AuthUser({
     required this.id,
     required this.email,
@@ -19,6 +24,7 @@ class AuthUser extends Equatable {
     required this.isActive,
     required this.profilePictureUrl,
     this.phoneNumber = '',
+    this.role = 'fidele',
   });
 
   String get fullName => '$firstName $lastName'.trim();
@@ -33,6 +39,7 @@ class AuthUser extends Equatable {
       isActive: json['is_active'] as bool? ?? true,
       profilePictureUrl: json['profile_picture_url'] as String? ?? '',
       phoneNumber: json['phone_number'] as String? ?? '',
+      role: json['role'] as String? ?? 'fidele',
     );
   }
 
@@ -46,6 +53,7 @@ class AuthUser extends Equatable {
       'is_active': isActive,
       'profile_picture_url': profilePictureUrl,
       'phone_number': phoneNumber,
+      'role': role,
     };
   }
 
@@ -58,6 +66,7 @@ class AuthUser extends Equatable {
     bool? isActive,
     String? profilePictureUrl,
     String? phoneNumber,
+    String? role,
   }) {
     return AuthUser(
       id: id ?? this.id,
@@ -68,6 +77,7 @@ class AuthUser extends Equatable {
       isActive: isActive ?? this.isActive,
       profilePictureUrl: profilePictureUrl ?? this.profilePictureUrl,
       phoneNumber: phoneNumber ?? this.phoneNumber,
+      role: role ?? this.role,
     );
   }
 
@@ -81,6 +91,7 @@ class AuthUser extends Equatable {
         isActive,
         profilePictureUrl,
         phoneNumber,
+        role,
       ];
 }
 

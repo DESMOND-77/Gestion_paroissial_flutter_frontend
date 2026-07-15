@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/di/injection.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/auth/permissions.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../blocs/auth/auth_bloc.dart';
 import 'user_avatar.dart';
@@ -62,16 +63,19 @@ class AppDrawer extends StatelessWidget {
                     context.go('/evenements');
                   },
                 ),
-                _DrawerItem(
-                  icon: Icons.account_balance_wallet_outlined,
-                  label: 'Finances',
-                  route: '/finances',
-                  isSelected: currentLocation.startsWith('/finances'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.go('/finances');
-                  },
-                ),
+                // Finances : réservé au trésorier et au-dessus (la vue backend
+                // elle-même exige IsTreasurerOrAbove).
+                if (context.perms.canViewFinances)
+                  _DrawerItem(
+                    icon: Icons.account_balance_wallet_outlined,
+                    label: 'Finances',
+                    route: '/finances',
+                    isSelected: currentLocation.startsWith('/finances'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.go('/finances');
+                    },
+                  ),
                 _DrawerItem(
                   icon: Icons.menu_book_outlined,
                   label: 'Librairie',

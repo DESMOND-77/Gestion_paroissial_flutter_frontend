@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/di/injection.dart';
+import '../../../core/auth/permissions.dart';
 import '../../blocs/groupes/groupes_bloc.dart';
 import '../../../data/models/groupe_model.dart';
 import '../../widgets/loading_widget.dart';
@@ -107,11 +108,13 @@ class _GroupesViewState extends State<_GroupesView> {
               ),
             ],
           ),
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: () => context.push('/groupes/new'),
-            icon: const Icon(Icons.group_add),
-            label: const Text('Nouveau groupe'),
-          ),
+          floatingActionButton: context.perms.canManageGroupes
+              ? FloatingActionButton.extended(
+                  onPressed: () => context.push('/groupes/new'),
+                  icon: const Icon(Icons.group_add),
+                  label: const Text('Nouveau groupe'),
+                )
+              : null,
         );
       },
     );
@@ -200,23 +203,28 @@ class _GroupesViewState extends State<_GroupesView> {
                       color: AppTheme.primaryColor, size: 24),
                 ),
                 const Spacer(),
-                PopupMenuButton<String>(
-                  onSelected: (value) {
-                    if (value == 'edit') {
-                      context.push('/groupes/${groupe.id}/edit');
-                    } else if (value == 'delete') {
-                      _deleteGroupe(context, groupe.id, groupe.nom);
-                    }
-                  },
-                  itemBuilder: (_) => [
-                    const PopupMenuItem(value: 'edit', child: Text('Modifier')),
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: Text('Supprimer',
-                          style: TextStyle(color: AppTheme.errorColor)),
-                    ),
-                  ],
-                ),
+                if (context.perms.canManageGroupes ||
+                    context.perms.canDeleteGroupes)
+                  PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'edit') {
+                        context.push('/groupes/${groupe.id}/edit');
+                      } else if (value == 'delete') {
+                        _deleteGroupe(context, groupe.id, groupe.nom);
+                      }
+                    },
+                    itemBuilder: (_) => [
+                      if (context.perms.canManageGroupes)
+                        const PopupMenuItem(
+                            value: 'edit', child: Text('Modifier')),
+                      if (context.perms.canDeleteGroupes)
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Text('Supprimer',
+                              style: TextStyle(color: AppTheme.errorColor)),
+                        ),
+                    ],
+                  ),
               ],
             ),
             const SizedBox(height: 12),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:data_table_2/data_table_2.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/di/injection.dart';
+import '../../../core/auth/permissions.dart';
 import '../../blocs/membres/membres_bloc.dart';
 import '../../../data/models/membre_model.dart';
 import '../../../data/repositories/auth_repository.dart';
@@ -128,14 +129,16 @@ class _MembresViewState extends State<_MembresView> {
               ),
             ],
           ),
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: () => context.push('/membres/new'),
-            icon: const Icon(
-              Icons.person_add,
-              size: 20,
-            ),
-            label: const SizedBox(),
-          ),
+          floatingActionButton: context.perms.canManageMembres
+              ? FloatingActionButton.extended(
+                  onPressed: () => context.push('/membres/new'),
+                  icon: const Icon(
+                    Icons.person_add,
+                    size: 20,
+                  ),
+                  label: const SizedBox(),
+                )
+              : null,
         );
       },
     );
@@ -279,23 +282,29 @@ class _MembresViewState extends State<_MembresView> {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit, size: 18),
-                        onPressed: () =>
-                            context.push('/membres/${membre.id}/edit'),
-                        tooltip: 'Modifier',
-                        constraints: const BoxConstraints(),
-                        padding: const EdgeInsets.all(4),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete,
-                            size: 18, color: AppTheme.errorColor),
-                        onPressed: () => _deleteMembre(
-                            context, membre.id, membre.nomComplet),
-                        tooltip: 'Supprimer',
-                        constraints: const BoxConstraints(),
-                        padding: const EdgeInsets.all(4),
-                      ),
+                      if (context.perms.canManageMembres)
+                        IconButton(
+                          icon: const Icon(Icons.edit, size: 18),
+                          onPressed: () =>
+                              context.push('/membres/${membre.id}/edit'),
+                          tooltip: 'Modifier',
+                          constraints: const BoxConstraints(),
+                          padding: const EdgeInsets.all(4),
+                        ),
+                      if (context.perms.canDeleteMembres)
+                        IconButton(
+                          icon: const Icon(Icons.delete,
+                              size: 18, color: AppTheme.errorColor),
+                          onPressed: () => _deleteMembre(
+                              context, membre.id, membre.nomComplet),
+                          tooltip: 'Supprimer',
+                          constraints: const BoxConstraints(),
+                          padding: const EdgeInsets.all(4),
+                        ),
+                      if (!context.perms.canManageMembres &&
+                          !context.perms.canDeleteMembres)
+                        const Text('—',
+                            style: TextStyle(color: AppTheme.textSecondary)),
                     ],
                   ),
                 ),

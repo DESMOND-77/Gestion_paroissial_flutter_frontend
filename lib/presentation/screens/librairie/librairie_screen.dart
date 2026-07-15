@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/auth/permissions.dart';
 import '../../../data/models/article_model.dart';
 import '../../../data/models/vente_model.dart';
 import '../../blocs/librairie/librairie_bloc.dart';
@@ -299,23 +300,24 @@ class _LibrairieScreenState extends State<LibrairieScreen>
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              IconButton(
-                icon: const Icon(Icons.edit_outlined, size: 18),
-                onPressed: () =>
-                    context.go('/librairie/articles/${article.id}/edit'),
-                tooltip: 'Modifier',
-                padding: const EdgeInsets.all(4),
-                constraints: const BoxConstraints(),
-              ),
-              // const SizedBox(width: 2), --- IGNORE ---
-              IconButton(
-                icon: const Icon(Icons.delete_outline,
-                    size: 18, color: AppTheme.errorColor),
-                onPressed: () => _confirmDelete(article),
-                tooltip: 'Supprimer',
-                padding: const EdgeInsets.all(4),
-                constraints: const BoxConstraints(),
-              ),
+              if (context.perms.canManageLibrairie)
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined, size: 18),
+                  onPressed: () =>
+                      context.go('/librairie/articles/${article.id}/edit'),
+                  tooltip: 'Modifier',
+                  padding: const EdgeInsets.all(4),
+                  constraints: const BoxConstraints(),
+                ),
+              if (context.perms.canDeleteLibrairie)
+                IconButton(
+                  icon: const Icon(Icons.delete_outline,
+                      size: 18, color: AppTheme.errorColor),
+                  onPressed: () => _confirmDelete(article),
+                  tooltip: 'Supprimer',
+                  padding: const EdgeInsets.all(4),
+                  constraints: const BoxConstraints(),
+                ),
             ],
           ),
         ),
@@ -415,19 +417,21 @@ class _LibrairieScreenState extends State<LibrairieScreen>
                 style: const TextStyle(fontWeight: FontWeight.w600)),
             subtitle: Text(
                 '${article.categorieLabel} · Stock: ${article.stockDisponible} / Seuil: ${article.seuilAlerte}'),
-            trailing: ElevatedButton.icon(
-              icon: const Icon(Icons.edit, size: 16),
-              label: const Text('Réapprovisionner'),
-              onPressed: () =>
-                  context.go('/librairie/articles/${article.id}/edit'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.warningColor,
-                foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                textStyle: const TextStyle(fontSize: 12),
-              ),
-            ),
+            trailing: context.perms.canManageLibrairie
+                ? ElevatedButton.icon(
+                    icon: const Icon(Icons.edit, size: 16),
+                    label: const Text('Réapprovisionner'),
+                    onPressed: () =>
+                        context.go('/librairie/articles/${article.id}/edit'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.warningColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      textStyle: const TextStyle(fontSize: 12),
+                    ),
+                  )
+                : null,
           ),
         );
       },
@@ -458,6 +462,8 @@ class _LibrairieScreenState extends State<LibrairieScreen>
   }
 
   Widget? _buildFAB() {
+    // Nouvelle vente / ajout d'article = IsSecretaryOrAbove côté backend.
+    if (!context.perms.canManageLibrairie) return null;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [

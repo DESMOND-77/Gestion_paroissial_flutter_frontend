@@ -4,6 +4,65 @@ A chronological log of bug fixes applied to this project. Each entry: date, symp
 
 ---
 
+## 2026-07-15 — Affichage des éléments UI selon le rôle / les permissions
+
+### Besoin
+
+Masquer/afficher les éléments d'interface (boutons Modifier/Supprimer/Créer,
+entrées de navigation) selon le rôle de l'utilisateur, en cohérence avec la
+logique de permissions du backend.
+
+### Analyse
+
+Les vues DRF protègent les écritures par des **classes hiérarchiques de rôle**
+(`core/permissions.py` : `IsSecretaryOrAbove`, `IsTreasurerOrAbove`, `IsAdmin`)
+— et non (encore) par les permissions granulaires de `core/rbac.py`. Pour que
+l'UI ne montre jamais un bouton qui renverrait 403 (ni n'en cache un qui
+passerait), le frontend reproduit **ces ensembles de rôles**, pas le catalogue
+granulaire.
+
+### Fix
+
+- **`AuthUser`** (`auth_model.dart`) : ajout du champ `role` (parse `role`,
+  toJson/copyWith/props). Login et `/auth/me/` le renvoient déjà (UserSerializer).
+- **`lib/core/auth/permissions.dart`** (nouveau) : `AppPermissions(role)` miroir
+  des ensembles backend (`secretaryRoles`/`treasurerRoles`/`adminRoles`) +
+  capacités par domaine (`canManageMembres`, `canDeleteMembres`,
+  `canRecordSacrement`, `canManageGroupes`, `canManageEvenements`,
+  `canDeleteEvenements`, `canViewFinances`, `canManageFinances`,
+  `canDeleteFinances`, `canManageLibrairie`, `canDeleteLibrairie`). Extension
+  `context.perms` (via `watch<AuthBloc>`).
+- **Boutons gâtés** (create FAB / edit / delete / ajouter sacrement /
+  réapprovisionner) dans : membres (liste+détail), groupes (liste+détail),
+  événements (liste+détail — cumulé avec la désactivation « passé »), finances
+  (liste), librairie (liste + FAB vente/article).
+- **Navigation** : l'entrée **Finances** est masquée sauf `canViewFinances`
+  (sidebar desktop `main_layout.dart` + drawer mobile `app_drawer.dart`), car la
+  vue liste backend exige elle-même `IsTreasurerOrAbove`.
+
+Mapping appliqué (= enforcement réel des vues) : membres create/edit =
+secrétaire+, delete = admin ; groupes create/edit/delete = admin ; événements
+create/edit = secrétaire+, delete = admin ; finances view/create/edit =
+trésorier+, delete = admin ; librairie create/edit = secrétaire+, delete = admin.
+
+### Files
+
+- `lib/data/models/auth_model.dart`, `lib/core/auth/permissions.dart`
+- `lib/presentation/screens/{membres,groupes,evenements,finances,librairie}/**`
+- `lib/presentation/widgets/{main_layout.dart,app_drawer.dart}`
+
+### Follow-up
+
+- `flutter analyze` : 0 erreur. La sécurité reste **côté backend** — ce gating
+  n'est qu'un confort d'affichage (le backend refuse toujours un appel non
+  autorisé).
+- Le gating reproduit les classes de rôle. Si le backend bascule sur
+  `HasPermission` (granulaire, `core/rbac.py`), réaligner `AppPermissions`.
+- **Non traité** : le `DashboardBloc` interroge les finances pour ses stats ;
+  pour un rôle < trésorier, cet appel peut renvoyer 403 — à gâter séparément si
+  besoin (afficher la carte Finances du tableau de bord seulement si
+  `canViewFinances`).
+
 ## 2026-07-15 — Événements : conviés (convocations) + détails groupe/événement
 
 ### Symptom / besoin

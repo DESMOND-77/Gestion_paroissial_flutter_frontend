@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/di/injection.dart';
+import '../../../core/auth/permissions.dart';
 import '../../blocs/groupes/groupes_bloc.dart';
 import '../../../data/models/groupe_model.dart';
 import '../../../data/models/membre_model.dart';
@@ -42,11 +43,12 @@ class _GroupeDetailView extends StatelessWidget {
           onPressed: () => context.go('/groupes'),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            tooltip: 'Modifier',
-            onPressed: () => context.push('/groupes/$groupeId/edit'),
-          ),
+          if (context.perms.canManageGroupes)
+            IconButton(
+              icon: const Icon(Icons.edit),
+              tooltip: 'Modifier',
+              onPressed: () => context.push('/groupes/$groupeId/edit'),
+            ),
         ],
       ),
       body: BlocBuilder<GroupesBloc, GroupesState>(
