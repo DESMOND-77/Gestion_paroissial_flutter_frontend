@@ -154,8 +154,15 @@ class GroupesBloc extends Bloc<GroupesEvent, GroupesState> {
   ) async {
     emit(const GroupesLoading());
     try {
-      final groupe = await _groupeRepository.getGroupeById(event.id);
-      emit(GroupeDetailLoaded(groupe: groupe));
+      // Détail = infos du groupe (dont le responsable) + ses membres.
+      final results = await Future.wait([
+        _groupeRepository.getGroupeById(event.id),
+        _groupeRepository.getGroupeMembres(event.id),
+      ]);
+      emit(GroupeDetailLoaded(
+        groupe: results[0] as Groupe,
+        membres: results[1] as List<Membre>,
+      ));
     } catch (e) {
       emit(GroupesError(message: e.toString().replaceAll('Exception: ', '')));
     }

@@ -4,6 +4,57 @@ A chronological log of bug fixes applied to this project. Each entry: date, symp
 
 ---
 
+## 2026-07-15 — Événements : conviés (convocations) + détails groupe/événement
+
+### Symptom / besoin
+
+Fonctionnalités demandées : (1) détail d'un groupe montrant ses membres et son
+responsable ; (2) à la création d'un événement, choisir les conviés (rôle
+précis / tous / ensemble de rôles / groupe entier ou sélection de membres) ;
+(3) la liste des événements ne montre que ceux où l'utilisateur est convié ;
+(4) écran de détail d'un événement avec gestion des conviés ; (5) boutons
+modifier/supprimer désactivés si l'événement est passé.
+
+### Fix (frontend ; backend documenté dans `../backend/fixs.md`)
+
+- **Modèle** `evenement_model.dart` : champs `inviteTous`, `rolesInvites`,
+  `groupesInvites`, `membresInvites`, `groupesInvitesNoms`,
+  `membresInvitesNoms`, `estPasse` (repli calculé depuis les dates si le
+  backend ne fournit pas `est_passe`).
+- **Détail groupe** (nouveau `groupe_detail_screen.dart` + route `/groupes/:id`)
+  : infos + responsable + liste des membres (avatars) ; carte de groupe rendue
+  cliquable. `groupes_bloc` : `LoadGroupeDetail` charge maintenant groupe +
+  membres en parallèle.
+- **Sélecteur de conviés** dans `evenement_form_screen.dart` : switch « toute la
+  paroisse », FilterChips de rôles, sélecteurs multi (dialog avec recherche)
+  pour groupes entiers et membres précis ; groupes/membres chargés via
+  repositories. Envoi de `invite_tous`/`roles_invites`/`groupes_invites`/
+  `membres_invites` ; préremplissage à l'édition.
+- **Détail événement** (nouveau `evenement_detail_screen.dart` + route
+  `/evenements/:id`) : infos, conviés (puces), participants ; boutons
+  modifier/supprimer **désactivés si `estPasse`**. Carte de la liste rendue
+  cliquable ; menu modifier/supprimer désactivé si passé.
+
+### Files
+
+- `lib/data/models/evenement_model.dart`
+- `lib/presentation/blocs/groupes/groupes_bloc.dart`
+- `lib/presentation/screens/groupes/{groupe_detail_screen.dart,groupes_screen.dart}`
+- `lib/presentation/screens/evenements/{evenement_detail_screen.dart,evenement_form_screen.dart,evenements_screen.dart}`
+- `lib/core/router/app_router.dart`
+
+### Follow-up
+
+- `flutter analyze` : 0 erreur. Backend : 90 tests OK, migration
+  `evenements/0002` appliquée. **Redémarrer le backend** pour servir les
+  nouveaux champs.
+- Visibilité retenue : **chacun ne voit que ses convocations**, mais le
+  **créateur** voit toujours ses propres événements (sinon le personnel
+  perdrait l'accès à ce qu'il crée).
+- Non couvert offline : la sélection groupes/membres du form nécessite d'avoir
+  déjà chargé groupes+membres (repli cache). Reste online-only :
+  l'inscription (`inscrire`).
+
 ## 2026-07-15 — Photo de profil du membre absente du `membre_detail_screen`
 
 ### Symptom

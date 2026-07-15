@@ -176,9 +176,10 @@ class _GroupesViewState extends State<_GroupesView> {
   }
 
   Widget _buildGroupeCard(BuildContext context, Groupe groupe) {
-    debugPrint("#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*#*##*#*");
-    debugPrint(groupe.dateCreation);
-    return Card(
+    return InkWell(
+      onTap: () => context.push('/groupes/${groupe.id}'),
+      borderRadius: BorderRadius.circular(16),
+      child: Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
@@ -268,6 +269,6 @@ class _GroupesViewState extends State<_GroupesView> {
           ],
         ),
       ),
-    );
+    ));
   }
 }

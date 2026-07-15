@@ -10,8 +10,10 @@ import '../../presentation/screens/membres/membres_screen.dart';
 import '../../presentation/screens/membres/membre_detail_screen.dart';
 import '../../presentation/screens/membres/membre_form_screen.dart';
 import '../../presentation/screens/groupes/groupes_screen.dart';
+import '../../presentation/screens/groupes/groupe_detail_screen.dart';
 import '../../presentation/screens/groupes/groupe_form_screen.dart';
 import '../../presentation/screens/evenements/evenements_screen.dart';
+import '../../presentation/screens/evenements/evenement_detail_screen.dart';
 import '../../presentation/screens/evenements/evenement_form_screen.dart';
 import '../../presentation/screens/finances/finances_screen.dart';
 import '../../presentation/screens/finances/transaction_form_screen.dart';
@@ -128,6 +130,14 @@ class AppRouter {
                 builder: (context, state) => const GroupeFormScreen(),
               ),
               GoRoute(
+                path: ':id',
+                name: 'groupe-detail',
+                builder: (context, state) {
+                  final id = state.pathParameters['id']!;
+                  return GroupeDetailScreen(groupeId: id);
+                },
+              ),
+              GoRoute(
                 path: ':id/edit',
                 name: 'groupe-edit',
                 builder: (context, state) {
@@ -146,6 +156,14 @@ class AppRouter {
                 path: 'new',
                 name: 'evenement-new',
                 builder: (context, state) => const EvenementFormScreen(),
+              ),
+              GoRoute(
+                path: ':id',
+                name: 'evenement-detail',
+                builder: (context, state) {
+                  final id = state.pathParameters['id']!;
+                  return EvenementDetailScreen(evenementId: id);
+                },
               ),
               GoRoute(
                 path: ':id/edit',

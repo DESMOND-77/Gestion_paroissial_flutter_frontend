@@ -7,6 +7,20 @@ import '../../../core/di/injection.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../blocs/evenements/evenements_bloc.dart';
 import '../../widgets/loading_widget.dart';
+import '../../../data/models/groupe_model.dart';
+import '../../../data/models/membre_model.dart';
+import '../../../data/repositories/groupe_repository.dart';
+import '../../../data/repositories/membre_repository.dart';
+
+/// Rôles (accounts.User.ROLES_CHOICES) proposés pour la conviction par rôle.
+const Map<String, String> kRoleLabels = {
+  'fidele': 'Fidèle',
+  'responsable': 'Responsable',
+  'secretaire': 'Secrétaire',
+  'tresorier': 'Trésorier',
+  'pretre': 'Prêtre',
+  'admin': 'Administrateur',
+};
 
 class EvenementFormScreen extends StatelessWidget {
   final String? evenementId;
@@ -44,6 +58,38 @@ class _EvenementFormViewState extends State<_EvenementFormView> {
   String? _dateFin;
   bool _estInscriptionRequise = false;
   bool _dataLoaded = false;
+
+  // Conviés
+  bool _inviteTous = false;
+  final Set<String> _rolesInvites = {};
+  final Set<String> _groupesInvites = {};
+  final Set<String> _membresInvites = {};
+  List<Groupe> _allGroupes = [];
+  List<Membre> _allMembres = [];
+  bool _optionsLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOptions();
+  }
+
+  Future<void> _loadOptions() async {
+    try {
+      final results = await Future.wait([
+        sl<GroupeRepository>().getGroupes(),
+        sl<MembreRepository>().getMembres(),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _allGroupes = results[0] as List<Groupe>;
+        _allMembres = results[1] as List<Membre>;
+        _optionsLoaded = true;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _optionsLoaded = true);
+    }
+  }
 
   @override
   void dispose() {
@@ -89,6 +135,10 @@ class _EvenementFormViewState extends State<_EvenementFormView> {
         if (_dateFin != null) 'date_fin': _dateFin,
         if (_lieuController.text.isNotEmpty) 'lieu': _lieuController.text.trim(),
         'est_inscription_requise': _estInscriptionRequise,
+        'invite_tous': _inviteTous,
+        'roles_invites': _rolesInvites.toList(),
+        'groupes_invites': _groupesInvites.toList(),
+        'membres_invites': _membresInvites.toList(),
       };
       if (widget.evenementId != null) {
         context.read<EvenementsBloc>().add(UpdateEvenement(id: widget.evenementId!, data: data));
@@ -123,6 +173,16 @@ class _EvenementFormViewState extends State<_EvenementFormView> {
               _dateDebut = e.dateDebut;
               _dateFin = e.dateFin;
               _estInscriptionRequise = e.estInscriptionRequise;
+              _inviteTous = e.inviteTous;
+              _rolesInvites
+                ..clear()
+                ..addAll(e.rolesInvites);
+              _groupesInvites
+                ..clear()
+                ..addAll(e.groupesInvites);
+              _membresInvites
+                ..clear()
+                ..addAll(e.membresInvites);
               _dataLoaded = true;
             });
           }
@@ -274,6 +334,8 @@ class _EvenementFormViewState extends State<_EvenementFormView> {
                             activeThumbColor: AppTheme.primaryColor,
                             contentPadding: EdgeInsets.zero,
                           ),
+                          const Divider(height: 32),
+                          _buildConvocationSection(),
                           const SizedBox(height: 28),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
@@ -314,6 +376,197 @@ class _EvenementFormViewState extends State<_EvenementFormView> {
         },
       ),
     );
+  }
+
+  Widget _buildConvocationSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Conviés',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          'Qui est invité à cet événement ? (l\'événement s\'affichera chez les personnes conviées)',
+          style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+        ),
+        SwitchListTile(
+          title: const Text('Convier toute la paroisse'),
+          value: _inviteTous,
+          onChanged: (v) => setState(() => _inviteTous = v),
+          activeThumbColor: AppTheme.primaryColor,
+          contentPadding: EdgeInsets.zero,
+        ),
+        if (!_inviteTous) ...[
+          const SizedBox(height: 8),
+          const Text('Par rôle',
+              style: TextStyle(
+                  fontSize: 13, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            children: kRoleLabels.entries.map((e) {
+              final selected = _rolesInvites.contains(e.key);
+              return FilterChip(
+                label: Text(e.value),
+                selected: selected,
+                onSelected: (on) => setState(() {
+                  if (on) {
+                    _rolesInvites.add(e.key);
+                  } else {
+                    _rolesInvites.remove(e.key);
+                  }
+                }),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 12),
+          _buildPickerRow(
+            label: 'Groupes entiers',
+            icon: Icons.groups_outlined,
+            count: _groupesInvites.length,
+            enabled: _optionsLoaded,
+            onTap: () => _pickMulti(
+              title: 'Groupes conviés',
+              options: {for (final g in _allGroupes) g.id: g.nom},
+              selection: _groupesInvites,
+            ),
+          ),
+          const SizedBox(height: 8),
+          _buildPickerRow(
+            label: 'Membres précis',
+            icon: Icons.person_outline,
+            count: _membresInvites.length,
+            enabled: _optionsLoaded,
+            onTap: () => _pickMulti(
+              title: 'Membres conviés',
+              options: {for (final m in _allMembres) m.id: m.nomComplet},
+              selection: _membresInvites,
+            ),
+          ),
+          if (!_optionsLoaded)
+            const Padding(
+              padding: EdgeInsets.only(top: 8),
+              child: Text('Chargement des groupes et membres…',
+                  style: TextStyle(
+                      fontSize: 12, color: AppTheme.textSecondary)),
+            ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildPickerRow({
+    required String label,
+    required IconData icon,
+    required int count,
+    required bool enabled,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: enabled ? onTap : null,
+      borderRadius: BorderRadius.circular(8),
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon),
+          border: const OutlineInputBorder(),
+          isDense: true,
+        ),
+        child: Text(
+          count == 0 ? 'Aucun sélectionné' : '$count sélectionné(s)',
+          style: TextStyle(
+            color: count == 0 ? AppTheme.textSecondary : AppTheme.textPrimary,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickMulti({
+    required String title,
+    required Map<String, String> options,
+    required Set<String> selection,
+  }) async {
+    final search = TextEditingController();
+    final result = await showDialog<Set<String>>(
+      context: context,
+      builder: (context) {
+        final temp = Set<String>.from(selection);
+        return StatefulBuilder(
+          builder: (context, setD) {
+            final query = search.text.trim().toLowerCase();
+            final entries = options.entries
+                .where((e) => e.value.toLowerCase().contains(query))
+                .toList();
+            return AlertDialog(
+              title: Text(title),
+              content: SizedBox(
+                width: 400,
+                height: 420,
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: search,
+                      decoration: const InputDecoration(
+                        hintText: 'Rechercher…',
+                        prefixIcon: Icon(Icons.search, size: 20),
+                        isDense: true,
+                      ),
+                      onChanged: (_) => setD(() {}),
+                    ),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: entries.isEmpty
+                          ? const Center(child: Text('Aucun résultat'))
+                          : ListView(
+                              children: entries.map((e) {
+                                return CheckboxListTile(
+                                  dense: true,
+                                  title: Text(e.value),
+                                  value: temp.contains(e.key),
+                                  onChanged: (on) => setD(() {
+                                    if (on == true) {
+                                      temp.add(e.key);
+                                    } else {
+                                      temp.remove(e.key);
+                                    }
+                                  }),
+                                );
+                              }).toList(),
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Annuler'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context, temp),
+                  child: const Text('Valider'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+    if (result != null) {
+      setState(() {
+        selection
+          ..clear()
+          ..addAll(result);
+      });
+    }
   }
 
   Widget _buildDateTimeField(

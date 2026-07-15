@@ -230,7 +230,7 @@ class _EvenementsViewState extends State<_EvenementsView> with SingleTickerProvi
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () {},
+        onTap: () => context.push('/evenements/${ev.id}'),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -320,7 +320,9 @@ class _EvenementsViewState extends State<_EvenementsView> with SingleTickerProvi
                   ],
                 ),
               ),
+              // Un événement passé ne peut plus être modifié ni supprimé.
               PopupMenuButton<String>(
+                enabled: !ev.estPasse,
                 onSelected: (value) {
                   if (value == 'edit') {
                     context.push('/evenements/${ev.id}/edit');
