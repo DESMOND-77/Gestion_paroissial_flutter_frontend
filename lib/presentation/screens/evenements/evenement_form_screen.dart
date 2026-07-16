@@ -112,8 +112,12 @@ class _EvenementFormViewState extends State<_EvenementFormView> {
         initialTime: TimeOfDay.now(),
       );
       if (timePicked != null) {
-        final dt = DateTime(picked.year, picked.month, picked.day, timePicked.hour, timePicked.minute);
-        final formatted = DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(dt);
+        final dt = DateTime(picked.year, picked.month, picked.day,
+            timePicked.hour, timePicked.minute);
+        // Envoi en UTC (avec « Z ») : l'instant est non ambigu quel que soit le
+        // fuseau du serveur (sinon une heure naïve est interprétée dans le
+        // fuseau serveur et décalée).
+        final formatted = dt.toUtc().toIso8601String();
         setState(() {
           if (isDebut) {
             _dateDebut = formatted;
@@ -593,7 +597,8 @@ class _EvenementFormViewState extends State<_EvenementFormView> {
           ),
           child: Text(
             value != null
-                ? DateFormat('dd/MM/yyyy HH:mm').format(DateTime.parse(value))
+                ? DateFormat('dd/MM/yyyy HH:mm')
+                    .format(DateTime.parse(value).toLocal())
                 : 'Sélectionner',
             style: TextStyle(
               color: value != null ? AppTheme.textPrimary : AppTheme.textSecondary,

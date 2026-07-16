@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-
 class Evenement extends Equatable {
   final String id;
   final String titre;
@@ -154,10 +153,11 @@ class Evenement extends Equatable {
   }
 
   bool get isUpcoming {
-    final now = DateTime.now();
-    final eventDate = DateTime.tryParse(dateDebut);
+    final eventDate = DateTime.tryParse(dateDebut)?.toLocal();
     if (eventDate == null) return false;
-    return eventDate.isAfter(now);
+    // `isAfter` compare des instants (indépendant du fuseau UTC/local) :
+    // `eventDate` (souvent UTC) vs `DateTime.now()` (local) est correct.
+    return eventDate.isAfter(DateTime.now());
   }
 
   @override

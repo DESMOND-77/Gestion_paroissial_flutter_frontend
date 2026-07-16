@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../../data/models/auth_model.dart';
 import '../../../data/repositories/auth_repository.dart';
+import '../../../core/network/api_exception.dart';
 
 // Events
 abstract class AuthEvent extends Equatable {
@@ -202,7 +203,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final response = await _authRepository.login(event.email, event.password);
       emit(AuthAuthenticated(user: response.user));
     } catch (e) {
-      emit(AuthError(message: e.toString().replaceAll('Exception: ', '')));
+      emit(AuthError(message: messageOf(e)));
     }
   }
 
@@ -232,7 +233,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       });
       emit(AuthRegistered(user: user));
     } catch (e) {
-      emit(AuthError(message: e.toString().replaceAll('Exception: ', '')));
+      emit(AuthError(message: messageOf(e)));
     }
   }
 
@@ -245,7 +246,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await _authRepository.requestPasswordReset(event.email);
       emit(const AuthPasswordResetSent());
     } catch (e) {
-      emit(AuthError(message: e.toString().replaceAll('Exception: ', '')));
+      emit(AuthError(message: messageOf(e)));
     }
   }
 
@@ -264,7 +265,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (cached != null) {
         emit(AuthAuthenticated(user: cached));
       } else {
-        emit(AuthError(message: e.toString().replaceAll('Exception: ', '')));
+        emit(AuthError(message: messageOf(e)));
       }
     }
   }
@@ -279,7 +280,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthProfileUpdateSuccess(user: user));
       emit(AuthAuthenticated(user: user));
     } catch (e) {
-      emit(AuthError(message: e.toString().replaceAll('Exception: ', '')));
+      emit(AuthError(message: messageOf(e)));
     }
   }
 
@@ -293,7 +294,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthProfileUpdateSuccess(user: user));
       emit(AuthAuthenticated(user: user));
     } catch (e) {
-      emit(AuthError(message: e.toString().replaceAll('Exception: ', '')));
+      emit(AuthError(message: messageOf(e)));
     }
   }
 
@@ -310,7 +311,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final user = await _authRepository.getCachedUser();
       if (user != null) emit(AuthAuthenticated(user: user));
     } catch (e) {
-      emit(AuthError(message: e.toString().replaceAll('Exception: ', '')));
+      emit(AuthError(message: messageOf(e)));
     }
   }
 
@@ -326,7 +327,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final user = await _authRepository.getCachedUser();
       if (user != null) emit(AuthAuthenticated(user: user));
     } catch (e) {
-      emit(AuthError(message: e.toString().replaceAll('Exception: ', '')));
+      emit(AuthError(message: messageOf(e)));
     }
   }
 }

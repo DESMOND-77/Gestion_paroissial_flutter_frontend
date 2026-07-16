@@ -17,7 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  bool _rememberMe = false;
+  // bool _rememberMe = false;
 
   @override
   void dispose() {
@@ -182,9 +182,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   if (value == null || value.isEmpty) {
                     return 'Veuillez saisir votre mot de passe';
                   }
-                  // if (value.length < 6) {
-                  //   return 'Mot de passe trop court';
-                  // }
                   return null;
                 },
                 onFieldSubmitted: (_) => _onLogin(),
@@ -192,18 +189,18 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Checkbox(
-                    value: _rememberMe,
-                    onChanged: (v) => setState(() => _rememberMe = v ?? false),
-                    activeColor: AppTheme.primaryColor,
-                  ),
-                  const Text('Se souvenir de moi', style: TextStyle(fontSize: 9),),
+                  // Checkbox(
+                  //   value: _rememberMe,
+                  //   onChanged: (v) => setState(() => _rememberMe = v ?? false),
+                  //   activeColor: AppTheme.primaryColor,
+                  // ),
+                  // const Text('Se souvenir de moi', style: TextStyle(fontSize: 9),),
                   const Spacer(),
                   TextButton(
                     onPressed: () => context.go('/forgot-password'),
                     child: const Text(
                       'Mot de passe oublié ?',
-                      style: TextStyle(fontSize: 9),
+                      style: TextStyle(fontSize: 10),
                     ),
                   ),
                 ],

@@ -146,8 +146,11 @@ class _EvenementDetailView extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context, Evenement ev) {
-    final dateDebut = DateTime.tryParse(ev.dateDebut);
-    final dateFin = ev.dateFin != null ? DateTime.tryParse(ev.dateFin!) : null;
+    // `.toLocal()` : les dates backend sont horodatées (+offset) et parsées en
+    // UTC ; on les affiche dans le fuseau de l'appareil.
+    final dateDebut = DateTime.tryParse(ev.dateDebut)?.toLocal();
+    final dateFin =
+        ev.dateFin != null ? DateTime.tryParse(ev.dateFin!)?.toLocal() : null;
     final fmt = DateFormat('EEEE d MMMM yyyy • HH:mm', 'fr_FR');
 
     return ListView(

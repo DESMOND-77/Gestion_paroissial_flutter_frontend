@@ -57,15 +57,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthRegistered) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+          // Invitation explicite à vérifier l'email avant de se connecter.
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (dCtx) => AlertDialog(
+              icon: const Icon(Icons.mark_email_read_outlined,
+                  color: AppTheme.primaryColor, size: 40),
+              title: const Text('Vérifiez votre email'),
               content: Text(
-                  'Compte créé avec succès ! Bienvenue ${state.user.fullName}.'),
-              backgroundColor: AppTheme.successColor,
-              duration: const Duration(seconds: 3),
+                'Votre compte a été créé. Un email de vérification a été '
+                'envoyé à ${state.user.email}. Confirmez votre adresse avant '
+                'de vous connecter.',
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(dCtx).pop();
+                    context.go('/login');
+                  },
+                  child: const Text('Aller à la connexion'),
+                ),
+              ],
             ),
           );
-          context.go('/login');
         } else if (state is AuthError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

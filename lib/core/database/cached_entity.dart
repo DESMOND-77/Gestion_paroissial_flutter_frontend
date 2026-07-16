@@ -3,7 +3,7 @@ import 'package:isar_plus/isar_plus.dart';
 part 'cached_entity.g.dart';
 
 /// Ligne générique de cache hors ligne : un blob JSON par (type d'entité,
-/// id serveur). Remplace l'ancien schéma sqflite `CREATE TABLE <entity> (id,
+/// id serveur). Remplace l'ancien schéma sqflite `CREATE TABLE `<`entity`>` (id,
 /// data, syncedAt)` — une seule collection Isar joue le rôle de toutes les
 /// anciennes tables (membres, groupes, evenements, finances, librairie).
 ///

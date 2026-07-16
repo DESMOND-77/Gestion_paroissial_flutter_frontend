@@ -4,6 +4,63 @@ A chronological log of bug fixes applied to this project. Each entry: date, symp
 
 ---
 
+## 2026-07-16 — Parcours d'authentification : messages, vérification email, feedbacks
+
+### Symptoms
+
+1. Mauvais mot de passe au login → l'utilisateur voit « error 401 » au lieu d'un
+   message clair.
+2. Mot de passe oublié → aucun retour visible côté front.
+3. Après inscription → aucune invitation à vérifier son compte.
+4. La connexion ne vérifiait pas que le compte était validé (un compte non
+   vérifié pouvait se connecter).
+
+### Root cause
+
+- Le BLoC affichait `e.toString()` → pour une `ApiException` ça donnait
+  « ApiException: … (status: 401) ». De plus `ApiException.fromStatusCode(401)`
+  écrasait le message serveur par « Non authorisé. ».
+- Le login backend renvoyait des messages en **anglais** et **ne bloquait pas**
+  les comptes non vérifiés (il renvoyait juste un drapeau `verification_needed`).
+- Les écrans register/forgot affichaient un SnackBar puis `context.go('/login')`
+  **immédiatement** → le message disparaissait avant d'être lu.
+
+### Fix
+
+**Backend** (`accounts/auth/services.py`) : messages de login traduits en
+français (« Email ou mot de passe incorrect. », verrouillage, compte
+désactivé) ; **blocage de la connexion si `not is_verified`** (avec
+`REQUIRE_EMAIL_VERIFICATION`) → 403 « Votre compte n'est pas encore vérifié… ».
+
+**Frontend** :
+- `api_exception.dart` : `fromStatusCode` 401/403 utilise le message du corps
+  s'il existe ; ajout de `messageOf(e)` (renvoie `.message` propre pour
+  Api/NetworkException).
+- `auth_bloc.dart` : tous les `AuthError` utilisent `messageOf(e)` au lieu de
+  `e.toString()`.
+- `register_screen.dart` : succès → **dialogue** « Vérifiez votre email » (avec
+  l'adresse) avant d'aller au login.
+- `forgot_password_screen.dart` : succès → **dialogue** persistant, message
+  neutre « Si un compte existe avec cette adresse… ».
+
+### Files
+
+- `../backend/accounts/auth/services.py`
+- `lib/core/network/api_exception.dart`,
+  `lib/presentation/blocs/auth/auth_bloc.dart`,
+  `lib/presentation/screens/auth/{register_screen,forgot_password_screen}.dart`
+
+### Follow-up
+
+- Backend : 82 tests OK ; smoke-test (non vérifié→403, mauvais mdp→401 FR,
+  vérifié→200). Frontend : `flutter analyze` 0 erreur. **Redémarrer le backend**.
+- Sécurité : `register` ne stocke pas de jetons et `login` ne les stocke qu'en
+  cas de 200 → un compte non vérifié n'obtient jamais de session.
+- **Non fait** : renvoi de l'email de vérification *dans l'app* pour un compte
+  bloqué au login (l'endpoint de renvoi exige une auth ; l'utilisateur utilise
+  le lien reçu par email). À ajouter via un endpoint de renvoi non authentifié
+  si besoin.
+
 ## 2026-07-16 — Détail groupe : assigner plusieurs responsables + ajouter un membre
 
 ### Besoin

@@ -34,13 +34,30 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthPasswordResetSent) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Un email de réinitialisation a été envoyé.'),
-              backgroundColor: AppTheme.successColor,
+          // Message neutre (n'expose pas l'existence du compte) mais persistant.
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (dCtx) => AlertDialog(
+              icon: const Icon(Icons.email_outlined,
+                  color: AppTheme.primaryColor, size: 40),
+              title: const Text('Email envoyé'),
+              content: const Text(
+                'Si un compte existe avec cette adresse, un lien de '
+                'réinitialisation vient d\'être envoyé. Pensez à vérifier vos '
+                'spams.',
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(dCtx).pop();
+                    context.go('/login');
+                  },
+                  child: const Text('Retour à la connexion'),
+                ),
+              ],
             ),
           );
-          context.go('/login');
         } else if (state is AuthError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

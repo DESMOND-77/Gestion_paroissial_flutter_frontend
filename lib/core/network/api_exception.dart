@@ -16,10 +16,14 @@ class ApiException implements Exception {
         message = _extractMessage(data) ?? 'Requête invalide';
         break;
       case 401:
-        message = 'Non authorisé.';
+        // Message serveur si présent (ex. « Email ou mot de passe incorrect. »),
+        // sinon message générique de session.
+        message = _extractMessage(data) ??
+            'Session expirée. Veuillez vous reconnecter.';
         break;
       case 403:
-        message = 'Accès refusé. Vous n\'avez pas les droits nécessaires.';
+        message = _extractMessage(data) ??
+            'Accès refusé. Vous n\'avez pas les droits nécessaires.';
         break;
       case 404:
         message = 'Ressource introuvable.';
@@ -94,4 +98,15 @@ class NetworkException implements Exception {
 
   @override
   String toString() => 'NetworkException: $message';
+}
+
+/// Message lisible d'une erreur pour l'affichage UI.
+///
+/// Pour une [ApiException] / [NetworkException] on renvoie le `message` propre
+/// (sans le préfixe « ApiException: … (status: 401) » que produirait
+/// `toString()`). Sinon on retombe sur un nettoyage minimal.
+String messageOf(Object error) {
+  if (error is ApiException) return error.message;
+  if (error is NetworkException) return error.message;
+  return error.toString().replaceAll('Exception: ', '');
 }

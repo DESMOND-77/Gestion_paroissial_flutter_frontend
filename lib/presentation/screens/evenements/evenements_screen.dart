@@ -225,7 +225,8 @@ class _EvenementsViewState extends State<_EvenementsView> with SingleTickerProvi
       'reservation': const Color(0xFFE65100),
     };
     final color = typeColors[ev.type] ?? AppTheme.primaryColor;
-    final dateDebut = DateTime.tryParse(ev.dateDebut) ?? DateTime.now();
+    // Affichage dans le fuseau local (les dates backend sont parsées en UTC).
+    final dateDebut = DateTime.tryParse(ev.dateDebut)?.toLocal() ?? DateTime.now();
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
