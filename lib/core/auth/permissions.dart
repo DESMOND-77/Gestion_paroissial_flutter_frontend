@@ -31,12 +31,17 @@ class AppPermissions {
   };
   static const Set<String> treasurerRoles = {'tresorier', 'pretre', 'admin'};
   static const Set<String> adminRoles = {'admin'};
+  static const Set<String> responsableRoles = {'responsable'};
 
   bool get isSecretaryOrAbove => secretaryRoles.contains(role);
   bool get isTreasurerOrAbove => treasurerRoles.contains(role);
   bool get isAdmin => adminRoles.contains(role);
+  bool get isResponsable => responsableRoles.contains(role);
 
   // --- Capacités par domaine (reflètent les permission_classes des vues) -----
+
+  // Dashboard : lecture = IsSecretaryOrAbove (secretaire, tresorier, responsable, pretre, admin).
+  bool get canViewDashboard => isSecretaryOrAbove && !isResponsable;
 
   // Membres : create/edit + ajout de sacrement = IsSecretaryOrAbove ;
   // suppression = IsAdmin ; lecture = tout utilisateur authentifié.
@@ -45,7 +50,7 @@ class AppPermissions {
   bool get canRecordSacrement => isSecretaryOrAbove;
 
   // Groupes : create/edit/delete = IsAdmin ; lecture = authentifié.
-  bool get canManageGroupes => isAdmin;
+  bool get canManageGroupes => isSecretaryOrAbove;
   bool get canDeleteGroupes => isAdmin;
 
   // Événements : create/edit = IsSecretaryOrAbove ; suppression = IsAdmin.

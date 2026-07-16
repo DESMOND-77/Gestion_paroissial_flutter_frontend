@@ -23,26 +23,29 @@ class AppDrawer extends StatelessWidget {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                _DrawerItem(
-                  icon: Icons.dashboard_outlined,
-                  label: 'Tableau de bord',
-                  route: '/dashboard',
-                  isSelected: currentLocation == '/dashboard',
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.go('/dashboard');
-                  },
-                ),
-                _DrawerItem(
-                  icon: Icons.people_outline,
-                  label: 'Membres',
-                  route: '/membres',
-                  isSelected: currentLocation.startsWith('/membres'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.go('/membres');
-                  },
-                ),
+                if (context.perms.canViewDashboard)
+                  _DrawerItem(
+                    icon: Icons.dashboard_outlined,
+                    label: 'Tableau de bord',
+                    route: '/dashboard',
+                    isSelected: currentLocation == '/dashboard',
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.go('/dashboard');
+                    },
+                  ),
+                if (context.perms.canManageMembres)
+                  _DrawerItem(
+                    icon: Icons.people_outline,
+                    label: 'Membres',
+                    route: '/membres',
+                    isSelected: currentLocation.startsWith('/membres'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.go('/membres');
+                    },
+                  ),
+                  if (context.perms.canManageGroupes)
                 _DrawerItem(
                   icon: Icons.group_outlined,
                   label: 'Groupes',
@@ -65,7 +68,7 @@ class AppDrawer extends StatelessWidget {
                 ),
                 // Finances : réservé au trésorier et au-dessus (la vue backend
                 // elle-même exige IsTreasurerOrAbove).
-                if (context.perms.canViewFinances)
+                if (context.perms.canViewFinances )
                   _DrawerItem(
                     icon: Icons.account_balance_wallet_outlined,
                     label: 'Finances',
@@ -76,16 +79,17 @@ class AppDrawer extends StatelessWidget {
                       context.go('/finances');
                     },
                   ),
-                _DrawerItem(
-                  icon: Icons.menu_book_outlined,
-                  label: 'Librairie',
-                  route: '/librairie',
-                  isSelected: currentLocation.startsWith('/librairie'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.go('/librairie');
-                  },
-                ),
+                if (context.perms.canManageLibrairie && !context.perms.isResponsable)
+                  _DrawerItem(
+                    icon: Icons.menu_book_outlined,
+                    label: 'Librairie',
+                    route: '/librairie',
+                    isSelected: currentLocation.startsWith('/librairie'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.go('/librairie');
+                    },
+                  ),
                 const Divider(indent: 16, endIndent: 16),
                 _DrawerItem(
                   icon: Icons.person_outline,
@@ -163,7 +167,8 @@ class AppDrawer extends StatelessWidget {
         leading: const Icon(Icons.logout, color: AppTheme.errorColor),
         title: const Text(
           'Déconnexion',
-          style: TextStyle(color: AppTheme.errorColor, fontWeight: FontWeight.w500),
+          style: TextStyle(
+              color: AppTheme.errorColor, fontWeight: FontWeight.w500),
         ),
         onTap: () {
           Navigator.pop(context);

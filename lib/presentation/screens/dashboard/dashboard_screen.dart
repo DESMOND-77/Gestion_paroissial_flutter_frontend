@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:paroisse_gest/core/auth/permissions.dart';
 import 'package:paroisse_gest/core/constants/app_constants.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -68,8 +69,8 @@ class _DashboardView extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context, DashboardLoaded state) {
-    final formatter = AppConstants.formatter; 
-    
+    final formatter = AppConstants.formatter;
+
     return RefreshIndicator(
       onRefresh: () async {
         context.read<DashboardBloc>().add(const RefreshDashboard());
@@ -504,79 +505,81 @@ class _DashboardView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                const Text(
-                  'Transactions récentes',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
-                  ),
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () => context.go('/finances'),
-                  child: const Text('Voir tout'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            if (state.recentTransactions.isEmpty)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Text(
-                    'Aucune transaction récente',
-                    style: TextStyle(color: AppTheme.textSecondary),
-                  ),
-                ),
-              )
-            else
-              ...state.recentTransactions.take(5).map((tx) {
-                final isRecette = tx.isRecette;
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: (isRecette
-                              ? AppTheme.successColor
-                              : AppTheme.errorColor)
-                          .withAlpha(30),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      isRecette ? Icons.arrow_downward : Icons.arrow_upward,
-                      color: isRecette
-                          ? AppTheme.successColor
-                          : AppTheme.errorColor,
-                      size: 20,
-                    ),
-                  ),
-                  title: Text(
-                    tx.categorieLabel,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w500, fontSize: 14),
-                  ),
-                  subtitle: Text(
-                    '${tx.date}${tx.description != null ? ' · ${tx.description}' : ''}',
-                    style: const TextStyle(
-                        fontSize: 12, color: AppTheme.textSecondary),
-                  ),
-                  trailing: Text(
-                    '${isRecette ? '+' : '-'} ${formatter.format(tx.montant)}',
+            if (context.perms.canViewFinances) ...[
+              Row(
+                children: [
+                  const Text(
+                    'Transactions récentes',
                     style: TextStyle(
-                      color: isRecette
-                          ? AppTheme.successColor
-                          : AppTheme.errorColor,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                      color: AppTheme.textPrimary,
                     ),
                   ),
-                );
-              }),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () => context.go('/finances'),
+                    child: const Text('Voir tout'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              if (state.recentTransactions.isEmpty)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Text(
+                      'Aucune transaction récente',
+                      style: TextStyle(color: AppTheme.textSecondary),
+                    ),
+                  ),
+                )
+              else
+                ...state.recentTransactions.take(5).map((tx) {
+                  final isRecette = tx.isRecette;
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: (isRecette
+                                ? AppTheme.successColor
+                                : AppTheme.errorColor)
+                            .withAlpha(30),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        isRecette ? Icons.arrow_downward : Icons.arrow_upward,
+                        color: isRecette
+                            ? AppTheme.successColor
+                            : AppTheme.errorColor,
+                        size: 20,
+                      ),
+                    ),
+                    title: Text(
+                      tx.categorieLabel,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w500, fontSize: 14),
+                    ),
+                    subtitle: Text(
+                      '${tx.date}${tx.description != null ? ' · ${tx.description}' : ''}',
+                      style: const TextStyle(
+                          fontSize: 12, color: AppTheme.textSecondary),
+                    ),
+                    trailing: Text(
+                      '${isRecette ? '+' : '-'} ${formatter.format(tx.montant)}',
+                      style: TextStyle(
+                        color: isRecette
+                            ? AppTheme.successColor
+                            : AppTheme.errorColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  );
+                }),
+            ],
             if (state.prochainEvenements.isNotEmpty) ...[
               const Divider(height: 32),
               Row(

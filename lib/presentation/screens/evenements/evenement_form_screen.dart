@@ -415,6 +415,9 @@ class _EvenementFormViewState extends State<_EvenementFormView> {
               final selected = _rolesInvites.contains(e.key);
               return FilterChip(
                 label: Text(e.value),
+                labelStyle: TextStyle(
+                  color: selected ? AppTheme.accentColor : AppTheme.textPrimary,
+                ),
                 selected: selected,
                 onSelected: (on) => setState(() {
                   if (on) {

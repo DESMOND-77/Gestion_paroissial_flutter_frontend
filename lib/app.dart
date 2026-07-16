@@ -97,7 +97,7 @@ class _AppState extends State<App> {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.light,
+        themeMode: ThemeMode.system,
         routerConfig: _appRouter.router,
         builder: (context, child) => ResponsiveBreakpoints.builder(
           child: child!,
