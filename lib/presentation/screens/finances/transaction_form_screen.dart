@@ -143,7 +143,7 @@ class _TransactionFormViewState extends State<_TransactionFormView> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Informations de la transaction',
                             style: TextStyle(
                               fontSize: 18,
@@ -152,7 +152,7 @@ class _TransactionFormViewState extends State<_TransactionFormView> {
                             ),
                           ),
                           const SizedBox(height: 24),
-                          const Text('Type *', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                          Text('Type *', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
                           const SizedBox(height: 8),
                           SegmentedButton<String>(
                             segments: const [

@@ -190,7 +190,7 @@ class _ProfileScreenViewState extends State<_ProfileScreenView>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Padding(
+              Padding(
                 padding: EdgeInsets.fromLTRB(20, 20, 20, 8),
                 child: Align(
                   alignment: Alignment.centerLeft,
@@ -220,7 +220,7 @@ class _ProfileScreenViewState extends State<_ProfileScreenView>
                     Navigator.of(sheetContext).pop(_PhotoSource.gallery),
               ),
               ListTile(
-                leading: const Icon(Icons.close, color: AppTheme.textSecondary),
+                leading: Icon(Icons.close, color: AppTheme.textSecondary),
                 title: const Text('Annuler'),
                 onTap: () => Navigator.of(sheetContext).pop(),
               ),
@@ -614,7 +614,7 @@ class _ProfileScreenViewState extends State<_ProfileScreenView>
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Sexe',
                               style: TextStyle(
                                   fontSize: 12, color: AppTheme.textSecondary),
@@ -810,7 +810,7 @@ class _ProfileScreenViewState extends State<_ProfileScreenView>
                     .copyWith(dividerColor: Colors.transparent),
                 child: ExpansionTile(
                   tilePadding: EdgeInsets.zero,
-                  title: const Text(
+                  title: Text(
                     'Paramètres avancés',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
@@ -819,7 +819,7 @@ class _ProfileScreenViewState extends State<_ProfileScreenView>
                     ),
                   ),
                   leading:
-                      const Icon(Icons.tune, color: AppTheme.textSecondary),
+                      Icon(Icons.tune, color: AppTheme.textSecondary),
                   childrenPadding: const EdgeInsets.only(top: 8, bottom: 16),
                   children: [
                     Form(
@@ -827,7 +827,7 @@ class _ProfileScreenViewState extends State<_ProfileScreenView>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          const Text(
+                          Text(
                             "Adresse du serveur de l'application. À modifier "
                             'uniquement si vous savez ce que vous faites.',
                             style: TextStyle(

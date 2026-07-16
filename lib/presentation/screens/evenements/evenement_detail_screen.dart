@@ -166,7 +166,7 @@ class _EvenementDetailView extends StatelessWidget {
                     Expanded(
                       child: Text(
                         ev.titre,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: AppTheme.textPrimary,
@@ -181,7 +181,7 @@ class _EvenementDetailView extends StatelessWidget {
                           color: AppTheme.textSecondary.withAlpha(30),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Text('Passé',
+                        child: Text('Passé',
                             style: TextStyle(
                                 fontSize: 12,
                                 color: AppTheme.textSecondary,
@@ -206,7 +206,7 @@ class _EvenementDetailView extends StatelessWidget {
                 if (ev.description != null && ev.description!.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   Text(ev.description!,
-                      style: const TextStyle(color: AppTheme.textSecondary)),
+                      style: TextStyle(color: AppTheme.textSecondary)),
                 ],
               ],
             ),
@@ -244,20 +244,20 @@ class _EvenementDetailView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Conviés',
+            Text('Conviés',
                 style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: AppTheme.textPrimary)),
             const SizedBox(height: 12),
             if (children.isEmpty)
-              const Text('Personne n\'est convié pour le moment.',
+              Text('Personne n\'est convié pour le moment.',
                   style: TextStyle(color: AppTheme.textSecondary))
             else
               Wrap(spacing: 8, runSpacing: 8, children: children),
             if (!ev.estPasse) ...[
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'Utilisez « Modifier » pour ajouter ou retirer des conviés.',
                 style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
               ),
@@ -293,7 +293,7 @@ class _EvenementDetailView extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.w600)),
           Expanded(
             child: Text(value,
-                style: const TextStyle(color: AppTheme.textSecondary)),
+                style: TextStyle(color: AppTheme.textSecondary)),
           ),
         ],
       ),

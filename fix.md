@@ -4,6 +4,138 @@ A chronological log of bug fixes applied to this project. Each entry: date, symp
 
 ---
 
+## 2026-07-16 — Icône de l'app + logo de login remplacés par logo.svg
+
+### Besoin
+
+Utiliser `assets/images/logo.svg` comme icône d'application et comme logo sur
+l'écran de connexion.
+
+### Fix
+
+- **Icône de l'app** : `flutter_launcher_icons` exige un PNG. `logo.svg` a été
+  rendu en `assets/images/logo.png` (1024², fond blanc) via **Chrome headless**
+  (ImageMagick rendait des artefacts noirs sur les dégradés faute de délégué
+  rsvg). Un foreground d'icône adaptative Android padé
+  (`logo_adaptive.png`, logo à ~68 % centré sur canevas transparent) évite le
+  rognage par la zone de sécurité. Config `flutter_launcher_icons` mise à jour
+  (`image_path` → `logo.png`, fond blanc, adaptive fg/bg) puis
+  `dart run flutter_launcher_icons` (Android + iOS régénérés).
+- **Logo de login** : ajout de la dépendance `flutter_svg: ^2.0.10` ;
+  `login_screen.dart` affiche désormais `SvgPicture.asset('assets/images/logo.svg')`
+  dans un badge blanc arrondi (remplace l'ancien `Icon(Icons.church)` sur carré
+  crimson). Le SVG n'utilise que tracés + dégradés → rendu fidèle par flutter_svg.
+
+### Files
+
+- `assets/images/logo.png` (+ `logo_adaptive.png`), `android/**/mipmap-*`,
+  `ios/**/AppIcon.appiconset` (régénérés)
+- `pubspec.yaml` (dep `flutter_svg`, config `flutter_launcher_icons`)
+- `lib/presentation/screens/auth/login_screen.dart`
+
+### Follow-up
+
+- `flutter analyze` : 0 erreur. Icône Android vérifiée (rendu correct).
+- **Non fait** : le splash natif (`flutter_native_splash`) utilise encore
+  `gestparr_logo.png` — le basculer sur `logo.png` + regénérer si souhaité.
+- Rappel : recompiler l'app (les icônes natives ne changent qu'au prochain build
+  d'installation).
+
+## 2026-07-16 — Thème recodé (clair/sombre) sur la palette du logo ; éléments invisibles corrigés
+
+### Symptom
+
+En clair comme en sombre, certains éléments étaient illisibles (texte
+quasi-invisible, cartes/barres blanches en mode sombre).
+
+### Root cause
+
+- Le `darkTheme` était quasi vide → les composants Material n'avaient pas de
+  couleurs sombres correctes.
+- Surtout, des dizaines de widgets référencent des **couleurs statiques**
+  `AppTheme.textPrimary` / `textSecondary` / `surfaceColor` (const, valeurs
+  claires) qui ne s'adaptent pas au mode sombre → texte foncé sur fond foncé.
+- Des fonds de surface étaient codés en dur `Colors.white` (barres de recherche,
+  top-bar) → restaient blancs en sombre, masquant le contenu.
+
+### Fix
+
+- **`app_theme.dart` recodé** sur la palette du logo : primaire crimson
+  `#90151F`, secondaire orange `#F3751E`, accent bleu `#2F9ADC`, papier
+  `#FDFDFC`. `lightTheme` **et** `darkTheme` entièrement définis (colorScheme,
+  appBar, cartes, boutons, inputs, textTheme, chips, dataTable, tabBar, popup,
+  dialog, listTile…). En sombre, la primaire d'avant-plan est éclaircie
+  (`primaryOnDark #E0727A`) pour rester lisible.
+- **Neutres adaptatifs** : `textPrimary` / `textSecondary` / `surfaceColor` /
+  `backgroundColor` / `cardColor` / `dividerColor` sont désormais des **getters**
+  qui suivent la luminosité système (`platformDispatcher.platformBrightness`,
+  l'app étant en `ThemeMode.system`). Les widgets existants deviennent lisibles
+  dans les deux modes sans réécriture.
+- Conséquence : ~82 usages de ces neutres étaient dans des expressions `const` →
+  `const` retiré (script piloté par l'analyzer). Défaut de paramètre
+  `_buildEmpty({Color color = AppTheme.textSecondary})` résolu à l'intérieur.
+- **Fonds de surface** codés `Colors.white` (top-bar desktop + barres de
+  recherche membres/groupes/événements/finances/librairie) → `AppTheme.cardColor`
+  (adaptatif). Le texte blanc sur fonds de marque (sidebar, boutons, avatars)
+  est conservé.
+
+### Files
+
+- `lib/core/theme/app_theme.dart` (recode complet)
+- écrans `membres/groupes/evenements/finances/librairie/dashboard/auth/profile`,
+  `widgets/main_layout.dart` (de-const + fonds de surface)
+
+### Follow-up
+
+- `flutter analyze` : 0 erreur. **Non vérifié visuellement ici** (lancer l'app
+  et basculer clair/sombre système pour confirmer le rendu).
+- **Limite connue** : `AppTheme.primaryColor` reste constant (crimson foncé).
+  Utilisé en *fond*, c'est parfait ; utilisé en *avant-plan* direct sur du
+  sombre (ex. `labelColor: AppTheme.primaryColor` de certains TabBar, liens de
+  tableau), le contraste est faible. À affiner en remplaçant ces usages
+  d'avant-plan par la primaire éclaircie si nécessaire.
+- Si un jour un bouton de bascule manuel de thème est ajouté, remplacer
+  `platformBrightness` par la source du `ThemeMode` choisi.
+
+## 2026-07-16 — Changement de mot de passe : message « mot de passe actuel incorrect » peu clair
+
+### Constat
+
+La vérification du mot de passe actuel **existait déjà** de bout en bout :
+- backend `ChangePasswordView` → `if not user.check_password(old_password)` →
+  400 `error="Mot de passe actuel incorrect"` ;
+- frontend : le formulaire (profil) collecte « Mot de passe actuel », le repo
+  envoie `old_password`/`new_password`/`confirm_password`, Dio lève sur le 400
+  (pas de `validateStatus` permissif), le BLoC émet `AuthError`, l'écran affiche
+  un snackbar.
+
+Mais le message affiché était trompeur : `ApiException._extractMessage` ne
+gérait pas la clé `error` de l'enveloppe standardisée du backend. Résultat :
+préfixe parasite `error: Mot de passe actuel incorrect`, et les erreurs de
+validation DRF (`error` = dict) retombaient sur un générique « Requête
+invalide » — donnant l'impression que rien n'était vérifié.
+
+### Fix
+
+`lib/core/network/api_exception.dart` — `_extractMessage` rendu **récursif et
+conscient de l'enveloppe** : gère `error` (chaîne → message direct ; dict/list →
+descente récursive), garde les `null`, et ignore les clés d'enveloppe
+(`success`/`error`/`message`/`detail`/`non_field_errors`) dans la boucle des
+erreurs par champ. Le rejet du mauvais mot de passe actuel s'affiche désormais
+proprement : « Mot de passe actuel incorrect ».
+
+### Files
+
+- `lib/core/network/api_exception.dart`
+
+### Follow-up
+
+- `flutter analyze` : 0 erreur. Amélioration transverse (tous les messages
+  d'erreur API sont plus lisibles).
+- Rappel : après un changement réussi, le backend blackliste les jetons ; la
+  session se termine au prochain appel (re-login attendu) — comportement de
+  sécurité, non modifié ici.
+
 ## 2026-07-16 — Un fidèle atterrit sur le tableau de bord au démarrage malgré son absence du menu
 
 ### Symptom

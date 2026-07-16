@@ -123,7 +123,7 @@ class _GroupesViewState extends State<_GroupesView> {
   Widget _buildSearchBar(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      color: Colors.white,
+      color: AppTheme.cardColor,
       child: TextField(
         controller: _searchController,
         decoration: InputDecoration(
@@ -151,7 +151,7 @@ class _GroupesViewState extends State<_GroupesView> {
 
   Widget _buildGrid() {
     if (_groupes.isEmpty) {
-      return const RefreshableEmpty(
+      return RefreshableEmpty(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -230,7 +230,7 @@ class _GroupesViewState extends State<_GroupesView> {
             const SizedBox(height: 12),
             Text(
               groupe.nom,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
                 color: AppTheme.textPrimary,
@@ -242,7 +242,7 @@ class _GroupesViewState extends State<_GroupesView> {
               const SizedBox(height: 4),
               Text(
                 groupe.description!,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 12, color: AppTheme.textSecondary),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -252,13 +252,13 @@ class _GroupesViewState extends State<_GroupesView> {
             if (groupe.responsableNom != null) ...[
               Row(
                 children: [
-                  const Icon(Icons.person_outline,
+                  Icon(Icons.person_outline,
                       size: 14, color: AppTheme.textSecondary),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       groupe.responsableNom!,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 11, color: AppTheme.textSecondary),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -272,7 +272,7 @@ class _GroupesViewState extends State<_GroupesView> {
               // :
               'Créé le ${DateFormat('EEEE d MMMM yyyy', 'fr_FR').format(DateTime.parse(groupe.dateCreation))}',
               style:
-                  const TextStyle(fontSize: 10, color: AppTheme.textSecondary),
+                  TextStyle(fontSize: 10, color: AppTheme.textSecondary),
             ),
           ],
         ),

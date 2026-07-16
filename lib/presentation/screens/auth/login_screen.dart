@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../blocs/auth/auth_bloc.dart';
@@ -80,16 +81,23 @@ class _LoginScreenState extends State<LoginScreen> {
     return Column(
       children: [
         Container(
-          width: 80,
-          height: 80,
+          width: 104,
+          height: 104,
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: AppTheme.primaryColor,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: const Icon(
-            Icons.church,
             color: Colors.white,
-            size: 44,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(20),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: SvgPicture.asset(
+            'assets/images/logo.svg',
+            fit: BoxFit.contain,
           ),
         ),
         const SizedBox(height: 16),
@@ -103,7 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 6),
-        const Text(
+        Text(
           'Connectez-vous à votre compte',
           style: TextStyle(
             fontSize: 14,
@@ -126,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
+              Text(
                 'Connexion',
                 style: TextStyle(
                   fontSize: 20,
@@ -227,7 +235,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
+                  Text(
                     'Pas encore de compte ?',
                     style: TextStyle(
                       color: AppTheme.textSecondary,

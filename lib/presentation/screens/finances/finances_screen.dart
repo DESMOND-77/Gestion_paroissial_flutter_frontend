@@ -168,7 +168,7 @@ class _FinancesViewState extends State<_FinancesView>
 
   Widget _buildSummaryCards(RapportFinancier rapport, NumberFormat formatter) {
     return Container(
-      color: Colors.white,
+      color: AppTheme.cardColor,
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Row(
         children: [
@@ -208,7 +208,7 @@ class _FinancesViewState extends State<_FinancesView>
   Widget _buildFilterBar(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 8, 4, 8),
-      color: Colors.white,
+      color: AppTheme.cardColor,
       child: Row(
         children: [
           DropdownButton<String?>(
@@ -268,7 +268,7 @@ class _FinancesViewState extends State<_FinancesView>
     if (_transactions.isEmpty) {
       return RefreshIndicator(
         onRefresh: _refresh,
-        child: const RefreshableEmpty(
+        child: RefreshableEmpty(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -428,7 +428,7 @@ class _FinancesViewState extends State<_FinancesView>
                   ),
                   const SizedBox(height: 20),
                   if (categories.isEmpty)
-                    const Center(
+                    Center(
                       child: Text('Aucune donnée',
                           style: TextStyle(color: AppTheme.textSecondary)),
                     )
@@ -459,7 +459,7 @@ class _FinancesViewState extends State<_FinancesView>
                                 getTitlesWidget: (value, meta) => Text(
                                   NumberFormat.compact(locale: 'fr_FR')
                                       .format(value),
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       fontSize: 10,
                                       color: AppTheme.textSecondary),
                                 ),
@@ -481,7 +481,7 @@ class _FinancesViewState extends State<_FinancesView>
                                             categories[i].key;
                                     return Text(
                                       label,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                           fontSize: 10,
                                           color: AppTheme.textSecondary),
                                     );

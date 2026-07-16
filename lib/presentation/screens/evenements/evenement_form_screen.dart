@@ -231,7 +231,7 @@ class _EvenementFormViewState extends State<_EvenementFormView> {
                         children: [
                           Text(
                             isEdit ? 'Modifier l\'événement' : 'Informations de l\'événement',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: AppTheme.textPrimary,
@@ -382,7 +382,7 @@ class _EvenementFormViewState extends State<_EvenementFormView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Conviés',
           style: TextStyle(
             fontSize: 16,
@@ -391,7 +391,7 @@ class _EvenementFormViewState extends State<_EvenementFormView> {
           ),
         ),
         const SizedBox(height: 4),
-        const Text(
+        Text(
           'Qui est invité à cet événement ? (l\'événement s\'affichera chez les personnes conviées)',
           style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
         ),
@@ -454,7 +454,7 @@ class _EvenementFormViewState extends State<_EvenementFormView> {
             ),
           ),
           if (!_optionsLoaded)
-            const Padding(
+            Padding(
               padding: EdgeInsets.only(top: 8),
               child: Text('Chargement des groupes et membres…',
                   style: TextStyle(

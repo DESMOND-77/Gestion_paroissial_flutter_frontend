@@ -47,25 +47,40 @@ class ApiException implements Exception {
 
   static String? _extractMessage(dynamic data) {
     if (data == null) return null;
-    if (data is Map<String, dynamic>) {
-      if (data.containsKey('detail')) return data['detail'].toString();
-      if (data.containsKey('message')) return data['message'].toString();
-      if (data.containsKey('non_field_errors')) {
-        final errors = data['non_field_errors'];
-        if (errors is List && errors.isNotEmpty) return errors.first.toString();
+    if (data is String) return data.trim().isEmpty ? null : data;
+    if (data is List) {
+      for (final item in data) {
+        final m = _extractMessage(item);
+        if (m != null) return m;
       }
-      // Collect field errors
+      return null;
+    }
+    if (data is Map) {
+      // Enveloppe standardisée du backend : { success, error, message, ... }.
+      // `error` peut être une chaîne ("Mot de passe actuel incorrect") ou un
+      // dictionnaire d'erreurs de validation DRF ({ "new_password": [...] }) :
+      // on descend récursivement pour en extraire un message lisible.
+      for (final key in const ['error', 'detail', 'message', 'non_field_errors']) {
+        if (data[key] != null) {
+          final m = _extractMessage(data[key]);
+          if (m != null) return m;
+        }
+      }
+      // Erreurs par champ (serializer DRF) : "champ : message".
       final fieldErrors = <String>[];
       data.forEach((key, value) {
-        if (value is List) {
-          fieldErrors.add('$key: ${value.join(', ')}');
-        } else if (value is String) {
-          fieldErrors.add('$key: $value');
+        if (key == 'success' ||
+            key == 'error' ||
+            key == 'message' ||
+            key == 'detail' ||
+            key == 'non_field_errors') {
+          return;
         }
+        final m = _extractMessage(value);
+        if (m != null) fieldErrors.add('$key : $m');
       });
       if (fieldErrors.isNotEmpty) return fieldErrors.join('\n');
     }
-    if (data is String) return data;
     return null;
   }
 

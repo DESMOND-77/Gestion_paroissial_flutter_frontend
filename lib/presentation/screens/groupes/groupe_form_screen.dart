@@ -125,7 +125,7 @@ class _GroupeFormViewState extends State<_GroupeFormView> {
                         children: [
                           Text(
                             isEdit ? 'Modifier le groupe' : 'Informations du groupe',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: AppTheme.textPrimary,

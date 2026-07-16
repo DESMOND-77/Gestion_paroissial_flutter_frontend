@@ -147,7 +147,7 @@ class _MembresViewState extends State<_MembresView> {
   Widget _buildToolbar(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      color: Colors.white,
+      color: AppTheme.cardColor,
       child: Row(
         children: [
           Expanded(
@@ -194,7 +194,7 @@ class _MembresViewState extends State<_MembresView> {
   Widget _buildTable(BuildContext context) {
    
     if (_membres.isEmpty) {
-      return const RefreshableEmpty(
+      return RefreshableEmpty(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -303,7 +303,7 @@ class _MembresViewState extends State<_MembresView> {
                         ),
                       if (!context.perms.canManageMembres &&
                           !context.perms.canDeleteMembres)
-                        const Text('—',
+                        Text('—',
                             style: TextStyle(color: AppTheme.textSecondary)),
                     ],
                   ),

@@ -122,7 +122,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 6),
-        const Text(
+        Text(
           'Rejoignez la communauté paroissiale',
           style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
           textAlign: TextAlign.center,
@@ -142,7 +142,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
+              Text(
                 'Informations personnelles',
                 style: TextStyle(
                   fontSize: 16,
@@ -213,7 +213,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 20),
               const Divider(),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Sécurité',
                 style: TextStyle(
                   fontSize: 16,
@@ -306,7 +306,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
+                  Text(
                     'Déjà un compte ?',
                     style: TextStyle(
                       color: AppTheme.textSecondary,
@@ -400,7 +400,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Expanded(
           child: GestureDetector(
             onTap: () => setState(() => _acceptTerms = !_acceptTerms),
-            child: const Text.rich(
+            child: Text.rich(
               TextSpan(
                 text: 'J\'accepte les ',
                 style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),

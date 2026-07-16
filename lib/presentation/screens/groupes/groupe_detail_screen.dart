@@ -114,7 +114,7 @@ class _GroupeDetailView extends StatelessWidget {
                     Expanded(
                       child: Text(
                         groupe.nom,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: AppTheme.textPrimary,
@@ -127,7 +127,7 @@ class _GroupeDetailView extends StatelessWidget {
                     groupe.description!.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   Text(groupe.description!,
-                      style: const TextStyle(color: AppTheme.textSecondary)),
+                      style: TextStyle(color: AppTheme.textSecondary)),
                 ],
                 const Divider(height: 28),
                 Row(
@@ -140,7 +140,7 @@ class _GroupeDetailView extends StatelessWidget {
                     Expanded(
                       child: Text(
                         groupe.responsableNom ?? 'Non défini',
-                        style: const TextStyle(color: AppTheme.textSecondary),
+                        style: TextStyle(color: AppTheme.textSecondary),
                       ),
                     ),
                   ],
@@ -152,7 +152,7 @@ class _GroupeDetailView extends StatelessWidget {
         const SizedBox(height: 20),
         Row(
           children: [
-            const Text('Membres',
+            Text('Membres',
                 style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -174,7 +174,7 @@ class _GroupeDetailView extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         if (membres.isEmpty)
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(vertical: 24),
             child: Center(
               child: Text('Aucun membre dans ce groupe',

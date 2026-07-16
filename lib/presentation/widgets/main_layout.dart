@@ -159,7 +159,7 @@ class _MainLayoutState extends State<MainLayout> {
     return Container(
       height: 60,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardColor,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withAlpha(160),
@@ -183,7 +183,7 @@ class _MainLayoutState extends State<MainLayout> {
               }
               return Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.textPrimary,

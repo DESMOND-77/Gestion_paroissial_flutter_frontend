@@ -109,7 +109,7 @@ class _DashboardView extends StatelessWidget {
           children: [
             Text(
               '$greeting, ${user?.firstName ?? 'Administrateur'} !',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: AppTheme.textPrimary,
@@ -117,7 +117,7 @@ class _DashboardView extends StatelessWidget {
             ),
             Text(
               DateFormat('EEEE d MMMM yyyy', 'fr_FR').format(now),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 color: AppTheme.textSecondary,
               ),
@@ -256,7 +256,7 @@ class _DashboardView extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Text(
+                Text(
                   'Recettes vs Dépenses',
                   style: TextStyle(
                     fontSize: 16,
@@ -271,7 +271,7 @@ class _DashboardView extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 4),
-            const Text(
+            Text(
               '6 derniers mois',
               style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
             ),
@@ -300,7 +300,7 @@ class _DashboardView extends StatelessWidget {
                         getTitlesWidget: (value, meta) {
                           return Text(
                             formatter.format(value),
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontSize: 10, color: AppTheme.textSecondary),
                           );
                         },
@@ -317,7 +317,7 @@ class _DashboardView extends StatelessWidget {
                           if (value.toInt() < months.length) {
                             return Text(
                               months[value.toInt()],
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
                                 color: AppTheme.textSecondary,
                                 fontWeight: FontWeight.w500,
@@ -376,7 +376,7 @@ class _DashboardView extends StatelessWidget {
         const SizedBox(width: 4),
         Text(label,
             style:
-                const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
       ],
     );
   }
@@ -400,7 +400,7 @@ class _DashboardView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Répartition par catégorie',
               style: TextStyle(
                 fontSize: 16,
@@ -409,13 +409,13 @@ class _DashboardView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
+            Text(
               'Toutes transactions',
               style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
             ),
             const SizedBox(height: 16),
             if (categories.isEmpty)
-              const Center(
+              Center(
                 child: Padding(
                   padding: EdgeInsets.all(32),
                   child: Text('Aucune donnée',
@@ -468,14 +468,14 @@ class _DashboardView extends StatelessWidget {
                       Expanded(
                         child: Text(
                           label,
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 12, color: AppTheme.textSecondary),
                         ),
                       ),
                       Text(
                         NumberFormat.compact(locale: 'fr_FR')
                             .format(entry.value),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: AppTheme.textPrimary,
@@ -508,7 +508,7 @@ class _DashboardView extends StatelessWidget {
             if (context.perms.canViewFinances) ...[
               Row(
                 children: [
-                  const Text(
+                  Text(
                     'Transactions récentes',
                     style: TextStyle(
                       fontSize: 16,
@@ -525,7 +525,7 @@ class _DashboardView extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               if (state.recentTransactions.isEmpty)
-                const Center(
+                Center(
                   child: Padding(
                     padding: EdgeInsets.all(24),
                     child: Text(
@@ -564,7 +564,7 @@ class _DashboardView extends StatelessWidget {
                     ),
                     subtitle: Text(
                       '${tx.date}${tx.description != null ? ' · ${tx.description}' : ''}',
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 12, color: AppTheme.textSecondary),
                     ),
                     trailing: Text(
@@ -584,7 +584,7 @@ class _DashboardView extends StatelessWidget {
               const Divider(height: 32),
               Row(
                 children: [
-                  const Text(
+                  Text(
                     'Prochains événements',
                     style: TextStyle(
                       fontSize: 16,
@@ -623,7 +623,7 @@ class _DashboardView extends StatelessWidget {
                   ),
                   subtitle: Text(
                     '${ev.typeDisplay ?? ev.type} · ${ev.lieu ?? ''}',
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 12, color: AppTheme.textSecondary),
                   ),
                   trailing: Text(

@@ -167,7 +167,7 @@ class _MembreDetailView extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     membre.nomComplet,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: AppTheme.textPrimary,
@@ -232,7 +232,7 @@ class _MembreDetailView extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
                     color: AppTheme.textSecondary,
                     fontWeight: FontWeight.w500,
@@ -240,7 +240,7 @@ class _MembreDetailView extends StatelessWidget {
                 ),
                 Text(
                   value,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 14, color: AppTheme.textPrimary),
                 ),
               ],
@@ -282,7 +282,7 @@ class _MembreDetailView extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Text(
+                Text(
                   'Sacrements',
                   style: TextStyle(
                     fontSize: 16,
@@ -306,7 +306,7 @@ class _MembreDetailView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             if (membre.sacrements.isEmpty)
-              const Center(
+              Center(
                 child: Padding(
                   padding: EdgeInsets.all(24),
                   child: Column(
@@ -366,7 +366,7 @@ class _MembreDetailView extends StatelessWidget {
             Text(
               sacrement.observations!,
               style:
-                  const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                  TextStyle(fontSize: 12, color: AppTheme.textSecondary),
             ),
         ],
       ),

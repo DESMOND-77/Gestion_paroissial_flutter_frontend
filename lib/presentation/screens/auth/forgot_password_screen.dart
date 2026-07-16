@@ -85,7 +85,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    const Text(
+                    Text(
                       'Mot de passe oublié ?',
                       style: TextStyle(
                         fontSize: 24,
@@ -95,7 +95,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       'Saisissez votre email et nous vous enverrons un lien pour réinitialiser votre mot de passe.',
                       style: TextStyle(
                         fontSize: 14,

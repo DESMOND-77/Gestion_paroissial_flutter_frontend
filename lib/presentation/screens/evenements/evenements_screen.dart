@@ -150,7 +150,7 @@ class _EvenementsViewState extends State<_EvenementsView> with SingleTickerProvi
   Widget _buildToolbar(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      color: Colors.white,
+      color: AppTheme.cardColor,
       child: Row(
         children: [
           Expanded(
@@ -192,7 +192,7 @@ class _EvenementsViewState extends State<_EvenementsView> with SingleTickerProvi
     if (evenements.isEmpty) {
       return RefreshIndicator(
         onRefresh: _refresh,
-        child: const RefreshableEmpty(
+        child: RefreshableEmpty(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -270,7 +270,7 @@ class _EvenementsViewState extends State<_EvenementsView> with SingleTickerProvi
                   children: [
                     Text(
                       ev.titre,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
                         color: AppTheme.textPrimary,
@@ -292,10 +292,10 @@ class _EvenementsViewState extends State<_EvenementsView> with SingleTickerProvi
                         ),
                         if (ev.lieu != null) ...[
                           const SizedBox(width: 8),
-                          const Icon(Icons.location_on_outlined, size: 13, color: AppTheme.textSecondary),
+                          Icon(Icons.location_on_outlined, size: 13, color: AppTheme.textSecondary),
                           Text(
                             ev.lieu!,
-                            style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                            style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
                           ),
                         ],
                       ],
@@ -304,7 +304,7 @@ class _EvenementsViewState extends State<_EvenementsView> with SingleTickerProvi
                       const SizedBox(height: 4),
                       Text(
                         ev.description!,
-                        style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                        style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -312,11 +312,11 @@ class _EvenementsViewState extends State<_EvenementsView> with SingleTickerProvi
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(Icons.people_outline, size: 13, color: AppTheme.textSecondary),
+                        Icon(Icons.people_outline, size: 13, color: AppTheme.textSecondary),
                         const SizedBox(width: 4),
                         Text(
                           '${ev.nbParticipants} participant(s)',
-                          style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                          style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
                         ),
                       ],
                     ),

@@ -186,7 +186,7 @@ class _MembreFormViewState extends State<_MembreFormView> {
                         children: [
                           Text(
                             isEdit ? 'Modifier les informations' : 'Informations du membre',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: AppTheme.textPrimary,
@@ -248,7 +248,7 @@ class _MembreFormViewState extends State<_MembreFormView> {
                           const SizedBox(height: 16),
                           _buildGroupeSelector(),
                           const SizedBox(height: 20),
-                          const Text(
+                          Text(
                             'Sacrements',
                             style: TextStyle(
                               fontSize: 14,
@@ -349,7 +349,7 @@ class _MembreFormViewState extends State<_MembreFormView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Sexe *',
           style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
         ),

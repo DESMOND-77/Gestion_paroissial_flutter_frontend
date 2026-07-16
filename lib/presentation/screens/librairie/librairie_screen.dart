@@ -155,7 +155,7 @@ class _LibrairieScreenState extends State<LibrairieScreen>
 
   Widget _buildHeader() {
     return Container(
-      color: Colors.white,
+      color: AppTheme.cardColor,
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
       child: Row(
         children: [
@@ -440,12 +440,13 @@ class _LibrairieScreenState extends State<LibrairieScreen>
   }
 
   Widget _buildEmpty(String message, IconData icon,
-      {Color color = AppTheme.textSecondary, String? subtitle}) {
+      {Color? color, String? subtitle}) {
+    final iconColor = color ?? AppTheme.textSecondary;
     return RefreshableEmpty(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 64, color: color.withAlpha(128)),
+          Icon(icon, size: 64, color: iconColor.withAlpha(128)),
           const SizedBox(height: 16),
           Text(message,
               style: Theme.of(context).textTheme.titleMedium,
