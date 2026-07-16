@@ -50,9 +50,6 @@ class _MainLayoutState extends State<MainLayout> {
       selectedIcon: Icons.account_balance_wallet,
       label: 'Finances',
       route: '/finances',
-      // Réservé au trésorier et au-dessus (la vue backend exige
-      // IsTreasurerOrAbove).
-      visibleWhen: (p) => p.canViewFinances,
     ),
     _NavItem(
       icon: Icons.menu_book_outlined,
@@ -85,9 +82,8 @@ class _MainLayoutState extends State<MainLayout> {
     final state = context.read<AuthBloc>().state;
     final perms =
         AppPermissions(state is AuthAuthenticated ? state.user.role : 'fidele');
-    return _navItems
-        .where((i) => i.visibleWhen == null || i.visibleWhen!(perms))
-        .toList();
+    // Même source de vérité que le drawer et la garde de route.
+    return _navItems.where((i) => perms.canAccessRoute(i.route)).toList();
   }
 
   void _updateSelectedIndex() {
@@ -422,14 +418,10 @@ class _NavItem {
   final String label;
   final String route;
 
-  /// Prédicat de visibilité selon les permissions. `null` = toujours visible.
-  final bool Function(AppPermissions)? visibleWhen;
-
   const _NavItem({
     required this.icon,
     required this.selectedIcon,
     required this.label,
     required this.route,
-    this.visibleWhen,
   });
 }

@@ -4,6 +4,57 @@ A chronological log of bug fixes applied to this project. Each entry: date, symp
 
 ---
 
+## 2026-07-16 — Un fidèle atterrit sur le tableau de bord au démarrage malgré son absence du menu
+
+### Symptom
+
+Masquer une section dans le drawer/la sidebar (ex. Tableau de bord pour un
+fidèle) n'empêchait pas d'y accéder : au démarrage / après connexion,
+l'utilisateur était quand même envoyé sur `/dashboard`.
+
+### Root cause
+
+Le contrôle d'affichage était fait **uniquement dans la navigation** (visibilité
+des items). Le **routeur** n'avait aucune garde par rôle et redirigeait tout le
+monde vers `/dashboard` en dur : `AppRouter.redirect` (`return '/dashboard'`
+après login) et `SplashScreen._resolveTarget` (`_targetRoute = '/dashboard'`).
+Masquer un item ≠ bloquer la route.
+
+### Fix
+
+Source de vérité unique de l'accès aux sections dans `AppPermissions`
+(`core/auth/permissions.dart`) :
+
+- `canAccessRoute(location)` : accès par section (dashboard→canViewDashboard,
+  membres→canManageMembres, groupes→canManageGroupes, evenements→toujours,
+  finances→canViewFinances, librairie→canManageLibrairie && !isResponsable,
+  profile→toujours), sous-routes gérées via `startsWith`.
+- `landingRoute` : première section accessible (repli `/profile`).
+
+Utilisée partout :
+
+- **Routeur** (`app_router.dart`) : après login → `perms.landingRoute` (au lieu
+  de `/dashboard`) ; **garde** : si la route courante n'est pas accessible →
+  redirection vers `landingRoute`. Le splash n'est pas court-circuité.
+- **Splash** (`splash_screen.dart`) : cible = `landingRoute` selon le rôle.
+- **Sidebar desktop** (`main_layout.dart`) : items filtrés par `canAccessRoute`
+  (aligné sur le drawer ; suppression du prédicat `visibleWhen` devenu inutile).
+
+Pour un fidèle : `landingRoute` = `/evenements` ; `/dashboard` et `/finances`
+en accès direct sont renvoyés vers `/evenements`.
+
+### Files
+
+- `lib/core/auth/permissions.dart`, `lib/core/router/app_router.dart`
+- `lib/presentation/screens/splash/splash_screen.dart`
+- `lib/presentation/widgets/main_layout.dart`
+
+### Follow-up
+
+- `flutter analyze` : 0 erreur. Le drawer (déjà personnalisé) reste cohérent car
+  ses prédicats correspondent à `canAccessRoute`.
+- Rappel : garde côté client = confort UX ; la vraie protection reste le backend.
+
 ## 2026-07-15 — Affichage des éléments UI selon le rôle / les permissions
 
 ### Besoin

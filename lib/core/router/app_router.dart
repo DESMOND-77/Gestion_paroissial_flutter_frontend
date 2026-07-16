@@ -22,6 +22,7 @@ import '../../presentation/screens/librairie/article_form_screen.dart';
 import '../../presentation/screens/librairie/vente_form_screen.dart';
 import '../../presentation/screens/profile/profile_screen.dart';
 import '../../presentation/widgets/main_layout.dart';
+import '../auth/permissions.dart';
 
 class AppRouter {
   final AuthBloc authBloc;
@@ -54,8 +55,26 @@ class AppRouter {
       if (isLoggedOut && !isLoginRoute && !isSplashRoute) {
         return '/login';
       }
-      if (isConfirmedAuthenticated && isLoginRoute) {
-        return '/dashboard';
+
+      if (isConfirmedAuthenticated) {
+        // Rôle de l'utilisateur → sections autorisées + page d'accueil.
+        final role = authState is AuthAuthenticated
+            ? authState.user.role
+            : (authState as AuthLoginSuccess).user.role;
+        final perms = AppPermissions(role);
+
+        // Après connexion : atterrir sur la première section autorisée (et non
+        // /dashboard en dur, inaccessible à un fidèle par ex.).
+        if (isLoginRoute) {
+          return perms.landingRoute;
+        }
+
+        // Garde de route : une section masquée dans la navigation ne doit pas
+        // être atteignable par URL directe ni au démarrage. Le splash gère sa
+        // propre navigation, on ne le court-circuite pas.
+        if (!isSplashRoute && !perms.canAccessRoute(state.matchedLocation)) {
+          return perms.landingRoute;
+        }
       }
       return null;
     },

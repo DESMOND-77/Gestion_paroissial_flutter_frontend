@@ -67,6 +67,44 @@ class AppPermissions {
   // suppression d'article = IsAdmin ; lecture = authentifié.
   bool get canManageLibrairie => isSecretaryOrAbove;
   bool get canDeleteLibrairie => isAdmin;
+
+  // --- Accès aux sections (navigation + garde de route) ----------------------
+  //
+  // Source de vérité unique de la visibilité des sections principales : le
+  // drawer, la sidebar ET la garde du routeur s'en servent, pour qu'une section
+  // masquée ne soit jamais accessible par navigation directe / au démarrage.
+
+  /// Ordre de préférence des sections pour la page d'accueil par défaut.
+  static const List<String> _sectionsOrder = [
+    '/dashboard',
+    '/membres',
+    '/groupes',
+    '/evenements',
+    '/finances',
+    '/librairie',
+    '/profile',
+  ];
+
+  /// L'utilisateur peut-il accéder à la section correspondant à [location] ?
+  /// (Gère les sous-routes via `startsWith`, ex. `/membres/<id>/edit`.)
+  bool canAccessRoute(String location) {
+    if (location.startsWith('/dashboard')) return canViewDashboard;
+    if (location.startsWith('/membres')) return canManageMembres;
+    if (location.startsWith('/groupes')) return canManageGroupes;
+    if (location.startsWith('/evenements')) return true;
+    if (location.startsWith('/finances')) return canViewFinances;
+    if (location.startsWith('/librairie')) {
+      return canManageLibrairie && !isResponsable;
+    }
+    if (location.startsWith('/profile')) return true;
+    // Routes hors sections gardées (splash, auth…) : non concernées ici.
+    return true;
+  }
+
+  /// Première section accessible : page d'accueil après connexion / au
+  /// démarrage. Toujours accessible (repli `/profile`).
+  String get landingRoute =>
+      _sectionsOrder.firstWhere(canAccessRoute, orElse: () => '/profile');
 }
 
 /// Accès aux permissions de l'utilisateur courant depuis un `BuildContext`.

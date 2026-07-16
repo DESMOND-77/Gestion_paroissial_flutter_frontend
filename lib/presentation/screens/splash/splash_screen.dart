@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
+import '../../../core/auth/permissions.dart';
 import '../../blocs/auth/auth_bloc.dart';
 
 /// Netflix-style intro: plays the brand animation full-screen on cold start,
@@ -43,7 +44,12 @@ class _SplashScreenState extends State<SplashScreen>
 
   void _resolveTarget(AuthState state) {
     if (state is AuthAuthenticated || state is AuthLoginSuccess) {
-      _targetRoute = '/dashboard';
+      // Page d'accueil selon le rôle (un fidèle n'a pas accès au tableau de
+      // bord). Cohérent avec la garde de route de AppRouter.
+      final role = state is AuthAuthenticated
+          ? state.user.role
+          : (state as AuthLoginSuccess).user.role;
+      _targetRoute = AppPermissions(role).landingRoute;
       _tryNavigate();
     } else if (state is AuthUnauthenticated || state is AuthError) {
       _targetRoute = '/login';
