@@ -5,6 +5,7 @@ import '../../core/database/database_service.dart';
 import '../../core/sync/offline_write.dart';
 import '../models/groupe_model.dart';
 import '../models/membre_model.dart';
+import '../models/auth_model.dart';
 
 class GroupeRepository {
   final DioClient _dioClient;
@@ -150,6 +151,9 @@ class GroupeRepository {
     List<dynamic> results;
     if (data is List) {
       results = data;
+    } else if (data is Map && data.containsKey('membres')) {
+      // Réponse backend : { groupe, total_membres, membres: [...] }.
+      results = data['membres'] as List<dynamic>;
     } else if (data is Map && data.containsKey('results')) {
       results = data['results'] as List<dynamic>;
     } else {
@@ -158,5 +162,51 @@ class GroupeRepository {
     return results
         .map((e) => Membre.fromJson(e as Map<String, dynamic>))
         .toList();
+  }
+
+  // Liste des comptes utilisateurs (pour choisir les responsables d'un groupe).
+  Future<List<AuthUser>> getUsers() async {
+    final response = await _dioClient.get(ApiConstants.users);
+    final data = response.data["data"];
+    List<dynamic> results;
+    if (data is List) {
+      results = data;
+    } else if (data is Map && data.containsKey('results')) {
+      results = data['results'] as List<dynamic>;
+    } else {
+      results = [];
+    }
+    return results
+        .map((e) => AuthUser.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  // Assigne l'ensemble des responsables d'un groupe (remplace la liste).
+  Future<Groupe> assignResponsables(
+      String groupeId, List<String> userIds) async {
+    final response = await _dioClient.patch(
+      ApiConstants.groupeById(groupeId),
+      data: {'responsables': userIds},
+    );
+    await _databaseService?.clearTable('groupes');
+    return Groupe.fromJson(response.data["data"] as Map<String, dynamic>);
+  }
+
+  // Ajoute un membre existant au groupe (affecte son champ `groupe`).
+  Future<void> addMembreToGroupe(String groupeId, String membreId) async {
+    await _dioClient.post(
+      ApiConstants.groupeMembres(groupeId),
+      data: {'membre': membreId},
+    );
+    await _databaseService?.clearTable('membres');
+  }
+
+  // Retire un membre du groupe.
+  Future<void> removeMembreFromGroupe(String groupeId, String membreId) async {
+    await _dioClient.delete(
+      ApiConstants.groupeMembres(groupeId),
+      data: {'membre': membreId},
+    );
+    await _databaseService?.clearTable('membres');
   }
 }

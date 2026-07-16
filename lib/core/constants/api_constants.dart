@@ -34,6 +34,7 @@ class ApiConstants {
 
   // Groupes
   static const String groupes = '/groupes/';
+  static const String users = '/users/';
   static String groupeById(String id) => '/groupes/$id/';
   static String groupeMembres(String id) => '/groupes/$id/membres/';
 

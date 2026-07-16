@@ -4,6 +4,55 @@ A chronological log of bug fixes applied to this project. Each entry: date, symp
 
 ---
 
+## 2026-07-16 — Détail groupe : assigner plusieurs responsables + ajouter un membre
+
+### Besoin
+
+Depuis le détail d'un groupe : une liste déroulante pour assigner un ou
+plusieurs responsables, et une option pour ajouter un membre au groupe.
+
+### Fix
+
+**Backend** :
+- `groupes/models.py` : ajout du M2M `Groupe.responsables` (le FK `responsable`
+  singulier est conservé pour compat). Migration `groupes/0002`.
+- `groupes/serializers.py` : `responsables` (écriture, PrimaryKeyRelated many) +
+  `responsables_noms` (lecture, {id: nom}).
+- `groupes/views.py` : `GroupeDetailView` PUT/PATCH via `serializer.save()`
+  (gère le M2M) ; `GroupeMembresView` reçoit **POST** (ajoute un membre :
+  `membre.groupe = groupe`) et **DELETE** (retire), permission
+  `IsSecretaryOrAbove`.
+
+**Frontend** :
+- `groupe_model.dart` : `responsables` (List) + `responsablesNoms` (Map).
+- `GroupeRepository` : **corrige `getGroupeMembres`** (lisait mal la réponse
+  `{membres:[...]}` → liste toujours vide) ; ajoute `getUsers`,
+  `assignResponsables` (PATCH), `addMembreToGroupe`/`removeMembreFromGroupe`.
+- `groupes_bloc` : events `AssignResponsables` / `AddMembreToGroupe` /
+  `RemoveMembreFromGroupe` + rechargement du détail après action.
+- `groupe_detail_screen` : carte **Responsables** (puces + bouton « Assigner »
+  → dialogue multi-sélection d'utilisateurs) et carte **Membres** (bouton
+  « Ajouter » → sélection d'un membre hors groupe, retrait par ligne). Actions
+  réservées à `canManageGroupes`. Écran passé en Stateful (cache le détail pour
+  éviter le clignotement lors des états transitoires).
+
+### Files
+
+- `../backend/groupes/{models,serializers,views}.py` (+ migration `0002`)
+- `lib/data/models/groupe_model.dart`,
+  `lib/data/repositories/groupe_repository.dart`,
+  `lib/core/constants/api_constants.dart`
+- `lib/presentation/blocs/groupes/groupes_bloc.dart`,
+  `lib/presentation/screens/groupes/groupe_detail_screen.dart`
+
+### Follow-up
+
+- Backend : 90 tests OK, migration appliquée, smoke-test shell (2 responsables +
+  ajout membre) OK. Frontend : `flutter analyze` 0 erreur. **Redémarrer le
+  backend** pour servir les nouveaux champs/endpoints.
+- Le FK legacy `responsable` reste affiché (fusionné avec les multi-responsables)
+  mais n'est plus édité par l'app ; à retirer un jour si plus utilisé ailleurs.
+
 ## 2026-07-16 — Icône de l'app + logo de login remplacés par logo.svg
 
 ### Besoin
