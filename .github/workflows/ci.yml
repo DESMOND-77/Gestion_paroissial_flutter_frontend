@@ -46,7 +46,7 @@ jobs:
         run: flutter test --coverage
 
       - name: Publier la couverture
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage
           path: coverage/lcov.info
@@ -74,7 +74,7 @@ jobs:
         run: flutter build web --release
 
       - name: Archiver le build Web
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: web-build
           path: build/web
@@ -107,7 +107,7 @@ jobs:
         run: flutter build apk --release
 
       - name: Archiver l'APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: app-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
