@@ -55,7 +55,7 @@ jobs:
           zip -r ../../web-release.zip .
 
       - name: Téléverser les artefacts de build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-artifacts
           path: |
