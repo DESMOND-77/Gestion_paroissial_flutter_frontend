@@ -13,7 +13,7 @@ dependencies:
   # transitives) - sans elle, ces icônes s'affichent en carrés vides et le
   # build émet « Expected to find fonts for … CupertinoIcons ».
   cupertino_icons: ^1.0.8
-  flutter_bloc: ^8.1.6
+  flutter_bloc: ^9.1.1
   responsive_framework: ^1.4.0
   fl_chart: ^0.69.0
   data_table_2: ^2.5.14
