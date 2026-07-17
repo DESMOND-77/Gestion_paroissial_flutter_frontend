@@ -4,7 +4,7 @@
 
 # Gestion Paroissiale
 
-**Plateforme de gestion complète pour paroisses — membres, groupes, événements, finances et librairie.**
+**Plateforme de gestion complète pour paroisses - membres, groupes, événements, finances et librairie.**
 
 Application Flutter multiplateforme (Android · iOS · Web · Linux · macOS · Windows), pensée _offline-first_.
 
@@ -62,17 +62,17 @@ Elle communique avec un backend **Django / DRF** (dépôt séparé) via une API 
 
 ## Fonctionnalités
 
-- 🔐 **Authentification & sécurité** — connexion JWT, rafraîchissement automatique des jetons, vérification d'e-mail obligatoire, réinitialisation de mot de passe.
-- 👥 **Gestion des membres** — fiches détaillées, sacrements, profil personnel.
-- 🧑‍🤝‍🧑 **Groupes** — création, affectation multi-responsables, gestion des membres.
-- 📅 **Événements** — calendrier, inscriptions et participations.
-- 💰 **Finances** — transactions, dons par membre, rapports financiers.
-- 📚 **Librairie** — articles, stocks avec alertes, ventes.
-- 📊 **Tableau de bord** — statistiques et graphiques (fl_chart).
-- 🛡️ **Contrôle d'accès par rôle** — UI et routes gardées selon la hiérarchie de rôles (fidèle, secrétaire, trésorier, responsable, prêtre, admin).
-- 📴 **Mode hors ligne** — cache local (Isar), synchronisation bidirectionnelle push/pull, écritures optimistes.
-- 🌍 **Multiplateforme & responsive** — Android, iOS, Web, Linux, macOS, Windows.
-- 🇫🇷 **Interface en français** — localisation `fr_FR`.
+- 🔐 **Authentification & sécurité** - connexion JWT, rafraîchissement automatique des jetons, vérification d'e-mail obligatoire, réinitialisation de mot de passe.
+- 👥 **Gestion des membres** - fiches détaillées, sacrements, profil personnel.
+- 🧑‍🤝‍🧑 **Groupes** - création, affectation multi-responsables, gestion des membres.
+- 📅 **Événements** - calendrier, inscriptions et participations.
+- 💰 **Finances** - transactions, dons par membre, rapports financiers.
+- 📚 **Librairie** - articles, stocks avec alertes, ventes.
+- 📊 **Tableau de bord** - statistiques et graphiques (fl_chart).
+- 🛡️ **Contrôle d'accès par rôle** - UI et routes gardées selon la hiérarchie de rôles (fidèle, secrétaire, trésorier, responsable, prêtre, admin).
+- 📴 **Mode hors ligne** - cache local (Isar), synchronisation bidirectionnelle push/pull, écritures optimistes.
+- 🌍 **Multiplateforme & responsive** - Android, iOS, Web, Linux, macOS, Windows.
+- 🇫🇷 **Interface en français** - localisation `fr_FR`.
 
 ---
 
@@ -115,7 +115,7 @@ Voir [`docs/architecture.md`](docs/architecture.md) pour le détail.
 
 ## Prérequis
 
-- **Flutter SDK** ≥ 3.3.0 (canal stable recommandé — testé avec Flutter 3.44.x / Dart 3.x)
+- **Flutter SDK** ≥ 3.3.0 (canal stable recommandé - testé avec Flutter 3.44.x / Dart 3.x)
 - **Dart SDK** (fourni avec Flutter)
 - Un backend **Gestion Paroissiale** accessible (voir [Configuration](#configuration))
 - Selon la cible : Android SDK / Xcode / toolchain desktop / navigateur
@@ -157,7 +157,7 @@ class ApiConstants {
 }
 ```
 
-> **Note** — L'API est versionnée sous `/api/v1/`. Chaque endpoint renvoie une enveloppe `{ success, data, error?, message? }`.
+> **Note** - L'API est versionnée sous `/api/v1/`. Chaque endpoint renvoie une enveloppe `{ success, data, error?, message? }`.
 
 ---
 
@@ -348,14 +348,17 @@ Distribué sous licence **MIT**. Voir [LICENSE](LICENSE).
 
 ## Auteurs
 
-- **DESMOND-77** — Auteur et mainteneur principal — [@DESMOND-77](https://github.com/DESMOND-77)
+- **DESMOND-77** - Auteur et mainteneur principal - [@DESMOND-77](https://github.com/DESMOND-77)
 
-Projet réalisé dans le cadre d'un **PFE (Projet de Fin d'Études)**.
+Projet réalisé dans le cadre d'un **PFE (Projet de Fin d'Études)** - DUT2 GRT, Université des Sciences et Techniques de Masuku (USTM).
 
 ---
 
 ## Remerciements
 
+- L'équipe pédagogique de l'USTM pour l'encadrement du PFE.
 - L'équipe [Flutter](https://flutter.dev) et l'écosystème Dart
 - Les mainteneurs des paquets open source utilisés (voir [`pubspec.yaml`](pubspec.yaml))
 - La communauté [`isar_plus`](https://pub.dev/packages/isar_plus)
+
+- [Shields.io](https://shields.io/) pour les badges, [Vercel](https://vercel.com/) pour l'hébergement.

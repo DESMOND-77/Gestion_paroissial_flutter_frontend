@@ -4,7 +4,7 @@ A chronological log of bug fixes applied to this project. Each entry: date, symp
 
 ---
 
-## 2026-07-16 — Parcours d'authentification : messages, vérification email, feedbacks
+## 2026-07-16 - Parcours d'authentification : messages, vérification email, feedbacks
 
 ### Symptoms
 
@@ -61,7 +61,7 @@ désactivé) ; **blocage de la connexion si `not is_verified`** (avec
   le lien reçu par email). À ajouter via un endpoint de renvoi non authentifié
   si besoin.
 
-## 2026-07-16 — Détail groupe : assigner plusieurs responsables + ajouter un membre
+## 2026-07-16 - Détail groupe : assigner plusieurs responsables + ajouter un membre
 
 ### Besoin
 
@@ -110,7 +110,7 @@ plusieurs responsables, et une option pour ajouter un membre au groupe.
 - Le FK legacy `responsable` reste affiché (fusionné avec les multi-responsables)
   mais n'est plus édité par l'app ; à retirer un jour si plus utilisé ailleurs.
 
-## 2026-07-16 — Icône de l'app + logo de login remplacés par logo.svg
+## 2026-07-16 - Icône de l'app + logo de login remplacés par logo.svg
 
 ### Besoin
 
@@ -143,11 +143,11 @@ l'écran de connexion.
 
 - `flutter analyze` : 0 erreur. Icône Android vérifiée (rendu correct).
 - **Non fait** : le splash natif (`flutter_native_splash`) utilise encore
-  `gestparr_logo.png` — le basculer sur `logo.png` + regénérer si souhaité.
+  `gestparr_logo.png` - le basculer sur `logo.png` + regénérer si souhaité.
 - Rappel : recompiler l'app (les icônes natives ne changent qu'au prochain build
   d'installation).
 
-## 2026-07-16 — Thème recodé (clair/sombre) sur la palette du logo ; éléments invisibles corrigés
+## 2026-07-16 - Thème recodé (clair/sombre) sur la palette du logo ; éléments invisibles corrigés
 
 ### Symptom
 
@@ -203,7 +203,7 @@ quasi-invisible, cartes/barres blanches en mode sombre).
 - Si un jour un bouton de bascule manuel de thème est ajouté, remplacer
   `platformBrightness` par la source du `ThemeMode` choisi.
 
-## 2026-07-16 — Changement de mot de passe : message « mot de passe actuel incorrect » peu clair
+## 2026-07-16 - Changement de mot de passe : message « mot de passe actuel incorrect » peu clair
 
 ### Constat
 
@@ -219,11 +219,11 @@ Mais le message affiché était trompeur : `ApiException._extractMessage` ne
 gérait pas la clé `error` de l'enveloppe standardisée du backend. Résultat :
 préfixe parasite `error: Mot de passe actuel incorrect`, et les erreurs de
 validation DRF (`error` = dict) retombaient sur un générique « Requête
-invalide » — donnant l'impression que rien n'était vérifié.
+invalide » - donnant l'impression que rien n'était vérifié.
 
 ### Fix
 
-`lib/core/network/api_exception.dart` — `_extractMessage` rendu **récursif et
+`lib/core/network/api_exception.dart` - `_extractMessage` rendu **récursif et
 conscient de l'enveloppe** : gère `error` (chaîne → message direct ; dict/list →
 descente récursive), garde les `null`, et ignore les clés d'enveloppe
 (`success`/`error`/`message`/`detail`/`non_field_errors`) dans la boucle des
@@ -239,10 +239,10 @@ proprement : « Mot de passe actuel incorrect ».
 - `flutter analyze` : 0 erreur. Amélioration transverse (tous les messages
   d'erreur API sont plus lisibles).
 - Rappel : après un changement réussi, le backend blackliste les jetons ; la
-  session se termine au prochain appel (re-login attendu) — comportement de
+  session se termine au prochain appel (re-login attendu) - comportement de
   sécurité, non modifié ici.
 
-## 2026-07-16 — Un fidèle atterrit sur le tableau de bord au démarrage malgré son absence du menu
+## 2026-07-16 - Un fidèle atterrit sur le tableau de bord au démarrage malgré son absence du menu
 
 ### Symptom
 
@@ -293,7 +293,7 @@ en accès direct sont renvoyés vers `/evenements`.
   ses prédicats correspondent à `canAccessRoute`.
 - Rappel : garde côté client = confort UX ; la vraie protection reste le backend.
 
-## 2026-07-15 — Affichage des éléments UI selon le rôle / les permissions
+## 2026-07-15 - Affichage des éléments UI selon le rôle / les permissions
 
 ### Besoin
 
@@ -305,7 +305,7 @@ logique de permissions du backend.
 
 Les vues DRF protègent les écritures par des **classes hiérarchiques de rôle**
 (`core/permissions.py` : `IsSecretaryOrAbove`, `IsTreasurerOrAbove`, `IsAdmin`)
-— et non (encore) par les permissions granulaires de `core/rbac.py`. Pour que
+- et non (encore) par les permissions granulaires de `core/rbac.py`. Pour que
 l'UI ne montre jamais un bouton qui renverrait 403 (ni n'en cache un qui
 passerait), le frontend reproduit **ces ensembles de rôles**, pas le catalogue
 granulaire.
@@ -323,7 +323,7 @@ granulaire.
   `context.perms` (via `watch<AuthBloc>`).
 - **Boutons gâtés** (create FAB / edit / delete / ajouter sacrement /
   réapprovisionner) dans : membres (liste+détail), groupes (liste+détail),
-  événements (liste+détail — cumulé avec la désactivation « passé »), finances
+  événements (liste+détail - cumulé avec la désactivation « passé »), finances
   (liste), librairie (liste + FAB vente/article).
 - **Navigation** : l'entrée **Finances** est masquée sauf `canViewFinances`
   (sidebar desktop `main_layout.dart` + drawer mobile `app_drawer.dart`), car la
@@ -342,17 +342,17 @@ trésorier+, delete = admin ; librairie create/edit = secrétaire+, delete = adm
 
 ### Follow-up
 
-- `flutter analyze` : 0 erreur. La sécurité reste **côté backend** — ce gating
+- `flutter analyze` : 0 erreur. La sécurité reste **côté backend** - ce gating
   n'est qu'un confort d'affichage (le backend refuse toujours un appel non
   autorisé).
 - Le gating reproduit les classes de rôle. Si le backend bascule sur
   `HasPermission` (granulaire, `core/rbac.py`), réaligner `AppPermissions`.
 - **Non traité** : le `DashboardBloc` interroge les finances pour ses stats ;
-  pour un rôle < trésorier, cet appel peut renvoyer 403 — à gâter séparément si
+  pour un rôle < trésorier, cet appel peut renvoyer 403 - à gâter séparément si
   besoin (afficher la carte Finances du tableau de bord seulement si
   `canViewFinances`).
 
-## 2026-07-15 — Événements : conviés (convocations) + détails groupe/événement
+## 2026-07-15 - Événements : conviés (convocations) + détails groupe/événement
 
 ### Symptom / besoin
 
@@ -403,7 +403,7 @@ modifier/supprimer désactivés si l'événement est passé.
   déjà chargé groupes+membres (repli cache). Reste online-only :
   l'inscription (`inscrire`).
 
-## 2026-07-15 — Photo de profil du membre absente du `membre_detail_screen`
+## 2026-07-15 - Photo de profil du membre absente du `membre_detail_screen`
 
 ### Symptom
 
@@ -433,7 +433,7 @@ Bout-en-bout (backend + frontend) :
 - **Frontend** (`lib/data/models/membre_model.dart`) : nouveau champ
   `profilePictureUrl` (parse `profile_picture_url`, inclus dans
   toJson/copyWith/props et la sous-classe `MembreDetail`).
-- **Écran** (`membre_detail_screen.dart`) : avatar réparé — un seul
+- **Écran** (`membre_detail_screen.dart`) : avatar réparé - un seul
   `UserAvatar` (halo activé) avec `imageUrl: membre.profilePictureUrl`, repli
   hors ligne sur `getCachedProfilePicture(membre.user!)`, initiales sur le
   prénom ; doublon `CircleAvatar` supprimé ; import `AuthRepository` ajouté.
@@ -450,10 +450,10 @@ Bout-en-bout (backend + frontend) :
 - `getCachedProfilePicture` est indexé par id de compte user : la copie locale
   n'existe que pour l'utilisateur connecté ; pour les autres membres, le repli
   hors ligne tombe sur les initiales (la photo distante s'affiche en ligne).
-- La colonne du tableau (`membres_screen`) pourrait aussi afficher l'avatar —
+- La colonne du tableau (`membres_screen`) pourrait aussi afficher l'avatar -
   non fait ici (demande limitée au détail).
 
-## 2026-07-15 — Le numéro de téléphone ne s'affiche pas dans le tableau des membres
+## 2026-07-15 - Le numéro de téléphone ne s'affiche pas dans le tableau des membres
 
 ### Symptom
 
@@ -481,10 +481,10 @@ local (`saveItems`/`getItems`).
 ### Follow-up
 
 - `phone_number` est en lecture seule côté backend (dérivé du compte `user`) :
-  éditer le téléphone depuis la fiche membre n'a aucun effet serveur — à
+  éditer le téléphone depuis la fiche membre n'a aucun effet serveur - à
   traiter séparément si le besoin se confirme.
 
-## 2026-07-15 — Intégration de l'endpoint de synchronisation offline `/api/v1/sync/`
+## 2026-07-15 - Intégration de l'endpoint de synchronisation offline `/api/v1/sync/`
 
 ### Symptom
 
@@ -508,7 +508,7 @@ historique `SyncService.syncAll` reste l'autorité de rafraîchissement) :
 
 - **Outbox** (`lib/core/database/pending_change_entity.dart`, collection Isar
   `PendingChangeEntity`) : file d'attente des écritures locales. Champ nommé
-  `syncCollection` et **non** `collection` — un champ `collection` casse le code
+  `syncCollection` et **non** `collection` - un champ `collection` casse le code
   généré par isar_plus (collision avec sa variable interne `collection`).
 - **UUID côté client** (`lib/core/utils/id_generator.dart`, v4 sans dépendance).
 - **DatabaseService** étendu : `enqueueLocalChange` (fusion outbox + fusion
@@ -529,7 +529,7 @@ historique `SyncService.syncAll` reste l'autorité de rafraîchissement) :
   `pushLocalChanges()`.
 - **Repositories** (membres/groupes/évènements/finances/librairie + sacrements,
   ventes) : `create/update/patch/delete` interceptent `NetworkException` et
-  basculent sur `queueOfflineWrite` (`lib/core/sync/offline_write.dart`) —
+  basculent sur `queueOfflineWrite` (`lib/core/sync/offline_write.dart`) -
   file d'attente + application optimiste au cache, retour d'un modèle local. Le
   comportement **en ligne est inchangé** (appel direct + `clearTable`).
 - Correctif au passage : `createVente` vidait `clearTable('evenements')` (copié-
@@ -554,12 +554,12 @@ historique `SyncService.syncAll` reste l'autorité de rafraîchissement) :
   collection `participations`) et l'auto-modification de profil
   (`updateMyMembre`) restent en ligne uniquement. La pagination de `syncAll`
   (PAGE_SIZE 50) peut ne pas re-télécharger un élément au-delà de la 1re page
-  juste après sa poussée — limitation pré-existante du pull REST.
+  juste après sa poussée - limitation pré-existante du pull REST.
 - **À vérifier en conditions réelles** : un aller-retour hors ligne complet
   (créer/modifier/supprimer hors connexion, puis reconnecter et confirmer la
   poussée + la résolution de conflit) sur un appareil, non exécutable ici.
 
-## 2026-07-15 — Alignement frontend sur les clés primaires UUID du backend
+## 2026-07-15 - Alignement frontend sur les clés primaires UUID du backend
 
 ### Symptom
 
@@ -615,14 +615,14 @@ Le préfixe `/api/v1/` était déjà en place dans `ApiConstants.baseUrl`.
 
 - `flutter analyze` : aucune erreur (reste un seul `info` de style pré-existant
   sur un commentaire de doc).
-- **Non fait — décision produit en attente** : le backend expose un nouvel
+- **Non fait - décision produit en attente** : le backend expose un nouvel
   endpoint `POST /api/v1/sync/` (push/pull bidirectionnel, last-write-wins via
   `updated_at`, soft-delete `is_deleted`, UUID générés côté client). Le
   frontend garde pour l'instant son cache Isar en lecture seule + pull
   périodique REST ; l'intégration de la synchro d'écritures hors ligne reste à
   planifier.
 
-## 2026-07-06 — Tableau de bord, Finances et Librairie n'affichent plus rien hors ligne
+## 2026-07-06 - Tableau de bord, Finances et Librairie n'affichent plus rien hors ligne
 
 ### Symptom
 
@@ -635,26 +635,26 @@ continuent de fonctionner grâce à leur cache).
 Trois bugs distincts, chacun cassant une source de données différente :
 
 - **Librairie** : `LibrairieRepository.getArticles()` n'avait **aucune**
-  logique de cache — appel direct au serveur à chaque fois, sans repli. Pire,
+  logique de cache - appel direct au serveur à chaque fois, sans repli. Pire,
   le repository était même enregistré dans le DI **sans** `DatabaseService`
   du tout, et `SyncService` ne connaissait pas `LibrairieRepository` : la
   table SQLite `librairie` (pourtant créée par le schéma) n'était donc jamais
   alimentée par la synchronisation périodique.
 - **Finances** : `FinanceRepository.getRapport()` (utilisé par l'écran
   Finances ET par le Tableau de bord) tape un endpoint dédié
-  (`/finances/rapport/`) sans aucun repli cache — hors ligne, il lève
+  (`/finances/rapport/`) sans aucun repli cache - hors ligne, il lève
   toujours une exception.
 - **Tableau de bord** : `DashboardBloc._loadData()` charge 5 sources via
   `Future.wait([...])`. Dès qu'**une seule** échoue (typiquement
   `getRapport()`, cf. ci-dessus), `Future.wait` rejette immédiatement et
-  **toutes** les données sont perdues — y compris membres/groupes/événements/
+  **toutes** les données sont perdues - y compris membres/groupes/événements/
   transactions qui, eux, avaient un cache valide et auraient pu s'afficher.
 
 Bonus (repéré en cours de route, corrigé au passage car directement dans le
 code touché) : la réponse de `/finances/rapport/` renvoyait `solde` et
 `par_categorie` sous forme de **liste** `[{"categorie":..,"total":..}]`,
 alors que le modèle Flutter `RapportFinancier.fromJson` attend `balance` et
-un **dict** `{categorie: total}` — la balance et la répartition par
+un **dict** `{categorie: total}` - la balance et la répartition par
 catégorie étaient donc silencieusement toujours à zéro/vides, même en ligne.
 
 ### Fix
@@ -690,19 +690,19 @@ catégorie étaient donc silencieusement toujours à zéro/vides, même en ligne
 ### Follow-up
 
 - Le rapport recalculé localement (hors ligne) n'inclut pas de ventilation
-  `par_mois` (le backend ne la calcule pas non plus — champ toujours vide,
+  `par_mois` (le backend ne la calcule pas non plus - champ toujours vide,
   y compris en ligne). Fonctionnalité à ajouter séparément si le graphique
   mensuel doit réellement se remplir.
 - Vérifié la transformation `par_categorie` liste→dict directement contre la
   base de données de dev (résultats corrects) ; pas de test end-to-end HTTP
   réel (même limitation que le fix précédent).
 
-## 2026-07-06 — L'app éjecte vers /login quand le profil ne peut pas être rafraîchi hors connexion
+## 2026-07-06 - L'app éjecte vers /login quand le profil ne peut pas être rafraîchi hors connexion
 
 ### Symptom
 
 En consultant l'écran Profil sans connexion réseau (ou serveur injoignable),
-l'utilisateur est brutalement renvoyé à l'écran de connexion — alors que ses
+l'utilisateur est brutalement renvoyé à l'écran de connexion - alors que ses
 jetons sont toujours valides. Perçu comme un crash de l'application.
 
 ### Root cause
@@ -711,8 +711,8 @@ jetons sont toujours valides. Perçu comme un crash de l'application.
 l'ouverture (GET `/user/profile/`), même quand un utilisateur est déjà
 affiché. En cas d'échec réseau, `AuthBloc` émettait `AuthError`. Le guard de
 `AppRouter` (`redirect`) considérait **tout état différent de
-`AuthAuthenticated`** — y compris `AuthError`, qui est un état transitoire
-sans rapport avec la validité de la session — comme "non authentifié", et
+`AuthAuthenticated`** - y compris `AuthError`, qui est un état transitoire
+sans rapport avec la validité de la session - comme "non authentifié", et
 renvoyait donc immédiatement vers `/login` via `refreshListenable:
 GoRouterRefreshStream(authBloc.stream)`.
 
@@ -723,7 +723,7 @@ Par ailleurs, rien n'était mis en cache localement pour le profil membre
 ### Fix
 
 - `lib/core/router/app_router.dart` : le redirect ne force `/login` que sur
-  un état explicitement déconnecté (`AuthUnauthenticated` — vraie
+  un état explicitement déconnecté (`AuthUnauthenticated` - vraie
   déconnexion/session expirée), et ne quitte `/login` que sur un état
   confirmant l'authentification (`AuthAuthenticated`/`AuthLoginSuccess`).
   Tout état transitoire (`AuthError`, `AuthLoading`, states de succès d'une
@@ -754,7 +754,7 @@ Par ailleurs, rien n'était mis en cache localement pour le profil membre
 
 - Ce même bug de redirect touchait potentiellement toute action émettant
   `AuthError` pendant une session déjà active (changement de mot de passe,
-  mise à jour du profil, changement de photo, changement d'URL serveur) —
+  mise à jour du profil, changement de photo, changement d'URL serveur) -
   le fix au niveau du router les corrige toutes en une fois, pas seulement le
   cas du profil.
 - Pas de reproduction end-to-end (coupure réseau réelle dans l'app) faute
@@ -763,7 +763,7 @@ Par ailleurs, rien n'était mis en cache localement pour le profil membre
 
 ---
 
-## 2026-07-06 — Les filtres/tri des listes ne filtraient rien (Membres, Groupes, Finances, Librairie)
+## 2026-07-06 - Les filtres/tri des listes ne filtraient rien (Membres, Groupes, Finances, Librairie)
 
 ### Symptom
 
@@ -777,14 +777,14 @@ Chaque module avait un bug différent, mais avec le même effet (le filtre est
 un no-op) :
 
 - **Membres** : `MembreRepository.getMembres()` avait toute sa logique de
-  filtrage en commentaire — la méthode ignorait `search`/`groupe`/`sexe`/`page`
+  filtrage en commentaire - la méthode ignorait `search`/`groupe`/`sexe`/`page`
   et renvoyait toujours le cache ou la liste complète. Même corrigé côté app,
   le backend (`MembreService.search_membres`) ne connaissait pas du tout le
   paramètre `sexe`, et n'acceptait pas de recherche libre (seulement `nom`/
   `prenom` séparés, alors que l'app n'a qu'une seule boîte de recherche
   envoyant `search`).
 - **Groupes** : l'app envoie `?search=`, mais `GroupeListView.get()` ne lisait
-  que `?nom=` — mismatch de nom de paramètre, la recherche ne faisait rien.
+  que `?nom=` - mismatch de nom de paramètre, la recherche ne faisait rien.
 - **Finances** (`TransactionListView`) et **Librairie**
   (`ArticleListView`) : ces vues ne lisaient **aucun** query param et
   renvoyaient systématiquement la liste complète, quels que soient les filtres
@@ -810,7 +810,7 @@ un no-op) :
   `membre`.
 - `backend/librairie/views.py` : `ArticleListView.get()` filtre maintenant
   sur `search` (nom)/`categorie`/`en_alerte`.
-- `lib/data/repositories/membre_repository.dart` : `getMembres()` — code de
+- `lib/data/repositories/membre_repository.dart` : `getMembres()` - code de
   filtrage restauré (décommenté et corrigé), suit désormais le même schéma
   que les autres repositories (filtre présent → toujours serveur ; sinon
   cache-first).
@@ -833,7 +833,7 @@ un no-op) :
   donc pas d'impact utilisateur constaté, mais à corriger si une pagination
   de liste est ajoutée plus tard.
 - Vérifié uniquement au niveau ORM/service (requêtes exécutées directement
-  contre la base de données de dev, résultats cohérents) — le test bout-en-bout
+  contre la base de données de dev, résultats cohérents) - le test bout-en-bout
   via une requête HTTP authentifiée n'a pas pu être exécuté facilement depuis
   le shell (l'authentification JWT de l'app n'est pas trivialement simulable
   hors HTTP réel) ; à valider manuellement dans l'app sur les écrans Membres,
@@ -841,7 +841,7 @@ un no-op) :
 
 ---
 
-## 2026-07-04 — Auto-modification par un membre de sa date de naissance / sexe / quartier
+## 2026-07-04 - Auto-modification par un membre de sa date de naissance / sexe / quartier
 
 ### Symptom
 
@@ -868,7 +868,7 @@ sa propre fiche membre.
   événements/états `LoadMyMembre` / `UpdateMyMembre` /
   `MyMembreLoaded` / `MyMembreUpdated` sur `MembresBloc`, et une nouvelle
   section "Informations paroissiales" sur l'écran Profil (sexe, date de
-  naissance, quartier) — masquée si le compte n'a pas de fiche membre liée
+  naissance, quartier) - masquée si le compte n'a pas de fiche membre liée
   (ex : compte admin sans `Membre`).
 
 ### Files touched
@@ -885,14 +885,14 @@ sa propre fiche membre.
 
 - Le modèle Flutter `Membre.telephone` lit la clé JSON `telephone`, mais aucun
   serializer backend (`MembreSerializer` ni `MembreSelfSerializer`) ne renvoie
-  cette clé — c'est `phone_number` (issu de `user.phone_number`) qui est
+  cette clé - c'est `phone_number` (issu de `user.phone_number`) qui est
   envoyé. Ce champ est donc toujours `null` côté app. Pas corrigé ici (hors
   périmètre de cette demande) ; à corriger si le téléphone du membre doit
   s'afficher quelque part.
 
 ---
 
-## 2026-07-04 — Refonte de l'écran Profil : photo de profil, champs profil cassés, mot de passe cassé, URL serveur factice
+## 2026-07-04 - Refonte de l'écran Profil : photo de profil, champs profil cassés, mot de passe cassé, URL serveur factice
 
 ### Symptom
 
@@ -907,7 +907,7 @@ sa propre fiche membre.
 
 - `profile_screen.dart` envoyait `first_name`/`last_name` au PATCH
   `/user/profile/`, mais le serializer backend (`UserSerializer`) attend
-  `prenom`/`nom` — les clés inconnues sont silencieusement ignorées par DRF.
+  `prenom`/`nom` - les clés inconnues sont silencieusement ignorées par DRF.
 - `AuthRepository.changePassword` n'envoyait pas `confirm_password`, pourtant
   requis par `ChangePasswordSerializer` côté backend → 400 à chaque appel.
 - `AuthRepository.setBaseUrl` ne faisait que persister l'URL en secure storage ;
@@ -917,7 +917,7 @@ sa propre fiche membre.
   `api_base_url` inexistant côté backend) au lieu de `AuthBaseUrlUpdated`.
 - Affichage de la photo (`profile_screen.dart` + `app_drawer.dart`) : le test
   `user?.profilePictureUrl != null` est toujours vrai car `profilePictureUrl`
-  est un `String` non nullable (défaut `''`), pas un `String?` — l'app tentait
+  est un `String` non nullable (défaut `''`), pas un `String?` - l'app tentait
   systématiquement `Image.network('')` avant de retomber sur les initiales.
 
 ### Fix
@@ -965,7 +965,7 @@ sa propre fiche membre.
 
 ---
 
-## 2026-07-01 — Refresh en 500 (token blacklisté) : rotation des refresh tokens non persistée
+## 2026-07-01 - Refresh en 500 (token blacklisté) : rotation des refresh tokens non persistée
 
 ### Symptom
 
@@ -997,7 +997,7 @@ refresh.
 
 ### Files touched
 
-- `lib/core/network/dio_client.dart` — `_extractToken`/`_extractRefreshToken`,
+- `lib/core/network/dio_client.dart` - `_extractToken`/`_extractRefreshToken`,
   sauvegarde du refresh token, `_retryOriginal`, court-circuit + garde anti-boucle
 
 ### Follow-up
@@ -1007,7 +1007,7 @@ refresh.
 
 ---
 
-## 2026-07-01 — Refresh renvoie 401 : l'access token périmé était réattaché à la requête de refresh
+## 2026-07-01 - Refresh renvoie 401 : l'access token périmé était réattaché à la requête de refresh
 
 ### Symptom
 
@@ -1032,7 +1032,7 @@ requête de refresh part désormais sans en-tête et est acceptée.
 
 ### Files touched
 
-- `lib/core/network/dio_client.dart` — helper `_isAuthEndpoint()` + exclusion de
+- `lib/core/network/dio_client.dart` - helper `_isAuthEndpoint()` + exclusion de
   l'en-tête dans `onRequest`
 
 ### Follow-up
@@ -1045,7 +1045,7 @@ requête de refresh part désormais sans en-tête et est acceptée.
 
 ---
 
-## 2026-07-01 — Contrat API auth incohérent front/back (cause racine register + refresh)
+## 2026-07-01 - Contrat API auth incohérent front/back (cause racine register + refresh)
 
 > Backend : `../backend` (Django/DRF). Pas de fix-log côté backend → consigné ici.
 
@@ -1058,18 +1058,18 @@ requête de refresh part désormais sans en-tête et est acceptée.
 
 ### Root cause (backend)
 
-1. **Register double-enveloppé** — `accounts/auth/views.py` faisait
+1. **Register double-enveloppé** - `accounts/auth/views.py` faisait
    `standardized_response(response_data)` (positionnel → param `success`) au lieu
    de `standardized_response(**response_data)`. Le service renvoyait déjà
    `{"success":true,"data":{...}}`, d'où l'imbrication.
-2. **Refresh toujours en 500** — `accounts/auth/services.py::RefreshToken` lisait
+2. **Refresh toujours en 500** - `accounts/auth/services.py::RefreshToken` lisait
    `tokens["access_token"]/["refresh_token"]/["expire_in"]`, alors que
    `TokenManager.generate_token()` renvoie `access/refresh/access_expires_in/…`
    → `KeyError` capturé → réponse 500 à chaque refresh.
-3. **Noms de champs incohérents front/back** — le front envoyait `{'refresh': …}`
+3. **Noms de champs incohérents front/back** - le front envoyait `{'refresh': …}`
    pour refresh et logout, mais le backend lit `request.data.get("refresh_token")`.
 
-### Fix (backend — ../backend)
+### Fix (backend - ../backend)
 
 - `accounts/auth/views.py` : `standardized_response(**response_data)` pour le
   register ; bloc cookie du refresh aligné sur les clés natives
@@ -1099,12 +1099,12 @@ requête de refresh part désormais sans en-tête et est acceptée.
 ### Follow-up
 
 - `access_expires_in = 60 s` : le refresh transparent doit fonctionner en continu
-  maintenant — tester une session > 1 min pour valider bout en bout.
+  maintenant - tester une session > 1 min pour valider bout en bout.
 - Redémarrer le serveur Django après ces changements.
 
 ---
 
-## 2026-07-01 — Renouvellement de jeton : 3 tentatives puis déconnexion + redirection
+## 2026-07-01 - Renouvellement de jeton : 3 tentatives puis déconnexion + redirection
 
 ### Symptom / demande
 
@@ -1139,17 +1139,17 @@ DioClient`) alors que la DI ne lui passait que `SecureStorage`
 
 ### Files touched
 
-- `lib/core/network/dio_client.dart` — suppression dépendance AuthRepository,
+- `lib/core/network/dio_client.dart` - suppression dépendance AuthRepository,
   callback `onSessionExpired`, boucle 3 tentatives, `_expireSession()`,
   `_extractAccessToken()`
-- `lib/core/di/injection.dart` — commentaire ; `DioClient(sl<SecureStorage>())`
+- `lib/core/di/injection.dart` - commentaire ; `DioClient(sl<SecureStorage>())`
   redevient valide
-- `lib/app.dart` — import DioClient + câblage `onSessionExpired`
+- `lib/app.dart` - import DioClient + câblage `onSessionExpired`
 
 ### Follow-up
 
 - `AuthBloc` reste enregistré en factory dans la DI, mais `App` utilise une seule
-  instance partagée (`_authBloc`) pour le provider, le router et le callback —
+  instance partagée (`_authBloc`) pour le provider, le router et le callback -
   cohérent. Ne pas appeler `sl<AuthBloc>()` ailleurs en s'attendant à la même
   instance.
 - Les requêtes mises en file (`_failedQueue`) sont abandonnées sur échec final
@@ -1158,7 +1158,7 @@ DioClient`) alors que la DI ne lui passait que `SecureStorage`
 
 ---
 
-## 2026-07-01 — Crash au register : `Null is not a subtype of Map<String, dynamic>`
+## 2026-07-01 - Crash au register : `Null is not a subtype of Map<String, dynamic>`
 
 ### Symptom
 
@@ -1187,8 +1187,8 @@ Deux problèmes dans `AuthRepository.register()` :
 
 ### Files touched
 
-- `lib/data/repositories/auth_repository.dart` — déballage robuste dans `register()`
-- `lib/data/models/auth_model.dart` — fallback `prenom`/`nom` dans `AuthUser.fromJson`
+- `lib/data/repositories/auth_repository.dart` - déballage robuste dans `register()`
+- `lib/data/models/auth_model.dart` - fallback `prenom`/`nom` dans `AuthUser.fromJson`
 
 ### Follow-up
 
@@ -1199,7 +1199,7 @@ Deux problèmes dans `AuthRepository.register()` :
 
 ---
 
-## 2026-07-01 — Requêtes serveur au démarrage même sans utilisateur connecté
+## 2026-07-01 - Requêtes serveur au démarrage même sans utilisateur connecté
 
 ### Symptom
 
@@ -1220,14 +1220,14 @@ l'ouverture, avant toute connexion.
 
 `SyncService` reçoit désormais `SecureStorage` (injecté via DI) et vérifie la
 présence d'un access token via `_isAuthenticated()` au début de `syncAll()` et
-`syncEntity()`. Sans token valide, aucune requête serveur n'est effectuée — ni
+`syncEntity()`. Sans token valide, aucune requête serveur n'est effectuée - ni
 au démarrage, ni au cycle périodique de 5 min.
 
 ### Files touched
 
-- `lib/core/sync/sync_service.dart` — ajout du champ `_secureStorage`, du helper
+- `lib/core/sync/sync_service.dart` - ajout du champ `_secureStorage`, du helper
   `_isAuthenticated()`, et des gardes dans `syncAll()` / `syncEntity()`
-- `lib/core/di/injection.dart` — passe `secureStorage: sl<SecureStorage>()` à
+- `lib/core/di/injection.dart` - passe `secureStorage: sl<SecureStorage>()` à
   `SyncService`
 
 ### Follow-up
@@ -1240,7 +1240,7 @@ au démarrage, ni au cycle périodique de 5 min.
 
 ---
 
-## 2026-05-30 — L'interface ne se met pas à jour après ajout/modification/suppression
+## 2026-05-30 - L'interface ne se met pas à jour après ajout/modification/suppression
 
 ### Symptom
 
@@ -1281,7 +1281,7 @@ appliquer le même `clearTable(...)` dans ses mutations.
 
 ---
 
-## 2026-05-29 — App crashes (pops last page off stack) when confirming a delete
+## 2026-05-29 - App crashes (pops last page off stack) when confirming a delete
 
 ### Symptom
 
@@ -1302,7 +1302,7 @@ The "Annuler" button worked fine; only "Supprimer" crashed.
 `useRootNavigator: true`). The confirm button called `Navigator.pop(ctx)` where
 `ctx` was the **screen** context, which lives inside the `ShellRoute`'s nested
 navigator. So `Navigator.of(ctx)` resolved to the nested navigator and popped
-the current **page** instead of the dialog — emptying the shell's route stack.
+the current **page** instead of the dialog - emptying the shell's route stack.
 The "Annuler" button used the dialog builder's `context` (correct), which is why
 it worked. The librairie screen and the sacrement dialog were already correct
 because their builder param is named `ctx` (the dialog context).
@@ -1321,14 +1321,14 @@ screen context, which is valid.
 ### Follow-up
 
 - Unrelated `NetworkException` lines in the log are just the backend being
-  offline — the cache serves data correctly.
+  offline - the cache serves data correctly.
 - Separate, still-open: RenderFlex overflow (12–28px) in
   `lib/presentation/screens/groupes/groupes_screen.dart:174` (card content too
   tall for `childAspectRatio: 1.9`).
 
 ---
 
-## 2026-05-29 — `PlatformException(KeyringLocked)` on Linux at first auth read
+## 2026-05-29 - `PlatformException(KeyringLocked)` on Linux at first auth read
 
 ### Symptom
 
@@ -1354,7 +1354,7 @@ read crashed the auth flow.
 - Rewrote `lib/core/storage/secure_storage.dart` to:
   - Introduce a typed `SecureStorageLockedException`.
   - Wrap reads/deletes: return `null` / no-op on `KeyringLocked` (graceful
-    degradation — caller sees "no token", app falls back to the login screen
+    degradation - caller sees "no token", app falls back to the login screen
     instead of crashing).
   - Wrap writes: throw `SecureStorageLockedException` with a French
     user-facing message so callers (BLoCs) can surface it cleanly.
@@ -1368,10 +1368,10 @@ read crashed the auth flow.
 
 ### Files touched
 
-- `lib/core/storage/secure_storage.dart` — full rewrite with error handling
+- `lib/core/storage/secure_storage.dart` - full rewrite with error handling
   + `probe()` + typed exception.
-- `lib/main.dart` — added Linux probe + flag passthrough to `App`.
-- `lib/app.dart` — `App.secureStorageLocked` field, post-frame warning
+- `lib/main.dart` - added Linux probe + flag passthrough to `App`.
+- `lib/app.dart` - `App.secureStorageLocked` field, post-frame warning
   dialog.
 
 ### Follow-up (manual)
@@ -1387,12 +1387,12 @@ Unlock the keyring once so the app can persist tokens:
 secret-tool lookup test test
 ```
 
-Then `flutter run -d linux` again — the warning dialog should no longer
+Then `flutter run -d linux` again - the warning dialog should no longer
 appear and login will persist across restarts.
 
 ---
 
-## 2026-05-29 — SqfliteFfiException on Linux: `sqlite3_initialize` not found
+## 2026-05-29 - SqfliteFfiException on Linux: `sqlite3_initialize` not found
 
 ### Symptom
 
@@ -1430,8 +1430,8 @@ Two compounding issues:
 
 ### Files touched
 
-- `pubspec.yaml` — added `sqlite3_flutter_libs`.
-- `lib/main.dart` — reordered init + added platform guard.
+- `pubspec.yaml` - added `sqlite3_flutter_libs`.
+- `lib/main.dart` - reordered init + added platform guard.
 
 ### Follow-up (manual)
 

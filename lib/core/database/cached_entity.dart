@@ -4,7 +4,7 @@ part 'cached_entity.g.dart';
 
 /// Ligne générique de cache hors ligne : un blob JSON par (type d'entité,
 /// id serveur). Remplace l'ancien schéma sqflite `CREATE TABLE `<`entity`>` (id,
-/// data, syncedAt)` — une seule collection Isar joue le rôle de toutes les
+/// data, syncedAt)` - une seule collection Isar joue le rôle de toutes les
 /// anciennes tables (membres, groupes, evenements, finances, librairie).
 ///
 /// L'id Isar est dérivé de façon déterministe de "entityType|entityId" (via
@@ -15,7 +15,7 @@ part 'cached_entity.g.dart';
 @collection
 class CachedEntity {
   // Toujours affecté explicitement (voir database_service.dart) via
-  // Isar.fastHash — pas d'auto-incrément : isar_plus n'assigne pas
+  // Isar.fastHash - pas d'auto-incrément : isar_plus n'assigne pas
   // automatiquement d'id sur put(), il faut l'appeler soi-même.
   int id = 0;
 
@@ -31,12 +31,12 @@ class CachedEntity {
   late DateTime syncedAt;
 }
 
-/// Horodatage de dernière synchronisation par type d'entité — remplace
+/// Horodatage de dernière synchronisation par type d'entité - remplace
 /// l'ancienne table sqflite `sync_metadata`.
 @collection
 class SyncMetadataEntity {
   // Toujours affecté explicitement (voir database_service.dart) via
-  // Isar.fastHash — pas d'auto-incrément : isar_plus n'assigne pas
+  // Isar.fastHash - pas d'auto-incrément : isar_plus n'assigne pas
   // automatiquement d'id sur put(), il faut l'appeler soi-même.
   int id = 0;
 

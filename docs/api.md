@@ -24,7 +24,7 @@ Chaque endpoint renvoie :
 ```
 
 - Les repositories lisent `response.data["data"]`.
-- Pour le texte utilisateur, utilisez `messageOf(e)` (`api_exception.dart`) — jamais `e.toString()`.
+- Pour le texte utilisateur, utilisez `messageOf(e)` (`api_exception.dart`) - jamais `e.toString()`.
 
 ## Identifiants
 
@@ -33,8 +33,8 @@ Chaque endpoint renvoie :
 
 ## Dates
 
-- **Envoi** : en UTC — `dt.toUtc().toIso8601String()`.
-- **Affichage** : convertir en local — parsez puis `.toLocal()`.
+- **Envoi** : en UTC - `dt.toUtc().toIso8601String()`.
+- **Affichage** : convertir en local - parsez puis `.toLocal()`.
 
 ## Authentification
 

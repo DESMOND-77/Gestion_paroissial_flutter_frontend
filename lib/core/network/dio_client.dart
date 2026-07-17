@@ -71,7 +71,7 @@ class DioClient {
 
           // Si le jeton a déjà été renouvelé entre-temps (par une autre requête
           // concurrente), on rejoue directement avec le jeton courant sans
-          // relancer de refresh — évite de faire tourner la rotation des
+          // relancer de refresh - évite de faire tourner la rotation des
           // refresh tokens et les 401/500 en cascade.
           final usedAuth =
               error.requestOptions.headers['Authorization'] as String?;

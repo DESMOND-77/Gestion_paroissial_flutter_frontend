@@ -361,7 +361,7 @@ class _LibrairieScreenState extends State<LibrairieScreen>
         return DataRow2(
           cells: [
             DataCell(Text(v.articleNom)),
-            DataCell(Text(v.membreNom ?? '—')),
+            DataCell(Text(v.membreNom ?? '-')),
             DataCell(Text(v.quantite.toString())),
             DataCell(AutoScrollingText(
                 scrollDuration: const Duration(seconds: 1),

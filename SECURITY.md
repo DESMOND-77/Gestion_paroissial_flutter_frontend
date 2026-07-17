@@ -17,8 +17,8 @@ Les correctifs de sécurité sont appliqués à la dernière version mineure pub
 
 Merci de signaler toute vulnérabilité de manière privée, par l'un des canaux suivants :
 
-1. **GitHub Security Advisories** (recommandé) — via l'onglet **« Security » → « Report a vulnerability »** du dépôt, qui permet une divulgation coordonnée et privée.
-2. **E-mail** — à **dut2.git2025@gmail.com** avec l'objet `[SECURITY] Gestion Paroissiale`.
+1. **GitHub Security Advisories** (recommandé) - via l'onglet **« Security » → « Report a vulnerability »** du dépôt, qui permet une divulgation coordonnée et privée.
+2. **E-mail** - à **dut2.git2025@gmail.com** avec l'objet `[SECURITY] Gestion Paroissiale`.
 
 Merci d'inclure, dans la mesure du possible :
 

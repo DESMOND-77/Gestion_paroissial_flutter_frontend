@@ -1,6 +1,6 @@
 # Guide de contribution
 
-Merci de l'intérêt que vous portez à **Gestion Paroissiale** ! Ce document décrit comment contribuer efficacement au projet. Toute contribution — code, documentation, tests, rapports de bugs — est la bienvenue.
+Merci de l'intérêt que vous portez à **Gestion Paroissiale** ! Ce document décrit comment contribuer efficacement au projet. Toute contribution - code, documentation, tests, rapports de bugs - est la bienvenue.
 
 En participant, vous acceptez de respecter notre [Code de conduite](CODE_OF_CONDUCT.md).
 

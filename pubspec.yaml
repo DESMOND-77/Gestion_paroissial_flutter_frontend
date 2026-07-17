@@ -10,7 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   # Police des glyphes Cupertino (référencés par certaines dépendances
-  # transitives) — sans elle, ces icônes s'affichent en carrés vides et le
+  # transitives) - sans elle, ces icônes s'affichent en carrés vides et le
   # build émet « Expected to find fonts for … CupertinoIcons ».
   cupertino_icons: ^1.0.8
   flutter_bloc: ^8.1.6

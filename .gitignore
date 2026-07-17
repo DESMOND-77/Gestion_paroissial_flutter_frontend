@@ -1,5 +1,5 @@
 # =========================================================
-#  Gestion Paroissiale — .gitignore (Flutter / Dart)
+#  Gestion Paroissiale - .gitignore (Flutter / Dart)
 # =========================================================
 
 # Miscellaneous
@@ -37,7 +37,7 @@ migrate_working_dir/
 /coverage/
 pubspec.lock.bak
 
-# Code généré (build_runner / Isar) — décommentez si vous préférez ne pas versionner
+# Code généré (build_runner / Isar) - décommentez si vous préférez ne pas versionner
 #*.g.dart
 #*.freezed.dart
 

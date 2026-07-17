@@ -24,7 +24,7 @@ class AuthRepository {
 
   String _profilePictureFileName(String userId) => 'user_$userId';
 
-  /// Fichier local mis en cache pour cet utilisateur, s'il existe — utilisé
+  /// Fichier local mis en cache pour cet utilisateur, s'il existe - utilisé
   /// pour afficher la photo de profil sans réseau.
   File? getCachedProfilePicture(String userId) {
     return _fileStorage.getCachedFile(

@@ -8,7 +8,7 @@ This is a Flutter application called **Gestion Paroissiale** (Parish Management 
 
 - **Language**: Dart (Flutter)
 - **Min SDK**: 3.3.0
-- **Target Platforms**: Android, iOS, Linux, macOS, Windows, and Web (all six are scaffolded; the `isar_plus` caching layer is chosen specifically because it supports all of them — see Local Caching System)
+- **Target Platforms**: Android, iOS, Linux, macOS, Windows, and Web (all six are scaffolded; the `isar_plus` caching layer is chosen specifically because it supports all of them - see Local Caching System)
 
 ## Architecture
 
@@ -23,9 +23,9 @@ Infrastructure and configuration layer:
 - **`network/`**: Dio HTTP client and exception handling
 - **`router/`**: GoRouter configuration with nested routes and auth guards
 - **`theme/`**: Material design theme definitions
-- **`storage/`**: `SecureStorage` (JWT tokens via flutter_secure_storage) and `FileStorageService` (`file_storage_service.dart`) — caches downloaded files (e.g. profile pictures) to disk via `path_provider` for offline use; `AuthRepository` uses it for profile-picture caching
-- **`database/`**: Isar (`isar_plus`) local cache — see Local Caching System
-- **`sync/`**: Background sync (`PeriodicSyncManager`, `SyncService`) — see Local Caching System
+- **`storage/`**: `SecureStorage` (JWT tokens via flutter_secure_storage) and `FileStorageService` (`file_storage_service.dart`) - caches downloaded files (e.g. profile pictures) to disk via `path_provider` for offline use; `AuthRepository` uses it for profile-picture caching
+- **`database/`**: Isar (`isar_plus`) local cache - see Local Caching System
+- **`sync/`**: Background sync (`PeriodicSyncManager`, `SyncService`) - see Local Caching System
 
 ### `/lib/data`
 
@@ -63,11 +63,11 @@ Uses **GoRouter** with nested routes:
   - `/librairie` - Library (articles & sales)
   - `/profile` - User profile
 
-`AppRouter.redirect()` enforces **two** things: authentication state (unauthenticated → `/login`) **and** role-based access — see "Authorization & Role-Based UI".
+`AppRouter.redirect()` enforces **two** things: authentication state (unauthenticated → `/login`) **and** role-based access - see "Authorization & Role-Based UI".
 
 ## Authorization & Role-Based UI
 
-Single source of truth: **`lib/core/auth/permissions.dart`** (`AppPermissions`, built from the current user's `role`). It **mirrors the backend's role-hierarchy permission classes** (`core/permissions.py`: `IsSecretaryOrAbove` / `IsTreasurerOrAbove` / `IsAdmin`) — **not** the granular `core/rbac.py` catalogue — so the UI never shows a control that would 403 (nor hides one that would pass). If the backend migrates views to `HasPermission`, realign this file.
+Single source of truth: **`lib/core/auth/permissions.dart`** (`AppPermissions`, built from the current user's `role`). It **mirrors the backend's role-hierarchy permission classes** (`core/permissions.py`: `IsSecretaryOrAbove` / `IsTreasurerOrAbove` / `IsAdmin`) - **not** the granular `core/rbac.py` catalogue - so the UI never shows a control that would 403 (nor hides one that would pass). If the backend migrates views to `HasPermission`, realign this file.
 
 - **Reading it in widgets**: `context.perms` (extension, uses `watch<AuthBloc>` so it rebuilds on login/logout). Only call in `build`, never in a callback.
 - **Capability getters** (`canManageMembres`, `canDeleteX`, `canViewFinances`, …) gate FABs / edit / delete buttons across the feature screens.
@@ -222,7 +222,7 @@ flutter build ios --release
 
 ## API Communication
 
-- **Base URL**: `lib/core/constants/api_constants.dart` — versioned under **`/api/v1/`** (e.g. `http://127.0.0.1:8000/api/v1`). Several dev/prod URLs are kept commented; the uncommented one is active.
+- **Base URL**: `lib/core/constants/api_constants.dart` - versioned under **`/api/v1/`** (e.g. `http://127.0.0.1:8000/api/v1`). Several dev/prod URLs are kept commented; the uncommented one is active.
 - **Entity ids are UUID strings** (backend migrated all PKs to UUID). Models use `String id` and `String?` foreign keys; `ApiConstants.xById(String id)` helpers take strings. Offline-created records get a **client-generated UUID** (`lib/core/utils/id_generator.dart`) so the id survives sync (backend accepts client UUIDs via `WritableIDModelSerializer`).
 - **Response envelope**: every endpoint returns `{ success, data, error?, message? }`. Repositories read `response.data["data"]`; `ApiException._extractMessage` unwraps `error`/`detail`/field errors. For user-facing text use **`messageOf(e)`** (`api_exception.dart`), never `e.toString()` (it leaks `ApiException: … (status: N)`).
 - **Datetimes**: send event dates as **UTC** (`dt.toUtc().toIso8601String()`); when displaying any backend datetime, parse then **`.toLocal()`** (parsing an offset/`Z` string yields a UTC `DateTime`).
@@ -236,7 +236,7 @@ flutter build ios --release
 - **Auth Flow**:  
   - Login via `AuthRepository.login()` stores access and refresh tokens in `SecureStorage`
   - Tokens are automatically included in all subsequent requests via DioClient interceptor
-  - Token refresh is transparent—no need for manual re-authentication on expiry
+  - Token refresh is transparent-no need for manual re-authentication on expiry
 
 ## Local Caching System
 
@@ -245,27 +245,27 @@ Reduces server load and enables offline functionality. Auto-initialized in `main
 ### Database Architecture
 
 - **Isar NoSQL Database** (`lib/core/database/database_service.dart`, via the `isar_plus` package):
-  - Two collections defined in `lib/core/database/cached_entity.dart`: `CachedEntity` (one JSON blob per `(entityType, entityId)`, standing in for what used to be five separate SQLite tables — `membres`, `groupes`, `evenements`, `finances`, `librairie`) and `SyncMetadataEntity` (last sync timestamp per entity type, replaces the old `sync_metadata` table)
-  - `DatabaseService`'s public API (`saveItems`/`getItems`/`getItemById`/`getLastSyncTime`/`isCacheValid`/`hasData`/`clearDatabase`/`clearTable`/`close`) is unchanged from the old SQLite implementation on purpose — `SyncService` and all 5 repositories call it exactly as before; only the storage engine changed
-  - Ids are deterministic (`Isar.fastHash('$entityType|$entityId')`), not auto-incremented — `getItemById` is an O(1) primary-key read, not a filtered query
+  - Two collections defined in `lib/core/database/cached_entity.dart`: `CachedEntity` (one JSON blob per `(entityType, entityId)`, standing in for what used to be five separate SQLite tables - `membres`, `groupes`, `evenements`, `finances`, `librairie`) and `SyncMetadataEntity` (last sync timestamp per entity type, replaces the old `sync_metadata` table)
+  - `DatabaseService`'s public API (`saveItems`/`getItems`/`getItemById`/`getLastSyncTime`/`isCacheValid`/`hasData`/`clearDatabase`/`clearTable`/`close`) is unchanged from the old SQLite implementation on purpose - `SyncService` and all 5 repositories call it exactly as before; only the storage engine changed
+  - Ids are deterministic (`Isar.fastHash('$entityType|$entityId')`), not auto-incremented - `getItemById` is an O(1) primary-key read, not a filtered query
   - Schema is generated code: after editing `cached_entity.dart`, run `dart run build_runner build --delete-conflicting-outputs` to regenerate `cached_entity.g.dart`
 
 ### Cross-platform setup (Android/iOS/Linux/macOS/Windows/Web)
 
-- `isar_plus` (not the original/unmaintained `isar` or web-less `isar_community`) is the only Isar fork with genuine support for all of Android, iOS, Linux, macOS, Windows **and** Web — required since this app targets all of them
+- `isar_plus` (not the original/unmaintained `isar` or web-less `isar_community`) is the only Isar fork with genuine support for all of Android, iOS, Linux, macOS, Windows **and** Web - required since this app targets all of them
 - Native platforms: `isar_plus_flutter_libs` bundles the native engine per platform automatically, no manual init needed in `main.dart`
-- Web: the engine runs as WASM and must be loaded explicitly before first use — `main.dart` calls `await Isar.initialize('isar_plus.wasm')` when `kIsWeb`. The `.wasm`/`.js` pair is **self-hosted** under `web/isar_plus.{wasm,js}` (copied from `unpkg.com/isar_plus@<version>`) rather than fetched from the CDN at runtime, in keeping with the app's offline-first design — if you bump `isar_plus`'s version, re-download both files for the new version from unpkg and keep them in sync with the pinned pubspec version
-- `isar_plus` embeds its own code generator (registered via its `build.yaml`, builder name `isar_generator`) — no separate `isar_plus_generator` package exists, just `build_runner` as a dev dependency
-- `isar_plus` currently requires `meta: ^1.18.0`, newer than the version pinned by the bundled Flutter SDK's `flutter_test` — hence the `dependency_overrides: meta: ^1.18.0` in `pubspec.yaml`. Remove it only once the Flutter SDK's own `meta` pin catches up.
+- Web: the engine runs as WASM and must be loaded explicitly before first use - `main.dart` calls `await Isar.initialize('isar_plus.wasm')` when `kIsWeb`. The `.wasm`/`.js` pair is **self-hosted** under `web/isar_plus.{wasm,js}` (copied from `unpkg.com/isar_plus@<version>`) rather than fetched from the CDN at runtime, in keeping with the app's offline-first design - if you bump `isar_plus`'s version, re-download both files for the new version from unpkg and keep them in sync with the pinned pubspec version
+- `isar_plus` embeds its own code generator (registered via its `build.yaml`, builder name `isar_generator`) - no separate `isar_plus_generator` package exists, just `build_runner` as a dev dependency
+- `isar_plus` currently requires `meta: ^1.18.0`, newer than the version pinned by the bundled Flutter SDK's `flutter_test` - hence the `dependency_overrides: meta: ^1.18.0` in `pubspec.yaml`. Remove it only once the Flutter SDK's own `meta` pin catches up.
 
 ### Sync Strategy
 
 Each 5-minute cycle (`PeriodicSyncManager._syncCycle`) runs two steps in order: **push then pull**.
 
-- **Push — offline writes** (`lib/core/sync/offline_sync_service.dart`, `OfflineSyncService.pushPull`): sends the local outbox to `POST /api/v1/sync/` (bidirectional endpoint), then processes `results` (applied → dequeue; conflicts → server copy overwrites cache, last-write-wins on `updated_at`; errors → logged + dequeued to avoid a poison-pill loop), merges server `changes` into the cache, and advances the sync cursor (`server_time`). Backend collection names map to cache entity types via `OfflineSyncService._cacheEntityType` (`transactions`→`finances`, `articles`→`librairie`, etc.).
-- **Pull — REST refresh** (`SyncService.syncAll`): the historical pull path, still the authority for the 5 read entity types (reloads full lists into cache).
+- **Push - offline writes** (`lib/core/sync/offline_sync_service.dart`, `OfflineSyncService.pushPull`): sends the local outbox to `POST /api/v1/sync/` (bidirectional endpoint), then processes `results` (applied → dequeue; conflicts → server copy overwrites cache, last-write-wins on `updated_at`; errors → logged + dequeued to avoid a poison-pill loop), merges server `changes` into the cache, and advances the sync cursor (`server_time`). Backend collection names map to cache entity types via `OfflineSyncService._cacheEntityType` (`transactions`→`finances`, `articles`→`librairie`, etc.).
+- **Pull - REST refresh** (`SyncService.syncAll`): the historical pull path, still the authority for the 5 read entity types (reloads full lists into cache).
 - **Offline writes**: repository `create/update/patch/delete` call the API directly when online (unchanged); on `NetworkException` they fall back to `queueOfflineWrite` (`lib/core/sync/offline_write.dart`) → enqueue in the `PendingChangeEntity` outbox + optimistic cache write. Client-generated UUIDs (`lib/core/utils/id_generator.dart`) keep offline-created ids stable through sync (backend `WritableIDModelSerializer` accepts them). A record's outbox row carries the business fields plus `updated_at` and `is_deleted` (a delete is `is_deleted: true`, not a removed row).
-- The `PendingChangeEntity` field is named `syncCollection`, **not** `collection` — a field literally named `collection` collides with the isar_plus generator's internal variable and breaks the generated `.g.dart`.
+- The `PendingChangeEntity` field is named `syncCollection`, **not** `collection` - a field literally named `collection` collides with the isar_plus generator's internal variable and breaks the generated `.g.dart`.
 - **Not yet offline-capable**: event registration (`inscrire` / `participations`) and self-profile edit (`updateMyMembre`) stay online-only.
 - When fetching data from repositories:
   1. **No filters** → Check local cache first; return if valid (< 5 min old)
@@ -277,7 +277,7 @@ Each 5-minute cycle (`PeriodicSyncManager._syncCycle`) runs two steps in order: 
 
 - Cache is valid for 5 minutes; after that, fresh data is fetched on next request
 - Filtered queries **always bypass cache** (e.g., `search`, pagination, date ranges)
-- Creating/updating/deleting items: cache is NOT updated immediately—it refreshes on next sync cycle (max 5 min wait)
+- Creating/updating/deleting items: cache is NOT updated immediately-it refreshes on next sync cycle (max 5 min wait)
 - Manual cache control:
 
   ```dart
@@ -310,8 +310,8 @@ final sorted = await _membreRepository.getMembres(page: 2);
 
 ### Debugging Cache Issues
 
-- **"Cache shows old data"**: Normal behavior—cache refreshes every 5 minutes, or use `forceSyncNow()` for immediate refresh
-- **"Item I just created doesn't appear"**: Expected—cache syncs periodically, not on every create/update
+- **"Cache shows old data"**: Normal behavior-cache refreshes every 5 minutes, or use `forceSyncNow()` for immediate refresh
+- **"Item I just created doesn't appear"**: Expected-cache syncs periodically, not on every create/update
 - **"App works fine online but shows nothing offline"**: Ensure cache has data before going offline; requets with filters bypass cache
 - **"Need more details?"**: See `CACHE_USAGE_GUIDE.md` for practical examples and troubleshooting (French)
 
@@ -346,7 +346,7 @@ Test file structure mirrors src:
 **Solution**: Check that repositories are using `DatabaseService` for cache operations; manually call `forceSyncNow()` to update cache immediately
 
 **Issue**: Queries with filters returning wrong results  
-**Solution**: Filtered queries (`search`, pagination, date ranges) always hit the server—this is intentional; for cache-only filtering, fetch unfiltered data and filter locally
+**Solution**: Filtered queries (`search`, pagination, date ranges) always hit the server-this is intentional; for cache-only filtering, fetch unfiltered data and filter locally
 
 **Issue**: Database locked / "Isar instance not found" errors  
 **Solution**: Ensure only one instance of `DatabaseService` is used (registered as lazy singleton in DI); check that async database operations aren't blocking the UI thread
@@ -358,7 +358,7 @@ Test file structure mirrors src:
 **Solution**: Re-run `dart run build_runner build --delete-conflicting-outputs` after editing `lib/core/database/cached_entity.dart` to regenerate `cached_entity.g.dart`.
 
 **Issue**: `Invalid constant value` when referencing `AppTheme.textPrimary` / `textSecondary` / `surfaceColor` / `backgroundColor` / `cardColor` / `dividerColor`  
-**Solution**: Those neutrals are **runtime getters** (they adapt to system light/dark via `platformBrightness`), so they can't sit inside a `const` expression — drop the enclosing `const`. Brand colors (`primaryColor` crimson `#90151F`, `secondaryColor` orange, `accentColor` blue — from `assets/images/logo.svg`) stay `const`. Theme lives in `lib/core/theme/app_theme.dart`; app is `ThemeMode.system` with full `lightTheme`/`darkTheme`.
+**Solution**: Those neutrals are **runtime getters** (they adapt to system light/dark via `platformBrightness`), so they can't sit inside a `const` expression - drop the enclosing `const`. Brand colors (`primaryColor` crimson `#90151F`, `secondaryColor` orange, `accentColor` blue - from `assets/images/logo.svg`) stay `const`. Theme lives in `lib/core/theme/app_theme.dart`; app is `ThemeMode.system` with full `lightTheme`/`darkTheme`.
 
 ## Key Dependencies
 
@@ -380,7 +380,7 @@ Test file structure mirrors src:
 - `path_provider`: Resolves platform cache/documents dirs (used by `FileStorageService`)
 - `image_picker`: Picking profile/article images from gallery or camera
 - `lottie`: Animated illustrations (e.g. splash screen)
-- `flutter_native_splash` / `flutter_launcher_icons`: Generate native splash screens and app launcher icons (config lives in `pubspec.yaml`; regenerate with `dart run flutter_native_splash:create` / `dart run flutter_launcher_icons`). Icons/splash need a **raster** source: `assets/images/logo.png` is rendered from `logo.svg` — render it with **headless Chrome**, not ImageMagick (IM lacks an rsvg delegate and renders the gradients as black blobs). `logo_adaptive.png` is the padded Android adaptive-icon foreground.
+- `flutter_native_splash` / `flutter_launcher_icons`: Generate native splash screens and app launcher icons (config lives in `pubspec.yaml`; regenerate with `dart run flutter_native_splash:create` / `dart run flutter_launcher_icons`). Icons/splash need a **raster** source: `assets/images/logo.png` is rendered from `logo.svg` - render it with **headless Chrome**, not ImageMagick (IM lacks an rsvg delegate and renders the gradients as black blobs). `logo_adaptive.png` is the padded Android adaptive-icon foreground.
 - `flutter_svg`: renders `assets/images/logo.svg` at runtime (e.g. the login logo). The logo uses only paths + gradients (flutter_svg-safe).
 
 ## Key Configuration Files
@@ -393,14 +393,14 @@ Test file structure mirrors src:
 - **`lib/core/theme/app_theme.dart`**: Material theme definitions
 - **`lib/core/sync/periodic_sync_manager.dart`**: Cache sync configuration (5-minute interval)
 - **`lib/main.dart`**: App entry point and initialization
-- **`fix.md`**: Chronological bug-fix log. Every bug fix gets a dated entry with symptom, root cause, files touched, and follow-up steps — append a new section at the top when fixing a bug.
+- **`fix.md`**: Chronological bug-fix log. Every bug fix gets a dated entry with symptom, root cause, files touched, and follow-up steps - append a new section at the top when fixing a bug.
 
 ## Code Organization Quick Reference
 
 | Need to... | Look in... |
 | ----------- | ----------- |
 | Add a new API endpoint | `lib/data/repositories/<feature>_repository.dart`, then expose in BLoC |
-| Cache a new entity type offline | Just add `_sync<Entity>()` in `lib/core/sync/sync_service.dart` calling `saveItems('<entityType>', ...)` — `database_service.dart`/`cached_entity.dart` need no changes, the `CachedEntity` collection is generic |
+| Cache a new entity type offline | Just add `_sync<Entity>()` in `lib/core/sync/sync_service.dart` calling `saveItems('<entityType>', ...)` - `database_service.dart`/`cached_entity.dart` need no changes, the `CachedEntity` collection is generic |
 | Create new screen | `lib/presentation/screens/<feature>/` and add route to `lib/core/router/app_router.dart` |
 | Create new BLoC | `lib/presentation/blocs/<feature>/` (events, states, bloc class) |
 | Create new model | `lib/data/models/` (ensure JSON serializable with fromJson/toJson) |

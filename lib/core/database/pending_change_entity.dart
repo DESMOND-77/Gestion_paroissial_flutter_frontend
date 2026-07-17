@@ -12,7 +12,7 @@ part 'pending_change_entity.g.dart';
 /// `is_deleted: true`, pas une ligne retirée).
 ///
 /// L'id Isar est dérivé de `Isar.fastHash('collection|entityId')` (voir
-/// `database_service.dart`) : un upsert par (collection, id) — plusieurs
+/// `database_service.dart`) : un upsert par (collection, id) - plusieurs
 /// modifications successives du même enregistrement hors ligne fusionnent en
 /// une seule ligne à pousser.
 @collection
@@ -20,7 +20,7 @@ class PendingChangeEntity {
   // Toujours affecté explicitement via Isar.fastHash (pas d'auto-incrément).
   int id = 0;
 
-  // NB : ne pas nommer ce champ `collection` — le générateur isar_plus utilise
+  // NB : ne pas nommer ce champ `collection` - le générateur isar_plus utilise
   // en interne une variable `collection` (l'IsarCollection) et un champ
   // homonyme casse le code généré (`collection.updateProperties` mal résolu).
   @Index()

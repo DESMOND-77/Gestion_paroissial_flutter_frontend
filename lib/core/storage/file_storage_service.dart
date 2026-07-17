@@ -5,7 +5,7 @@ import 'package:path_provider/path_provider.dart';
 
 /// Stocke sur disque les fichiers volumineux destinés à l'accès hors ligne
 /// (photos de profil, et à terme vidéos, PDF, JSON volumineux). Ces fichiers
-/// ne doivent pas transiter par SQLite (`DatabaseService`) — path_provider
+/// ne doivent pas transiter par SQLite (`DatabaseService`) - path_provider
 /// donne un répertoire applicatif stable pour les écrire directement.
 ///
 /// Enregistré comme lazy singleton dans `injection.dart` ; `init()` doit être
@@ -14,7 +14,7 @@ class FileStorageService {
   Directory? _rootDir;
 
   Future<void> init() async {
-    // `getApplicationSupportDirectory()` — pas `getApplicationDocumentsDirectory()` —
+    // `getApplicationSupportDirectory()` - pas `getApplicationDocumentsDirectory()` -
     // car cette dernière pointe vers le dossier "Documents" réel et visible de
     // l'utilisateur sur desktop (Linux/macOS) ; le cache média est un détail
     // d'implémentation interne à l'app, pas un document de l'utilisateur.
@@ -72,7 +72,7 @@ class FileStorageService {
 
   /// Télécharge le fichier distant et le met en cache pour un accès hors
   /// ligne ultérieur. Renvoie `null` en cas d'échec (pas de réseau, URL
-  /// invalide, ...) — l'appelant doit alors se contenter du cache existant.
+  /// invalide, ...) - l'appelant doit alors se contenter du cache existant.
   Future<File?> downloadAndCache(
     String url,
     String category,

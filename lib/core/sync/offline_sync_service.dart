@@ -13,7 +13,7 @@ import 'sync_api.dart';
 /// écritures faites hors ligne**. À chaque passe [pushPull] :
 ///
 /// 1. envoie la file d'attente locale (outbox) ;
-/// 2. traite les résultats par enregistrement — `applied` (accepté),
+/// 2. traite les résultats par enregistrement - `applied` (accepté),
 ///    `conflicts` (le serveur, plus récent, gagne → sa copie écrase le cache),
 ///    `errors` (rejet de validation → journalisé et retiré pour éviter une
 ///    boucle de reprise infinie) ;

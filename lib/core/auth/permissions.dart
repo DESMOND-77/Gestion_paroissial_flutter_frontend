@@ -5,7 +5,7 @@ import '../../presentation/blocs/auth/auth_bloc.dart';
 /// Contrôle d'affichage UI basé sur le rôle de l'utilisateur.
 ///
 /// **Miroir de l'enforcement réel du backend.** Les vues DRF protègent les
-/// écritures par des classes hiérarchiques de rôle (`core/permissions.py`) —
+/// écritures par des classes hiérarchiques de rôle (`core/permissions.py`) -
 /// et non (encore) par les permissions granulaires de `core/rbac.py`. Pour que
 /// l'UI ne montre jamais un bouton qui renverrait 403 (ni n'en cache un qui
 /// passerait), on reproduit ici **ces mêmes ensembles de rôles** :

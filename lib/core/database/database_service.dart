@@ -11,7 +11,7 @@ import 'pending_change_entity.dart';
 /// SQLite (saveItems/getItems/getItemById/getLastSyncTime/isCacheValid/
 /// hasData/clearDatabase/clearTable/close) : `SyncService` et les 5
 /// repositories (membres, groupes, evenements, finances, librairie)
-/// continuent d'appeler ces méthodes sans aucune modification — seul le
+/// continuent d'appeler ces méthodes sans aucune modification - seul le
 /// moteur de stockage change.
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
@@ -30,7 +30,7 @@ class DatabaseService {
 
   Future<Isar> _openIsar() async {
     // Web : le moteur Isar tourne en WASM (chargé via Isar.initialize dans
-    // main.dart) et persiste dans IndexedDB — pas de répertoire de fichiers.
+    // main.dart) et persiste dans IndexedDB - pas de répertoire de fichiers.
     // Natif (Android/iOS/Linux/macOS/Windows) : répertoire applicatif privé,
     // cohérent avec FileStorageService (pas le dossier "Documents" visible).
     final directory = kIsWeb
@@ -216,9 +216,9 @@ class DatabaseService {
   ///
   /// Deux fusions distinctes ont lieu :
   /// - **outbox** : avec l'éventuel enregistrement déjà en attente pour ce
-  ///   (collection, id) — une création puis des modifications successives ne
+  ///   (collection, id) - une création puis des modifications successives ne
   ///   forment qu'une seule ligne à pousser (le serveur applique un upsert).
-  /// - **cache** : avec l'enregistrement déjà en cache — une modification
+  /// - **cache** : avec l'enregistrement déjà en cache - une modification
   ///   partielle (PATCH) ne doit pas écraser les champs absents à l'affichage.
   ///
   /// Renvoie l'enregistrement fusionné tel qu'appliqué au cache (utile pour

@@ -184,7 +184,7 @@ class FinanceRepository {
           response.data["data"] as Map<String, dynamic>);
     } catch (e) {
       // Hors ligne / serveur injoignable : pas d'endpoint dédié à mettre en
-      // cache pour un rapport (donnée calculée) — on le recalcule localement
+      // cache pour un rapport (donnée calculée) - on le recalcule localement
       // à partir des transactions déjà en cache plutôt que de tout perdre.
       // Une période filtrée reste néanmoins impossible à honorer hors ligne.
       if (dateDebut != null || dateFin != null || _databaseService == null) {

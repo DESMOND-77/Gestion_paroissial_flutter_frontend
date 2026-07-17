@@ -15,7 +15,7 @@ import 'package:flutter/material.dart';
 /// **comme** en sombre sans réécriture. Les définitions `lightTheme`/`darkTheme`
 /// ci-dessous utilisent, elles, les valeurs explicites de chaque mode.
 class AppTheme {
-  // --- Marque (palette logo) — constantes, indépendantes du mode ------------
+  // --- Marque (palette logo) - constantes, indépendantes du mode ------------
   static const Color primaryColor = Color(0xFF90151F); // crimson logo
   static const Color primaryDark = Color(0xFF6E0F17);
   static const Color secondaryColor = Color(0xFFF3751E); // orange logo

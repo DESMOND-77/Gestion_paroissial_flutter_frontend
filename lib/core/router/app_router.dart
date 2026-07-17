@@ -46,7 +46,7 @@ class AppRouter {
       // expirée, échec de la vérification initiale) doit renvoyer vers le
       // login. Des états transitoires comme AuthError (ex: rafraîchissement
       // du profil qui échoue faute de réseau) ne signifient PAS que la
-      // session est invalide — les jetons sont toujours valides en storage —
+      // session est invalide - les jetons sont toujours valides en storage -
       // donc ils ne doivent pas éjecter l'utilisateur de l'écran courant.
       final isLoggedOut = authState is AuthUnauthenticated;
       final isConfirmedAuthenticated =

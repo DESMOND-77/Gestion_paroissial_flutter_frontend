@@ -32,7 +32,7 @@ void main() async {
     secureStorageLocked = !(await sl<SecureStorage>().probe());
     if (secureStorageLocked) {
       debugPrint(
-        '[SecureStorage] GNOME keyring locked — auth tokens cannot persist '
+        '[SecureStorage] GNOME keyring locked - auth tokens cannot persist '
         'until the user unlocks it (Seahorse → Passwords → Login → Unlock).',
       );
     }

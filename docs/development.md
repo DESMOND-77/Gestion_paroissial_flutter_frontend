@@ -25,17 +25,17 @@ dart run build_runner build --delete-conflicting-outputs
 
 ## Ajouter une nouvelle fonctionnalité
 
-1. **BLoC** — `lib/presentation/blocs/<feature>/` (events, states, bloc).
-2. **Repository** — `lib/data/repositories/` (appels API via `DioClient`).
-3. **DI** — enregistrer dans `lib/core/di/injection.dart` (repository en lazy singleton, BLoC en factory).
-4. **Écrans** — `lib/presentation/screens/<feature>/`.
-5. **Routes** — `lib/core/router/app_router.dart`.
-6. **Modèles** — `lib/data/models/` (avec `fromJson`/`toJson`).
-7. **Provider** — ajouter le `BlocProvider` dans `lib/app.dart`.
+1. **BLoC** - `lib/presentation/blocs/<feature>/` (events, states, bloc).
+2. **Repository** - `lib/data/repositories/` (appels API via `DioClient`).
+3. **DI** - enregistrer dans `lib/core/di/injection.dart` (repository en lazy singleton, BLoC en factory).
+4. **Écrans** - `lib/presentation/screens/<feature>/`.
+5. **Routes** - `lib/core/router/app_router.dart`.
+6. **Modèles** - `lib/data/models/` (avec `fromJson`/`toJson`).
+7. **Provider** - ajouter le `BlocProvider` dans `lib/app.dart`.
 
 ## Conventions de code
 
-- **Equatable** pour l'égalité de valeur (modèles, events, states) — tous les champs dans `props`.
+- **Equatable** pour l'égalité de valeur (modèles, events, states) - tous les champs dans `props`.
 - Constructeurs **`const`** pour les widgets immuables ; `copyWith()` pour les modèles.
 - BLoCs : pattern `on<EventType>`, gestion des erreurs dans le repository, émission d'un état d'erreur.
 - Requêtes concurrentes : `Future.wait()`.

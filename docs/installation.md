@@ -4,7 +4,7 @@ Ce guide décrit l'installation de l'environnement de développement de **Gestio
 
 ## Prérequis
 
-- **Flutter SDK** ≥ 3.3.0 (canal stable — testé avec Flutter 3.44.x / Dart 3.x)
+- **Flutter SDK** ≥ 3.3.0 (canal stable - testé avec Flutter 3.44.x / Dart 3.x)
 - **Git**
 - Un backend Gestion Paroissiale accessible (Django/DRF)
 - Selon la ou les cibles de build :
