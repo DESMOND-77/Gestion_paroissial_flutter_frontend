@@ -63,7 +63,19 @@ Uses **GoRouter** with nested routes:
   - `/librairie` - Library (articles & sales)
   - `/profile` - User profile
 
-Auth guard in `AppRouter.redirect()` enforces authentication state.
+`AppRouter.redirect()` enforces **two** things: authentication state (unauthenticated → `/login`) **and** role-based access — see "Authorization & Role-Based UI".
+
+## Authorization & Role-Based UI
+
+Single source of truth: **`lib/core/auth/permissions.dart`** (`AppPermissions`, built from the current user's `role`). It **mirrors the backend's role-hierarchy permission classes** (`core/permissions.py`: `IsSecretaryOrAbove` / `IsTreasurerOrAbove` / `IsAdmin`) — **not** the granular `core/rbac.py` catalogue — so the UI never shows a control that would 403 (nor hides one that would pass). If the backend migrates views to `HasPermission`, realign this file.
+
+- **Reading it in widgets**: `context.perms` (extension, uses `watch<AuthBloc>` so it rebuilds on login/logout). Only call in `build`, never in a callback.
+- **Capability getters** (`canManageMembres`, `canDeleteX`, `canViewFinances`, …) gate FABs / edit / delete buttons across the feature screens.
+- **`canAccessRoute(location)` + `landingRoute`** are the shared basis for: the drawer/sidebar item visibility (`main_layout.dart`, `app_drawer.dart`), the **router guard** (a section the user can't access redirects to `landingRoute`), and the post-login / splash landing page. `AuthUser.role` is parsed from the login/`me` payload.
+
+## Email verification & auth errors
+
+- **Login is blocked server-side (403) if the account's email isn't verified** (`REQUIRE_EMAIL_VERIFICATION`). `AuthRepository.register` does **not** persist tokens and `login` persists them only on 200, so an unverified account never gets a session. Register success shows a "verify your email" dialog; forgot-password shows a security-neutral confirmation dialog (both persistent, not a fleeting SnackBar).
 
 ## State Management (BLoC Pattern)
 
@@ -210,7 +222,11 @@ flutter build ios --release
 
 ## API Communication
 
-- **Base URL**: Defined in `lib/core/constants/api_constants.dart` (e.g., `http://127.0.0.1:8000/api`)
+- **Base URL**: `lib/core/constants/api_constants.dart` — versioned under **`/api/v1/`** (e.g. `http://127.0.0.1:8000/api/v1`). Several dev/prod URLs are kept commented; the uncommented one is active.
+- **Entity ids are UUID strings** (backend migrated all PKs to UUID). Models use `String id` and `String?` foreign keys; `ApiConstants.xById(String id)` helpers take strings. Offline-created records get a **client-generated UUID** (`lib/core/utils/id_generator.dart`) so the id survives sync (backend accepts client UUIDs via `WritableIDModelSerializer`).
+- **Response envelope**: every endpoint returns `{ success, data, error?, message? }`. Repositories read `response.data["data"]`; `ApiException._extractMessage` unwraps `error`/`detail`/field errors. For user-facing text use **`messageOf(e)`** (`api_exception.dart`), never `e.toString()` (it leaks `ApiException: … (status: N)`).
+- **Datetimes**: send event dates as **UTC** (`dt.toUtc().toIso8601String()`); when displaying any backend datetime, parse then **`.toLocal()`** (parsing an offset/`Z` string yields a UTC `DateTime`).
+- **Backend source of truth** lives at `../backend` (Django/DRF). `./api_endpoints.json` (Swagger) may lag it.
 - **API Endpoints Reference**: `./api_endpoints.json` contains the Swagger specification for all available API endpoints (for reference/documentation)
 - **Client**: `DioClient` in `lib/core/network/dio_client.dart` handles:
   - Authorization headers with JWT tokens from secure storage
@@ -341,6 +357,9 @@ Test file structure mirrors src:
 **Issue**: Isar schema changes not taking effect  
 **Solution**: Re-run `dart run build_runner build --delete-conflicting-outputs` after editing `lib/core/database/cached_entity.dart` to regenerate `cached_entity.g.dart`.
 
+**Issue**: `Invalid constant value` when referencing `AppTheme.textPrimary` / `textSecondary` / `surfaceColor` / `backgroundColor` / `cardColor` / `dividerColor`  
+**Solution**: Those neutrals are **runtime getters** (they adapt to system light/dark via `platformBrightness`), so they can't sit inside a `const` expression — drop the enclosing `const`. Brand colors (`primaryColor` crimson `#90151F`, `secondaryColor` orange, `accentColor` blue — from `assets/images/logo.svg`) stay `const`. Theme lives in `lib/core/theme/app_theme.dart`; app is `ThemeMode.system` with full `lightTheme`/`darkTheme`.
+
 ## Key Dependencies
 
 - `flutter_bloc`: State management
@@ -361,7 +380,8 @@ Test file structure mirrors src:
 - `path_provider`: Resolves platform cache/documents dirs (used by `FileStorageService`)
 - `image_picker`: Picking profile/article images from gallery or camera
 - `lottie`: Animated illustrations (e.g. splash screen)
-- `flutter_native_splash` / `flutter_launcher_icons`: Generate native splash screens and app launcher icons (config lives in `pubspec.yaml`; regenerate with `dart run flutter_native_splash:create` / `dart run flutter_launcher_icons`)
+- `flutter_native_splash` / `flutter_launcher_icons`: Generate native splash screens and app launcher icons (config lives in `pubspec.yaml`; regenerate with `dart run flutter_native_splash:create` / `dart run flutter_launcher_icons`). Icons/splash need a **raster** source: `assets/images/logo.png` is rendered from `logo.svg` — render it with **headless Chrome**, not ImageMagick (IM lacks an rsvg delegate and renders the gradients as black blobs). `logo_adaptive.png` is the padded Android adaptive-icon foreground.
+- `flutter_svg`: renders `assets/images/logo.svg` at runtime (e.g. the login logo). The logo uses only paths + gradients (flutter_svg-safe).
 
 ## Key Configuration Files
 

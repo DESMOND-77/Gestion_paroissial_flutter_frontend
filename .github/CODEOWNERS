@@ -1,0 +1,14 @@
+# Propriétaires du dépôt
+# Chaque ligne associe un motif de fichiers à des relecteurs par défaut.
+# Ces personnes seront automatiquement demandées en revue sur les PR
+# modifiant les fichiers correspondants.
+
+# Propriétaire par défaut de l'ensemble du dépôt
+*                       @DESMOND-77
+
+# Documentation
+/docs/                  @DESMOND-77
+*.md                    @DESMOND-77
+
+# Configuration CI/CD et communauté
+/.github/               @DESMOND-77

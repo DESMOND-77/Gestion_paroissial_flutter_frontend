@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Discussions
+    url: https://github.com/DESMOND-77/Gestion_paroissial_flutter_frontend/discussions
+    about: Pour les questions ouvertes, idées et échanges avec la communauté.
+  - name: 🔐 Signalement de vulnérabilité
+    url: https://github.com/DESMOND-77/Gestion_paroissial_flutter_frontend/security/advisories/new
+    about: Signalez une faille de sécurité de manière privée (ne créez pas d'Issue publique).
+  - name: 📖 Documentation
+    url: https://github.com/DESMOND-77/Gestion_paroissial_flutter_frontend/tree/main/docs
+    about: Consultez la documentation technique avant d'ouvrir une Issue.
