@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Installer Java
         uses: actions/setup-java@v4
@@ -69,7 +69,7 @@ jobs:
     needs: build-artifacts
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Récupérer les artefacts
         uses: actions/download-artifact@v4
